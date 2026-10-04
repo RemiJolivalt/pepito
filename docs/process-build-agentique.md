@@ -1,0 +1,30 @@
+# Process de build en mode agentique
+
+## Principe
+
+Le build du produit est organisé autour de rôles inspirés d'une petite organisation, chacun associé à un livrable concret et vérifiable — pas un jeu de rôle décoratif. Le rôle "CEO" (décisions finales, arbitrages) reste humain (Rémi) : aucun agent ne valide ses propres décisions à sa place.
+
+## Rôles et livrables
+
+| Rôle | Responsabilité | Livrable |
+|---|---|---|
+| Business Analyst | Traduire les besoins en specs fonctionnelles | Documents `docs/spec-*.md` |
+| Architecte / CTO | Décisions techniques (stack, orchestration des agents, intégrations) | Document `docs/architecture-*.md` + ADR si décision structurante |
+| Dev | Implémentation | Code + PR |
+| Test | Critères d'acceptation, plan de test, exécution | `docs/test-plan-*.md` + rapport d'exécution |
+| Chargé de comm' | Contenus et messages orientés utilisateur final (pas de décision produit) | Textes, maquettes de contenu |
+| CEO | Arbitrage, validation des orientations | Décision actée dans ce document ou en commit |
+
+## Garde-fous
+
+- Chaque rôle produit un artefact écrit avant de passer au suivant — pas d'implémentation sans spec validée, pas de spec sans besoin identifié.
+- Les décisions structurantes (architecture, scope, pricing) sont actées explicitement par le CEO avant exécution, pas supposées à partir d'une discussion.
+- Ce document est mis à jour à chaque changement de process constaté en cours de route.
+
+## Historique des décisions actées
+
+- 2026-10-04 — Produit multi-métier dès la conception (cœur générique + packs de contexte par métier).
+- 2026-10-04 — Douleur cible : manque de temps + manque de compétence marketing.
+- 2026-10-04 — Validation humaine obligatoire avant toute exécution d'action par un agent (pas d'autonomie totale en V1).
+- 2026-10-04 — Prix de travail : 15€/mois (non verrouillé — à valider avec Finance sur la base d'un chiffrage du coût d'inférence par client actif).
+- 2026-10-04 — Ordre de build retenu : spec fonctionnelle de contextualisation d'abord, architecture technique ensuite.
