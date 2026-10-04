@@ -22,8 +22,9 @@ export function CockpitClient({
   );
   const [proposals, setProposals] = useState<AgentProposal[]>([]);
   const [loadingProposals, setLoadingProposals] = useState(false);
-  const [runningAgent, setRunningAgent] = useState(false);
+  const [runningAgent, setRunningAgent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [newsContext, setNewsContext] = useState("");
 
   // Formulaire de création d'entreprise démo (onboarding minimal, cf. docs/spec-contextualisation.md)
   const [name, setName] = useState("");
@@ -70,9 +71,9 @@ export function CockpitClient({
     setServingArea("");
   }
 
-  async function handleRunAgent() {
+  async function handleRunVisibiliteLocale() {
     if (!selectedCompanyId) return;
-    setRunningAgent(true);
+    setRunningAgent("visibilite_locale");
     setError(null);
     try {
       const res = await fetch("/api/agents/visibilite-locale/run", {
@@ -87,7 +88,29 @@ export function CockpitClient({
         "Échec de l'exécution de l'agent — vérifiez la clé ANTHROPIC_API_KEY.",
       );
     } finally {
-      setRunningAgent(false);
+      setRunningAgent(null);
+    }
+  }
+
+  async function handleRunCommunication() {
+    if (!selectedCompanyId || !newsContext.trim()) return;
+    setRunningAgent("communication");
+    setError(null);
+    try {
+      const res = await fetch("/api/agents/communication/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId: selectedCompanyId, newsContext }),
+      });
+      if (!res.ok) throw new Error();
+      await loadProposals(selectedCompanyId);
+      setNewsContext("");
+    } catch {
+      setError(
+        "Échec de l'exécution de l'agent — vérifiez la clé ANTHROPIC_API_KEY.",
+      );
+    } finally {
+      setRunningAgent(null);
     }
   }
 
@@ -188,13 +211,31 @@ export function CockpitClient({
               Propositions — {selectedCompany.name}
             </h2>
             <button
-              onClick={handleRunAgent}
-              disabled={runningAgent}
+              onClick={handleRunVisibiliteLocale}
+              disabled={runningAgent !== null}
               className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
             >
-              {runningAgent
+              {runningAgent === "visibilite_locale"
                 ? "L'agent réfléchit…"
                 : "Lancer l'agent Visibilité locale"}
+            </button>
+          </div>
+
+          <div className="mt-3 flex items-center gap-2 rounded border border-gray-200 p-3">
+            <input
+              placeholder="Actualité à communiquer (ex: nouvelle offre, événement, extension des horaires)"
+              value={newsContext}
+              onChange={(e) => setNewsContext(e.target.value)}
+              className="flex-1 rounded border px-2 py-1 text-sm"
+            />
+            <button
+              onClick={handleRunCommunication}
+              disabled={runningAgent !== null || !newsContext.trim()}
+              className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
+            >
+              {runningAgent === "communication"
+                ? "L'agent réfléchit…"
+                : "Lancer l'agent Communication"}
             </button>
           </div>
 
