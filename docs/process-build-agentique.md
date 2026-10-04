@@ -28,3 +28,5 @@ Le build du produit est organisé autour de rôles inspirés d'une petite organi
 - 2026-10-04 — Validation humaine obligatoire avant toute exécution d'action par un agent (pas d'autonomie totale en V1).
 - 2026-10-04 — Prix de travail : 15€/mois (non verrouillé — à valider avec Finance sur la base d'un chiffrage du coût d'inférence par client actif).
 - 2026-10-04 — Ordre de build retenu : spec fonctionnelle de contextualisation d'abord, architecture technique ensuite.
+- 2026-10-04 — Architecture retenue : Claude API + Tool Runner (TypeScript), pas de Managed Agents ni de Claude Agent SDK (nos agents n'ont pas besoin d'un sandbox bash/fichiers). Stack : Next.js + PostgreSQL + file de jobs asynchrones. Voir [architecture-technique.md](architecture-technique.md).
+- 2026-10-04 — Choix du modèle Claude (Opus 5.5 vs Sonnet 5.5) non verrouillé : proposition de démarrer en pilote avec Sonnet 5.5 pour maîtriser le coût à 15€/mois, à valider par le CEO après test qualité.
