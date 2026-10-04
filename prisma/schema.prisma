@@ -12,13 +12,27 @@ generator client {
 
 model Company {
   id              String    @id @default(cuid())
+  ownerEmail      String    @unique // identifiant de session (login minimal, cf. docs/architecture-technique.md)
   name            String
   trade           String // métier : kine, plombier, installateur_solaire, ...
   servingArea     String // zone de chalandise
   tone            String // ton de communication choisi à l'onboarding
+  website         String? // optionnel : beaucoup de TPE n'ont pas de site
+  socialHandles   String? // ex: @cabinet_kine_demo (Instagram)
   createdAt       DateTime  @default(now())
   channels        ChannelConnection[]
   proposals       AgentProposal[]
+  auditFindings   AuditFinding[]
+}
+
+model AuditFinding {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  category    String // site_web, reseaux_sociaux
+  title       String
+  content     String
+  createdAt   DateTime @default(now())
 }
 
 model ChannelConnection {

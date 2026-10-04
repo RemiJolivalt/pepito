@@ -1,0 +1,59 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      router.push(data.hasCompany ? "/dashboard" : "/onboarding");
+    } catch {
+      setError("Connexion impossible, réessayez.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="mx-auto flex max-w-sm flex-col justify-center p-8 font-sans min-h-screen">
+      <h1 className="text-2xl font-semibold">Pepito</h1>
+      <p className="mt-1 text-sm text-gray-500">
+        Connexion par email — pas de mot de passe pour l&apos;instant (phase
+        pilote).
+      </p>
+      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
+        <input
+          required
+          type="email"
+          placeholder="votre@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded border px-3 py-2 text-sm"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded bg-black px-3 py-2 text-sm text-white disabled:opacity-50"
+        >
+          {loading ? "Connexion…" : "Continuer"}
+        </button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </form>
+    </main>
+  );
+}

@@ -23,9 +23,17 @@ La personnification (nom, ton propre à chaque agent) est un choix UX à traiter
 
 ## Agent "Démarchage / prospection"
 
-- **Inputs** : zone de chalandise, métier, liste de prospects fournie ou ciblage par zone (source à définir en phase architecture).
-- **Propositions typiques** : email de prospection personnalisé, relance.
-- **Garde-fou spécifique** : le plus sensible du roster (RGPD, image de marque). Validation obligatoire ligne par ligne du contenu ET de la liste de destinataires avant tout envoi. Fonctionnalité à sortir en dernier dans la roadmap, après validation conformité.
+- **Inputs** : zone de chalandise, métier, description du type de prospects visés (saisie libre par l'utilisateur — pas de vraie liste de contacts en V1).
+- **Propositions typiques** : template d'email de prospection générique (placeholder `[Prénom]`), relance.
+- **Garde-fou spécifique** : le plus sensible du roster (RGPD, image de marque). En V1, l'agent ne produit QUE des templates génériques, jamais de ciblage nominatif ni d'envoi réel — chaque proposition inclut un rappel explicite de vérifier le cadre RGPD avant tout envoi.
+- **Note de décision (2026-10-04)** : le roster prévoyait initialement de sortir cet agent en dernier, après validation Conformité. Construit plus tôt à la demande du CEO ; le garde-fou "templates génériques uniquement, pas de liste réelle" compense l'absence de validation Conformité formelle à ce stade. Une vraie fonctionnalité de ciblage nominatif reste hors scope tant que cette validation n'a pas eu lieu.
+
+## Agent "Audit" (ajouté 2026-10-04)
+
+- Agent de diagnostic, pas d'action : ne produit aucune proposition à valider, seulement des constats affichés en tête du dashboard avant les agents d'optimisation.
+- **Inputs** : site web déclaré (optionnel) et comptes réseaux sociaux déclarés.
+- **Fonctionnement** : utilise l'outil serveur `web_fetch` d'Anthropic pour consulter le site déclaré. Si aucun site n'est déclaré ou s'il est inaccessible, l'agent enregistre ce fait comme un constat en soi (premier axe d'amélioration), jamais comme une erreur silencieuse.
+- Déclenché automatiquement à la fin de l'onboarding, et re-déclenchable manuellement depuis le dashboard.
 
 ## Hors scope V1 (roadmap future)
 
