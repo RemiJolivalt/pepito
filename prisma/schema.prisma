@@ -1,0 +1,54 @@
+// Dev local : SQLite (pas d'infra externe requise).
+// Prod : PostgreSQL, cf. docs/architecture-technique.md — seul le "provider"
+// change, le schéma reste identique. L'URL de connexion est définie dans
+// prisma.config.ts (Prisma 7+), pas ici.
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Company {
+  id              String    @id @default(cuid())
+  name            String
+  trade           String // métier : kine, plombier, installateur_solaire, ...
+  servingArea     String // zone de chalandise
+  tone            String // ton de communication choisi à l'onboarding
+  createdAt       DateTime  @default(now())
+  channels        ChannelConnection[]
+  proposals       AgentProposal[]
+}
+
+model ChannelConnection {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  channel     String // google_business_profile, instagram, email
+  status      String   @default("non_connecte") // non_connecte, connecte, erreur
+  createdAt   DateTime @default(now())
+}
+
+model AgentProposal {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  agent       String // visibilite_locale, communication, demarchage
+  kind        String // ex: gbp_update, review_reply, social_post, prospecting_email
+  title       String
+  content     String // contenu généré, prêt à être validé/modifié
+  status      String   @default("en_attente") // en_attente, validee, modifiee, rejetee, executee
+  createdAt   DateTime @default(now())
+  decidedAt   DateTime?
+  executionLog ExecutionLog?
+}
+
+model ExecutionLog {
+  id          String   @id @default(cuid())
+  proposalId  String   @unique
+  proposal    AgentProposal @relation(fields: [proposalId], references: [id])
+  executedAt  DateTime @default(now())
+  result      String // succes, echec
+  detail      String?
+}

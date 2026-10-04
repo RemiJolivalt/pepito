@@ -4,7 +4,27 @@ Copilote IA agentique pour indépendants et TPE (kiné, plombier, installateur s
 
 ## Statut
 
-Phase d'idéation / cadrage du MVP. Aucun code applicatif pour l'instant — voir [docs/](docs/) pour les décisions produit et les specs en cours.
+Premier agent fonctionnel : "Visibilité locale" (propositions en attente de validation humaine, cockpit de pilotage minimal). Voir [docs/](docs/) pour les décisions produit, specs et architecture.
+
+## Démarrer en local
+
+Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/).
+
+1. Créer un fichier `.env` à la racine (non commité) avec :
+   ```
+   DATABASE_URL="file:./dev.db"
+   ANTHROPIC_API_KEY="sk-ant-..."
+   ```
+2. Installer les dépendances : `npm install`
+3. Générer le client Prisma et créer la base SQLite locale :
+   ```
+   npx prisma generate
+   npx prisma db push
+   ```
+4. Lancer le serveur de dev : `npm run dev`
+5. Ouvrir `http://localhost:3000` (redirige vers `/cockpit`) : créer une entreprise démo, puis lancer l'agent "Visibilité locale" et valider/rejeter ses propositions.
+
+**Dev vs prod** : la base locale est SQLite (aucune infra externe requise). La décision d'architecture retient PostgreSQL pour la production — seule la variable `DATABASE_URL` (et le `provider` dans `prisma/schema.prisma`) changent, le schéma de données reste identique.
 
 ## Décisions clés (V1)
 
