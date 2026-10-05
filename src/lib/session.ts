@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "pepito_session_email";
 
@@ -25,4 +26,16 @@ export async function setSessionEmail(email: string) {
 export async function clearSession() {
   const store = await cookies();
   store.delete(COOKIE_NAME);
+}
+
+/**
+ * Source de vérité unique de l'isolation entre entreprises : toute route API
+ * qui lit/écrit des données d'une entreprise doit dériver son ID d'ICI, et
+ * ne jamais faire confiance à un companyId envoyé par le client (cf. audit
+ * du 2026-10-05 — aucune route ne vérifiait l'appartenance avant ce correctif).
+ */
+export async function getSessionCompany() {
+  const ownerEmail = await getSessionEmail();
+  if (!ownerEmail) return null;
+  return prisma.company.findUnique({ where: { ownerEmail } });
 }

@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { runVisibiliteLocaleAgent } from "@/lib/agents/visibilite-locale";
+import { getSessionCompany } from "@/lib/session";
 
-export async function POST(request: NextRequest) {
-  const { companyId } = await request.json();
-
-  if (!companyId) {
-    return NextResponse.json({ error: "companyId requis" }, { status: 400 });
+export async function POST() {
+  const company = await getSessionCompany();
+  if (!company) {
+    return NextResponse.json({ error: "Non connecté" }, { status: 401 });
   }
 
   try {
-    const proposals = await runVisibiliteLocaleAgent(companyId);
+    const proposals = await runVisibiliteLocaleAgent(company.id);
     return NextResponse.json(proposals, { status: 201 });
   } catch (error) {
     console.error("Erreur agent visibilite_locale:", error);

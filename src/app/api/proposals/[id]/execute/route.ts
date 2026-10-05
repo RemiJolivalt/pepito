@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { publishSiteFromProposal } from "@/lib/site/publish";
+import { getSessionCompany } from "@/lib/session";
 
 /**
  * Exécution réelle d'une proposition VALIDÉE. Aujourd'hui une seule
@@ -10,7 +12,17 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const company = await getSessionCompany();
+  if (!company) {
+    return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+  }
+
   const { id } = await params;
+  const proposal = await prisma.agentProposal.findUnique({ where: { id } });
+  if (!proposal || proposal.companyId !== company.id) {
+    return NextResponse.json({ error: "Proposition introuvable" }, { status: 404 });
+  }
+
   try {
     const { slug } = await publishSiteFromProposal(id);
     return NextResponse.json({ url: `/site/${slug}` });

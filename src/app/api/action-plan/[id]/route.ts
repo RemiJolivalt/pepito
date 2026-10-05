@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSessionCompany } from "@/lib/session";
 
 const ALLOWED_STATUSES = ["lance", "termine", "ecarte"] as const;
 
@@ -8,7 +9,17 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const company = await getSessionCompany();
+  if (!company) {
+    return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+  }
+
   const { id } = await params;
+  const existing = await prisma.actionPlanItem.findUnique({ where: { id } });
+  if (!existing || existing.companyId !== company.id) {
+    return NextResponse.json({ error: "Action introuvable" }, { status: 404 });
+  }
+
   const { status, feedback } = await request.json();
 
   if (!ALLOWED_STATUSES.includes(status)) {

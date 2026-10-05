@@ -4,6 +4,7 @@ import { runVisibiliteLocaleAgent } from "@/lib/agents/visibilite-locale";
 import { runCommunicationAgent } from "@/lib/agents/communication";
 import { runDemarchageAgent } from "@/lib/agents/demarchage";
 import { runAuditAgent } from "@/lib/agents/audit";
+import { getSessionCompany } from "@/lib/session";
 
 /**
  * Lance l'agent correspondant à une action du plan de Paul, EN LUI PASSANT
@@ -15,9 +16,14 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const company = await getSessionCompany();
+  if (!company) {
+    return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+  }
+
   const { id } = await params;
   const item = await prisma.actionPlanItem.findUnique({ where: { id } });
-  if (!item) {
+  if (!item || item.companyId !== company.id) {
     return NextResponse.json({ error: "Action introuvable" }, { status: 404 });
   }
   if (item.status !== "propose") {
