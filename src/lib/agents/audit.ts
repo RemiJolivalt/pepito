@@ -2,6 +2,7 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
+import { recordUsage } from "@/lib/usage";
 import {
   PERSONAS,
   directionLine,
@@ -60,7 +61,7 @@ export async function runAuditAgent(
     ? `Le site web déclaré est : ${company.website}. Utilise l'outil web_fetch pour le consulter avant de conclure.`
     : `Aucun site web n'a été déclaré. Enregistre un constat "site_web" signalant l'absence de site comme premier axe d'amélioration, sans inventer de contenu.`;
 
-  await anthropic.beta.messages.toolRunner({
+  const finalMessage = await anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     max_tokens: 4000,
     tools: [
@@ -103,6 +104,13 @@ Règles strictes :
     });
     createdFindingIds.push(fallback.id);
   }
+
+  await recordUsage({
+    companyId: company.id,
+    agent: "audit",
+    model: AGENT_MODEL,
+    usage: finalMessage.usage,
+  });
 
   return prisma.auditFinding.findMany({
     where: { id: { in: createdFindingIds } },

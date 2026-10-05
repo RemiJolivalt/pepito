@@ -9,6 +9,7 @@ const ITEMS = [
   { href: "/rapport", label: "Rapport", hint: "Ce qui a été fait" },
   { href: "/connexions", label: "Connexions", hint: "Google, Facebook, Instagram" },
   { href: "/onboarding", label: "Mon entreprise", hint: "Objectif, zone, site" },
+  { href: "/admin", label: "Administration", hint: "Coûts, entreprises, usage" },
 ];
 
 export function SidebarNav() {

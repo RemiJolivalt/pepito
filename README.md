@@ -22,6 +22,9 @@ Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/).
    # GOOGLE_OAUTH_CLIENT_SECRET=""
    # META_APP_ID=""
    # META_APP_SECRET=""
+
+   # Optionnel — accès à la vue /admin (emails séparés par des virgules) :
+   # ADMIN_EMAILS="vous@exemple.com"
    ```
 2. Installer les dépendances : `npm install`
 3. Générer le client Prisma et créer la base SQLite locale :

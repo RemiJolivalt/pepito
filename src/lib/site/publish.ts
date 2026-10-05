@@ -2,6 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { companyProfileLines } from "@/lib/agents/personas";
 import { prisma } from "@/lib/prisma";
+import { recordUsage } from "@/lib/usage";
 
 /**
  * Première exécution réelle de bout en bout du produit : un brief de site
@@ -66,6 +67,13 @@ ${proposal.content}`,
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
     .map((b) => b.text)
     .join("\n");
+  await recordUsage({
+    companyId: company.id,
+    agent: "site_publish",
+    model: AGENT_MODEL,
+    usage: response.usage,
+  });
+
   const html = sanitizeHtml(rawHtml);
   if (!html.toLowerCase().includes("<html")) {
     throw new Error("Le modèle n'a pas renvoyé une page HTML exploitable.");

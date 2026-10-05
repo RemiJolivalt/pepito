@@ -52,6 +52,14 @@ Demande CEO : "le Co-CEO doit être force de proposition et donner la direction 
 - Testé en conditions réelles : plan de 5 actions cohérent généré pour un cas concret, item lancé avec succès, rapport reflète les chiffres réels.
 - **Non fait** : envoi automatique du rapport par email (nécessite un fournisseur d'envoi configuré, cf. point 4 ci-dessous, toujours pas construit).
 
+### 2nonies. Vue administrateur — ✅ livré (2026-10-05, demande CEO)
+- **Coût par entreprise et par modèle** : chaque appel au modèle (tous les agents, y compris la publication de site) enregistre désormais tokens + coût estimé (`UsageEvent`, barème dans [src/lib/usage.ts](../src/lib/usage.ts) — **aucune mesure n'existait avant**, c'était un vrai trou identifié dès l'architecture initiale). Vue agrégée par entreprise, par agent, par modèle.
+- **Connexions** : compteur et date de dernière connexion par entreprise (`Company.loginCount`/`lastLoginAt`).
+- **Gestion des utilisateurs** : liste des entreprises avec suppression (nettoyage pilote, cascade complète sur toutes les données liées).
+- **Proposé en plus (jugement)** : entonnoir d'activation (créées → plan généré → action validée → site publié) — révèle si Pepito "accroche" vraiment, pas seulement le nombre d'inscriptions.
+- Accès restreint par liste blanche d'emails (`ADMIN_EMAILS` dans `.env`) — pas de notion de rôle en base tant qu'il n'y a qu'un opérateur.
+- Testé en conditions réelles : accès refusé à un compte non-admin (page et API), autorisé à l'admin, suppression en cascade vérifiée. Le traçage de coût lui-même n'a pas pu être vérifié avec un vrai montant > 0 car le compte de test a atteint sa limite de crédits Anthropic pendant la session — le mécanisme est en place et attend un appel réussi pour afficher un premier chiffre.
+
 ### 2septies. Sécurité : isolation stricte entre entreprises — ✅ corrigé (2026-10-05, audit demandé par le CEO)
 L'utilisateur a posé la question directe : "le contexte entre plusieurs entreprises est-il bien isolé ?" Réponse honnête après audit : **non, pas avant ce correctif.** Les 12 routes API manipulant un `companyId` lui faisaient confiance sans vérifier qu'il appartenait à la session connectée (IDOR) ; deux d'entre elles (`GET /api/proposals`, `GET /api/audit-findings`) renvoyaient même **toutes les entreprises** si aucun `companyId` n'était fourni. Corrigé : toute route dérive désormais l'entreprise de la session (`getSessionCompany`), ignore tout `companyId` client, et les routes par id de ressource vérifient l'appartenance avant lecture/écriture. Testé en conditions réelles avec deux sessions distinctes tentant un accès croisé forcé — refusé partout (404/401).
 

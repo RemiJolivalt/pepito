@@ -27,12 +27,32 @@ model Company {
   siteSlug        String?   @unique // site d'une page hébergé par Pepito : /site/[slug]
   siteHtml        String?
   sitePublishedAt DateTime?
+  loginCount      Int       @default(0) // nombre de connexions réussies (vue admin)
+  lastLoginAt     DateTime?
   createdAt       DateTime  @default(now())
   channels        ChannelConnection[]
   proposals       AgentProposal[]
   auditFindings   AuditFinding[]
   chatMessages    ChatMessage[]
   planItems       ActionPlanItem[]
+  usageEvents     UsageEvent[]
+}
+
+/**
+ * Trace chaque appel au modèle Claude : companyId, agent à l'origine, modèle
+ * utilisé, tokens, coût estimé au tarif du modèle au moment de l'appel.
+ * Base de la vue admin (coût par entreprise/agent/modèle) — cf. docs/backlog.md.
+ */
+model UsageEvent {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  agent        String // visibilite_locale, communication, demarchage, audit, co_ceo, site_publish
+  model        String // ex: claude-sonnet-5-5
+  inputTokens  Int
+  outputTokens Int
+  costUsd      Float
+  createdAt    DateTime @default(now())
 }
 
 /**
@@ -46,7 +66,7 @@ model Company {
 model ActionPlanItem {
   id          String   @id @default(cuid())
   companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   agent       String // visibilite_locale, communication, demarchage, audit
   title       String
   rationale   String
@@ -60,7 +80,7 @@ model ActionPlanItem {
 model ChatMessage {
   id          String   @id @default(cuid())
   companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   role        String // user, assistant
   content     String
   createdAt   DateTime @default(now())
@@ -69,7 +89,7 @@ model ChatMessage {
 model AuditFinding {
   id          String   @id @default(cuid())
   companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category    String // site_web, reseaux_sociaux
   title       String
   content     String
@@ -79,7 +99,7 @@ model AuditFinding {
 model ChannelConnection {
   id            String   @id @default(cuid())
   companyId     String
-  company       Company  @relation(fields: [companyId], references: [id])
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   channel       String // google_business_profile, instagram, facebook
   status        String   @default("non_connecte") // non_connecte, connecte, erreur
   // Jetons OAuth (jamais de mot de passe utilisateur — cf. docs/backlog.md).
@@ -96,7 +116,7 @@ model ChannelConnection {
 model AgentProposal {
   id          String   @id @default(cuid())
   companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   agent       String // visibilite_locale, communication, demarchage
   kind        String // ex: gbp_update, review_reply, social_post, prospecting_email
   title       String
@@ -105,14 +125,14 @@ model AgentProposal {
   createdAt   DateTime @default(now())
   decidedAt   DateTime?
   planItemId  String? // action du plan de Paul dont cette proposition découle (lisibilité plan → agent → proposition)
-  planItem    ActionPlanItem? @relation(fields: [planItemId], references: [id])
+  planItem    ActionPlanItem? @relation(fields: [planItemId], references: [id], onDelete: SetNull)
   executionLog ExecutionLog?
 }
 
 model ExecutionLog {
   id          String   @id @default(cuid())
   proposalId  String   @unique
-  proposal    AgentProposal @relation(fields: [proposalId], references: [id])
+  proposal    AgentProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
   executedAt  DateTime @default(now())
   result      String // succes, echec
   detail      String?

@@ -10,7 +10,15 @@ export async function POST(request: NextRequest) {
   }
 
   await setSessionEmail(email);
-  const company = await prisma.company.findUnique({ where: { ownerEmail: email } });
+  const existing = await prisma.company.findUnique({ where: { ownerEmail: email } });
+
+  // Compteur de connexions (vue admin) — uniquement une fois l'entreprise créée.
+  const company = existing
+    ? await prisma.company.update({
+        where: { id: existing.id },
+        data: { loginCount: { increment: 1 }, lastLoginAt: new Date() },
+      })
+    : null;
 
   return NextResponse.json({
     hasCompany: Boolean(company),

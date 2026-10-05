@@ -2,6 +2,7 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
+import { recordUsage } from "@/lib/usage";
 import {
   PERSONAS,
   objectiveLine,
@@ -62,7 +63,7 @@ export async function runVisibiliteLocaleAgent(
     },
   });
 
-  await anthropic.beta.messages.toolRunner({
+  const finalMessage = await anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     max_tokens: 4000,
     tools: [proposeAction],
@@ -91,6 +92,13 @@ Règles strictes :
           "Propose les premières actions de visibilité locale pour cette entreprise.",
       },
     ],
+  });
+
+  await recordUsage({
+    companyId: company.id,
+    agent: AGENT_NAME,
+    model: AGENT_MODEL,
+    usage: finalMessage.usage,
   });
 
   return prisma.agentProposal.findMany({

@@ -8,6 +8,7 @@ import { runVisibiliteLocaleAgent } from "@/lib/agents/visibilite-locale";
 import { runCommunicationAgent } from "@/lib/agents/communication";
 import { runDemarchageAgent } from "@/lib/agents/demarchage";
 import { runAuditAgent } from "@/lib/agents/audit";
+import { recordUsage } from "@/lib/usage";
 
 const PERSONA = PERSONAS.co_ceo;
 const HISTORY_LIMIT = 20;
@@ -161,6 +162,13 @@ Règles strictes, non négociables :
 
   const savedReply = assistantText || "(pas de réponse textuelle — vérifiez le dashboard pour les nouvelles propositions)";
 
+  await recordUsage({
+    companyId: company.id,
+    agent: "co_ceo",
+    model: AGENT_MODEL,
+    usage: finalMessage.usage,
+  });
+
   await prisma.chatMessage.create({
     data: { companyId, role: "assistant", content: savedReply },
   });
@@ -231,7 +239,7 @@ export async function runCoCeoPlanning(companyId: string) {
     },
   });
 
-  await anthropic.beta.messages.toolRunner({
+  const finalMessage = await anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     max_tokens: 2000,
     tools: [proposePlanItem],
@@ -258,6 +266,13 @@ Règles :
         content: "Donne-moi ton plan d'action priorisé.",
       },
     ],
+  });
+
+  await recordUsage({
+    companyId: company.id,
+    agent: "co_ceo",
+    model: AGENT_MODEL,
+    usage: finalMessage.usage,
   });
 
   return prisma.actionPlanItem.findMany({
