@@ -93,7 +93,10 @@ export async function runMarketingAgent(
 
   const finalMessage = await anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
-    max_tokens: 4000,
+    // Plus elevé que les autres agents : Martine fait a la fois diagnostic
+    // (web_fetch/web_search) ET propositions GBP en un seul passage, ce qui
+    // consomme plus de tours d'outils — un run vide a ete observe a 4000.
+    max_tokens: 8000,
     tools: [
       recordFinding,
       proposeAction,
@@ -126,6 +129,10 @@ Règles strictes :
   });
 
   if (createdFindingIds.length === 0 && createdProposalIds.length === 0) {
+    console.warn(
+      `Martine (marketing) n'a rien produit — stop_reason: ${finalMessage.stop_reason}, usage:`,
+      finalMessage.usage,
+    );
     const fallback = await prisma.auditFinding.create({
       data: {
         companyId: company.id,
