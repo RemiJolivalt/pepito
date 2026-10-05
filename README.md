@@ -52,6 +52,7 @@ Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/), u
 
 ## Documents
 
+- **[docs/architecture.md](docs/architecture.md) — logique inter-agents et stack technique à jour (diagrammes)**
 - [docs/spec-contextualisation.md](docs/spec-contextualisation.md) — parcours d'onboarding / contextualisation de l'entreprise
 - [docs/agents-roster.md](docs/agents-roster.md) — rôles, responsabilités et garde-fous des agents produit
 - [docs/process-build-agentique.md](docs/process-build-agentique.md) — organisation du build en rôles agentiques

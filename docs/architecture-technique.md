@@ -1,5 +1,7 @@
 # Architecture technique (V1) — rôle CTO
 
+> **Document historique.** Décrit la décision CTO initiale (avant Postgres/Vercel, avant la réorganisation en 4 agents). Pour l'architecture actuelle, voir **[architecture.md](architecture.md)**.
+
 Référence : [spec-contextualisation.md](spec-contextualisation.md), [agents-roster.md](agents-roster.md), [process-build-agentique.md](process-build-agentique.md).
 
 ## 1. Choix de la surface agentique
