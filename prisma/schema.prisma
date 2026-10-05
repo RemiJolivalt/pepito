@@ -1,9 +1,7 @@
-// Dev local : SQLite (pas d'infra externe requise).
-// Prod : PostgreSQL, cf. docs/architecture-technique.md — seul le "provider"
-// change, le schéma reste identique. L'URL de connexion est définie dans
-// prisma.config.ts (Prisma 7+), pas ici.
+// PostgreSQL (Vercel Postgres en prod) — cf. docs/architecture-technique.md.
+// L'URL de connexion est définie dans prisma.config.ts / DATABASE_URL, pas ici.
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 generator client {
@@ -13,6 +11,7 @@ generator client {
 model Company {
   id              String    @id @default(cuid())
   ownerEmail      String    @unique // identifiant de session (login minimal, cf. docs/architecture-technique.md)
+  passwordHash    String? // hash+sel (scrypt), jamais en clair — cf. src/lib/password.ts. Null = compte créé avant ce champ (accepte un premier mot de passe au prochain login).
   name            String
   trade           String // métier, saisi via recherche libre (ex: Restaurant, Plombier...)
   servingArea     String // zone de chalandise

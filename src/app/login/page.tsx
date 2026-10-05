@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,13 +18,13 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) throw new Error();
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Connexion impossible");
       router.push(data.hasCompany ? "/dashboard" : "/onboarding");
-    } catch {
-      setError("Connexion impossible, réessayez.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Connexion impossible, réessayez.");
     } finally {
       setLoading(false);
     }
@@ -33,8 +34,8 @@ export default function LoginPage() {
     <main className="mx-auto flex max-w-sm flex-col justify-center p-8 font-sans min-h-screen">
       <h1 className="text-2xl font-semibold">Pepito</h1>
       <p className="mt-1 text-sm text-gray-500">
-        Connexion par email — pas de mot de passe pour l&apos;instant (phase
-        pilote).
+        Première visite ? Entrez l&apos;email et le mot de passe que vous
+        voulez utiliser — votre compte est créé automatiquement.
       </p>
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
         <input
@@ -43,6 +44,14 @@ export default function LoginPage() {
           placeholder="votre@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          className="rounded border px-3 py-2 text-sm"
+        />
+        <input
+          required
+          type="password"
+          placeholder="Mot de passe (6 caractères minimum)"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="rounded border px-3 py-2 text-sm"
         />
         <button

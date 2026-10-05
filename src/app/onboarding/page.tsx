@@ -27,7 +27,7 @@ export default function OnboardingPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((c) => {
         if (!c) return;
-        setIsNew(false);
+        setIsNew(!c.name);
         setName(c.name ?? "");
         setTrade(c.trade ?? "");
         setServingArea(c.servingArea ?? "");
@@ -67,9 +67,9 @@ export default function OnboardingPage() {
       const company = await res.json();
 
       if (isNew) {
-        // Premier audit lancé automatiquement à la fin de l'onboarding
-        // (cf. docs/spec-contextualisation.md § écran de confirmation).
-        fetch("/api/agents/audit/run", { method: "POST" }).catch(() => {});
+        // Premier passage de Martine (audit) lancé automatiquement à la fin
+        // de l'onboarding (cf. docs/spec-contextualisation.md).
+        fetch("/api/agents/marketing/run", { method: "POST" }).catch(() => {});
       }
 
       router.push("/dashboard");

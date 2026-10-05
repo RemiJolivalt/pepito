@@ -57,6 +57,12 @@ export default function LandingPage() {
           Aucune action n&apos;est jamais exécutée sans votre validation. Vos accès (Google, Meta) passent par
           OAuth officiel — jamais de mot de passe saisi chez nous.
         </p>
+
+        <footer className="mt-10 flex gap-4 border-t border-slate-200 pt-4 text-xs text-slate-400">
+          <Link href="/cgu" className="hover:underline">Conditions d&apos;utilisation</Link>
+          <Link href="/confidentialite" className="hover:underline">Confidentialité</Link>
+          <Link href="/mentions-legales" className="hover:underline">Mentions légales</Link>
+        </footer>
       </div>
     </main>
   );

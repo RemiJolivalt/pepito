@@ -11,7 +11,7 @@ export default async function DashboardPage() {
   if (!ownerEmail) redirect("/login");
 
   const company = await prisma.company.findUnique({ where: { ownerEmail } });
-  if (!company) redirect("/onboarding");
+  if (!company || !company.name) redirect("/onboarding");
 
   const [planItems, chatMessages, pendingCount] = await Promise.all([
     prisma.actionPlanItem.findMany({

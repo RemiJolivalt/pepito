@@ -1,13 +1,12 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-// Dev local : adaptateur SQLite. Prod : adaptateur PostgreSQL (@prisma/adapter-pg),
-// cf. docs/architecture-technique.md — seul l'adaptateur change, le schéma reste identique.
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+// PostgreSQL en dev comme en prod (cf. docs/architecture-technique.md) —
+// DATABASE_URL pointe vers Vercel Postgres en prod, vers une base locale/
+// distante au choix en dev.
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 

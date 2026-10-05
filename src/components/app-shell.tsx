@@ -24,6 +24,11 @@ export function AppShell({
             Déconnexion
           </button>
         </form>
+        <div className="flex flex-wrap gap-2 px-3 pt-2 text-[10px] text-slate-300">
+          <Link href="/cgu" className="hover:text-slate-500">CGU</Link>
+          <Link href="/confidentialite" className="hover:text-slate-500">Confidentialité</Link>
+          <Link href="/mentions-legales" className="hover:text-slate-500">Mentions légales</Link>
+        </div>
       </aside>
       <div className="flex-1">
         <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">

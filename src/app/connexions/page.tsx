@@ -46,7 +46,7 @@ export default async function ConnexionsPage({
   if (!ownerEmail) redirect("/login");
 
   const company = await prisma.company.findUnique({ where: { ownerEmail } });
-  if (!company) redirect("/onboarding");
+  if (!company || !company.name) redirect("/onboarding");
 
   const { connected, error } = await searchParams;
 

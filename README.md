@@ -4,38 +4,41 @@ Copilote IA agentique pour indépendants et TPE (kiné, plombier, installateur s
 
 ## Statut
 
-5 agents (Paul, Nadia, Camille, Martine, Jean-Claude), plan d'action piloté par Paul avec validation/réorientation par le dirigeant, première exécution réelle (site d'une page publié sur `/site/[slug]`), rapport, connexions OAuth (code prêt, identifiants Google/Meta à fournir). Voir [docs/backlog.md](docs/backlog.md) pour le détail à jour.
+4 agents (Paul, Martine, Camille, Jean-Claude), plan d'action piloté par Paul avec validation/réorientation par le dirigeant, première exécution réelle (site d'une page publié sur `/site/[slug]`), rapport, vue admin (coûts/usage), connexions OAuth (code prêt, identifiants Google/Meta à fournir), login par email + mot de passe. Base de données : PostgreSQL (plus de SQLite). Voir [docs/backlog.md](docs/backlog.md) pour le détail à jour.
 
-Parcours : `/` (landing) → `/login` → `/onboarding` → `/dashboard` (plan de Paul, validations) · `/equipe` (agents en manuel) · `/rapport` · `/connexions`.
+Parcours : `/` (landing) → `/login` → `/onboarding` → `/dashboard` (plan de Paul, validations) · `/equipe` (agents en manuel) · `/rapport` · `/admin` · `/connexions`.
 
 ## Démarrer en local
 
-Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/).
+Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/), une base PostgreSQL (ex: [Neon](https://neon.tech) ou [Vercel Postgres](https://vercel.com/storage/postgres), toutes deux ont un plan gratuit suffisant pour le dev/pilote).
 
 1. Créer un fichier `.env` à la racine (non commité) avec :
    ```
-   DATABASE_URL="file:./dev.db"
+   DATABASE_URL="postgres://..."
    ANTHROPIC_API_KEY="sk-ant-..."
 
-   # Optionnel — connexions OAuth (voir docs/backlog.md #2quater pour la démarche d'enregistrement) :
+   # Optionnel — connexions OAuth (voir docs/oauth-setup.md pour la démarche d'enregistrement) :
    # GOOGLE_OAUTH_CLIENT_ID=""
    # GOOGLE_OAUTH_CLIENT_SECRET=""
    # META_APP_ID=""
    # META_APP_SECRET=""
 
-   # Optionnel — accès à la vue /admin (emails séparés par des virgules) :
+   # Optionnel — referme la vue /admin à une liste d'emails (sinon ouverte à tout connecté) :
    # ADMIN_EMAILS="vous@exemple.com"
    ```
-2. Installer les dépendances : `npm install`
-3. Générer le client Prisma et créer la base SQLite locale :
-   ```
-   npx prisma generate
-   npx prisma db push
-   ```
+2. Installer les dépendances : `npm install` (génère aussi le client Prisma via `postinstall`)
+3. Créer les tables dans la base : `npx prisma db push`
 4. Lancer le serveur de dev : `npm run dev`
-5. Ouvrir `http://localhost:3000` : se connecter (email), remplir l'onboarding, puis sur `/dashboard` générer le plan de Paul, lancer les agents et valider leurs propositions.
+5. Ouvrir `http://localhost:3000` : se connecter (email + mot de passe — le compte est créé à la première connexion), remplir l'onboarding, puis sur `/dashboard` générer le plan de Paul, lancer les agents et valider leurs propositions.
 
-**Dev vs prod** : la base locale est SQLite (aucune infra externe requise). La décision d'architecture retient PostgreSQL pour la production — seule la variable `DATABASE_URL` (et le `provider` dans `prisma/schema.prisma`) changent, le schéma de données reste identique.
+## Déploiement (Vercel)
+
+1. Sur [vercel.com](https://vercel.com), importer le repo GitHub `RemiJolivalt/pepito` — aucune clé API Vercel n'est nécessaire, la connexion se fait directement via l'intégration GitHub native (sécurisé, zéro secret à partager).
+2. Onglet **Storage** du projet Vercel → créer une base **Postgres** → Vercel injecte automatiquement `DATABASE_URL` dans les variables d'environnement du projet.
+3. Onglet **Settings → Environment Variables** → ajouter `ANTHROPIC_API_KEY` (et les clés OAuth si prêtes). Laisser `ADMIN_EMAILS` non défini tant que l'admin doit rester ouvert à tous.
+4. Premier déploiement : Vercel lance `npm install` (génère le client Prisma) puis `next build` automatiquement.
+5. Créer les tables en prod : exécuter une fois `npx prisma db push` avec la `DATABASE_URL` de production dans l'environnement (copiée depuis l'onglet Storage de Vercel vers votre terminal local — jamais partagée ailleurs).
+6. Chaque `git push` sur la branche connectée redéploie automatiquement — aucune action supplémentaire.
 
 ## Décisions clés (V1)
 

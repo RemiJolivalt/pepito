@@ -1,0 +1,84 @@
+import { AppShell } from "@/components/app-shell";
+
+export default function ConfidentialitePage() {
+  return (
+    <AppShell>
+      <div className="mx-auto max-w-2xl text-sm leading-relaxed text-slate-700">
+        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-800">
+          <strong>Brouillon non validé juridiquement.</strong> Document généré
+          automatiquement pour la phase pilote, décrivant honnêtement le
+          fonctionnement actuel de l&apos;application. Une validation par un
+          Délégué à la Protection des Données ou un juriste reste nécessaire
+          avant toute ouverture à des utilisateurs externes, notamment pour
+          confirmer la base légale de traitement et les durées de
+          conservation.
+        </div>
+
+        <h1 className="text-2xl font-semibold text-slate-900">Politique de confidentialité</h1>
+        <p className="mt-2 text-slate-500">Dernière mise à jour : phase pilote, 2026-10-05.</p>
+
+        <h2 className="mt-6 font-medium text-slate-900">Qui traite vos données</h2>
+        <p className="mt-1">
+          [Raison sociale de l&apos;éditeur] — voir les{" "}
+          <a href="/mentions-legales" className="underline">mentions légales</a>.
+          Contact pour toute question relative à vos données : [email de contact].
+        </p>
+
+        <h2 className="mt-6 font-medium text-slate-900">Données collectées</h2>
+        <ul className="mt-1 list-disc pl-5">
+          <li>Email et mot de passe (le mot de passe est stocké sous forme de hash, jamais en clair).</li>
+          <li>Informations sur votre entreprise que vous saisissez (nom, métier, zone, description, téléphone, objectifs).</li>
+          <li>Contenu des échanges avec les agents Pepito (historique de conversation).</li>
+          <li>Propositions générées par les agents et vos décisions de validation.</li>
+          <li>Statistiques d&apos;usage (nombre de connexions, tokens et coût d&apos;appel au modèle d&apos;IA).</li>
+          <li>
+            Si vous connectez un compte externe (Google, Meta) : un jeton d&apos;accès OAuth,
+            jamais votre mot de passe sur ces plateformes.
+          </li>
+        </ul>
+
+        <h2 className="mt-6 font-medium text-slate-900">Pourquoi ces données sont traitées</h2>
+        <p className="mt-1">
+          Pour fournir le service : générer des propositions de contenu et
+          d&apos;actions marketing pertinentes pour votre entreprise, et vous
+          permettre de les valider avant toute publication.
+        </p>
+
+        <h2 className="mt-6 font-medium text-slate-900">Sous-traitants et destinataires</h2>
+        <ul className="mt-1 list-disc pl-5">
+          <li>
+            <strong>Anthropic</strong> (fournisseur du modèle d&apos;IA Claude) : les informations
+            sur votre entreprise et vos échanges sont envoyés à son API pour générer les réponses.
+          </li>
+          <li>
+            <strong>Vercel</strong> (hébergement de l&apos;application et de la base de données).
+          </li>
+          <li>
+            <strong>Google / Meta</strong> : uniquement si vous connectez explicitement un compte,
+            et uniquement pour les actions que vous autorisez.
+          </li>
+        </ul>
+        <p className="mt-1">Vos données ne sont pas vendues à des tiers.</p>
+
+        <h2 className="mt-6 font-medium text-slate-900">Durée de conservation</h2>
+        <p className="mt-1">
+          [À confirmer avec un juriste/DPO] — en phase pilote, vos données sont conservées tant
+          que votre compte est actif. Vous pouvez demander leur suppression à tout moment.
+        </p>
+
+        <h2 className="mt-6 font-medium text-slate-900">Vos droits</h2>
+        <p className="mt-1">
+          Conformément au RGPD, vous disposez d&apos;un droit d&apos;accès, de rectification et de
+          suppression de vos données. Pour l&apos;exercer, contactez [email de contact].
+          Vous pouvez également introduire une réclamation auprès de la CNIL (www.cnil.fr).
+        </p>
+
+        <h2 className="mt-6 font-medium text-slate-900">Cookies</h2>
+        <p className="mt-1">
+          Un seul cookie technique est utilisé, nécessaire au fonctionnement du service
+          (maintenir votre session connectée). Aucun cookie publicitaire ou de traçage tiers.
+        </p>
+      </div>
+    </AppShell>
+  );
+}
