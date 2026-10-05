@@ -1,6 +1,17 @@
 # Démarches OAuth — Google Business Profile & Meta (Facebook/Instagram)
 
-Le code est prêt ([backlog.md #2quater](backlog.md)) ; ce qui manque est entièrement externe, à faire par le CEO dans les consoles Google et Meta. Aucune de ces étapes ne peut être automatisée depuis le code.
+## Qui fait quoi (point souvent confondu)
+
+Ce document décrit une démarche **à faire une seule fois par le CEO**, pas par les entreprises clientes.
+
+| | Qui | Quand | Quoi |
+|---|---|---|---|
+| **Enregistrer l'app Pepito** | Vous (CEO) | Une fois pour toute la plateforme | Ce document : créer un projet Google Cloud + une app Meta qui représentent "Pepito" auprès de ces plateformes, et récupérer des identifiants (`CLIENT_ID`/`CLIENT_SECRET`) à mettre dans `.env`. |
+| **Connecter sa fiche/page** | Chaque entrepreneur client | À chaque nouvelle entreprise, autant de fois que nécessaire | Clic sur "Connecter" dans `/connexions` → redirection vers l'écran **officiel** Google ou Meta → il se connecte avec **son propre compte existant** → il autorise Pepito. Aucune notion technique, aucun identifiant à saisir, juste un clic. C'est exactement le flux "Se connecter avec Google" que tout le monde connaît déjà. |
+
+Autrement dit : vous ne créez l'app qu'une fois ; ensuite, chaque entreprise (vous compris, pour vos tests) se connecte individuellement avec son propre compte Google/Meta via l'écran de consentement standard — c'est ce qui permet à Pepito d'agir sur sa fiche/page spécifique sans jamais voir son mot de passe.
+
+Le code du flux "Connecter" est déjà prêt ([backlog.md #2quater](backlog.md)) pour les entrepreneurs. Ce qui manque est uniquement l'étape CEO ci-dessous — entièrement externe, à faire dans les consoles Google et Meta. Aucune de ces étapes ne peut être automatisée depuis le code.
 
 ## 1. Google (fiche Google Business Profile)
 
