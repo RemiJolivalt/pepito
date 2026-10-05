@@ -6,8 +6,8 @@
  */
 export const PERSONAS = {
   co_ceo: {
-    name: "Co-CEO",
-    role: "Votre point de contact",
+    name: "Paul",
+    role: "Co-CEO — votre point de contact",
     blurb:
       "Je connais votre entreprise et votre objectif. Je fais le point, je priorise et j'active les bons agents pour vous — toujours avec votre validation avant toute action réelle.",
   },

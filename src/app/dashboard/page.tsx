@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionEmail } from "@/lib/session";
+import { AppHeader } from "@/components/app-header";
 import { DashboardClient } from "./dashboard-client";
 
 export const dynamic = "force-dynamic";
@@ -28,11 +29,14 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <DashboardClient
-      company={company}
-      initialAuditFindings={auditFindings}
-      initialProposals={proposals}
-      initialChatMessages={chatMessages}
-    />
+    <>
+      <AppHeader companyName={company.name} />
+      <DashboardClient
+        company={company}
+        initialAuditFindings={auditFindings}
+        initialProposals={proposals}
+        initialChatMessages={chatMessages}
+      />
+    </>
   );
 }

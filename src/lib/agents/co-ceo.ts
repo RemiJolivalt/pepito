@@ -39,16 +39,38 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
     content: m.content,
   }));
 
-  const [pendingCount, latestFindings] = await Promise.all([
-    prisma.agentProposal.count({
-      where: { companyId, status: "en_attente" },
-    }),
-    prisma.auditFinding.findMany({
-      where: { companyId },
-      orderBy: { createdAt: "desc" },
-      take: 3,
-    }),
-  ]);
+  const getCurrentStatus = betaZodTool({
+    name: "get_current_status",
+    description:
+      "Récupère l'état réel actuel : propositions en attente (avec leur contenu) et derniers constats d'audit. À utiliser systématiquement avant de répondre à toute question sur l'état, le contenu ou le nombre de propositions/constats — ne jamais deviner ni se fier à ce qui a été dit dans un tour précédent.",
+    inputSchema: z.object({}),
+    run: async () => {
+      const [pending, findings] = await Promise.all([
+        prisma.agentProposal.findMany({
+          where: { companyId, status: "en_attente" },
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.auditFinding.findMany({
+          where: { companyId },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        }),
+      ]);
+      return JSON.stringify({
+        propositionsEnAttente: pending.map((p) => ({
+          id: p.id,
+          agent: p.agent,
+          kind: p.kind,
+          title: p.title,
+          content: p.content,
+        })),
+        derniersConstatsAudit: findings.map((f) => ({
+          title: f.title,
+          content: f.content,
+        })),
+      });
+    },
+  });
 
   const delegateVisibilite = betaZodTool({
     name: "delegate_visibilite_locale",
@@ -104,16 +126,22 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
   const finalMessage = await anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     max_tokens: 2000,
-    tools: [delegateVisibilite, delegateCommunication, delegateDemarchage, delegateAudit],
-    system: `Tu es le ${PERSONA.name} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.blurb}
+    tools: [
+      getCurrentStatus,
+      delegateVisibilite,
+      delegateCommunication,
+      delegateDemarchage,
+      delegateAudit,
+    ],
+    system: `Tu es ${PERSONA.name} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.blurb}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton : ${company.tone}.
 ${objectiveLine(company.objective)}
-Propositions en attente de validation actuellement : ${pendingCount}.
-Derniers constats d'audit : ${latestFindings.map((f) => f.title).join("; ") || "aucun"}.
 
 Ton rôle : échanger avec le dirigeant, l'aider à prioriser, et déléguer aux agents spécialisés (${PERSONAS.visibilite_locale.name} pour la visibilité locale, ${PERSONAS.communication.name} pour la communication, ${PERSONAS.demarchage.name} pour le démarchage, ${PERSONAS.audit.name} pour l'audit) via les outils delegate_* quand c'est pertinent.
-Règles strictes :
+Règles strictes, non négociables :
+- RÈGLE ABSOLUE : ne dis JAMAIS qu'une action a été faite (proposition créée, audit relancé, fiche vue, contenu consulté) sans avoir réellement appelé l'outil correspondant DANS CE TOUR. Tu n'as aucune mémoire fiable de ce qui a été fait avant ce message — si on te demande l'état actuel, le nombre ou le contenu de propositions/constats, appelle TOUJOURS get_current_status avant de répondre. Ne devine jamais.
 - Tu ne fais JAMAIS exécuter une action réelle toi-même : déléguer ne fait que créer des propositions, qui restent soumises à la validation du dirigeant dans le dashboard. Dis-le clairement si tu délègues.
+- Tu ne peux pas créer de site web, ni publier ou modifier quoi que ce soit toi-même sur les plateformes externes — sois honnête sur ce que tu ne sais pas faire plutôt que de promettre.
 - Pour déléguer à Communication ou Démarchage, tu as besoin d'une information concrète (actualité réelle, type de prospects) — demande-la au dirigeant si elle manque, n'invente jamais.
 - Réponds de façon brève et directe, comme un vrai point rapide entre dirigeants, pas un rapport formel.`,
     messages,

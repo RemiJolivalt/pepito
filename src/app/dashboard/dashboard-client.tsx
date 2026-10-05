@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { Company, AgentProposal, AuditFinding, ChatMessage } from "@prisma/client";
-import { PERSONAS } from "@/lib/agents/personas";
+import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
+import { PersonaAvatar } from "@/components/persona-avatar";
 
 const STATUS_LABELS: Record<string, string> = {
   en_attente: "En attente",
@@ -151,7 +152,7 @@ export function DashboardClient({
       ]);
       await refreshAll();
     } catch {
-      setError("Le Co-CEO n'a pas pu répondre — vérifiez la clé ANTHROPIC_API_KEY côté serveur.");
+      setError(`${PERSONAS.co_ceo.name} n'a pas pu répondre — vérifiez la clé ANTHROPIC_API_KEY côté serveur.`);
     } finally {
       setChatSending(false);
     }
@@ -159,7 +160,7 @@ export function DashboardClient({
 
   const pendingCount = proposals.filter((p) => p.status === "en_attente").length;
 
-  const agentCards = [
+  const agentCards: { key: AgentKey; persona: typeof PERSONAS[AgentKey]; stat: string }[] = [
     { key: "audit", persona: PERSONAS.audit, stat: `${auditFindings.length} constat(s)` },
     {
       key: "visibilite_locale",
@@ -203,9 +204,7 @@ export function DashboardClient({
       {/* Encart Co-CEO : point de contact unique, oriente vers les agents */}
       <section className="mt-6 rounded-lg border border-gray-300 bg-gray-50 p-4">
         <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-sm text-white">
-            CC
-          </span>
+          <PersonaAvatar agentKey="co_ceo" size={36} />
           <div>
             <h2 className="font-medium">{PERSONAS.co_ceo.name}</h2>
             <p className="text-xs text-gray-500">{PERSONAS.co_ceo.blurb}</p>
@@ -240,7 +239,7 @@ export function DashboardClient({
         </div>
         <form onSubmit={handleSendChat} className="mt-2 flex gap-2">
           <input
-            placeholder="Écrivez à votre Co-CEO…"
+            placeholder={`Écrivez à ${PERSONAS.co_ceo.name}…`}
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             className="flex-1 rounded border px-3 py-2 text-sm"
@@ -260,9 +259,7 @@ export function DashboardClient({
         {agentCards.map(({ key, persona, stat }) => (
           <div key={key} className="rounded border border-gray-200 p-4">
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-sm font-medium">
-                {persona.name.charAt(0)}
-              </span>
+              <PersonaAvatar agentKey={key} size={32} />
               <div>
                 <p className="font-medium leading-tight">{persona.name}</p>
                 <p className="text-xs text-gray-500">{persona.role}</p>

@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
+import { PersonaAvatar } from "@/components/persona-avatar";
+
+const TEAM: AgentKey[] = ["co_ceo", "audit", "visibilite_locale", "communication", "demarchage"];
 
 export default function LandingPage() {
   return (
@@ -6,10 +10,19 @@ export default function LandingPage() {
       <h1 className="text-3xl font-semibold">Pepito</h1>
       <p className="mt-3 text-lg text-gray-700">
         Le copilote IA des indépendants et TPE — kiné, plombier, installateur
-        de panneaux solaires… Des agents spécialisés s&apos;occupent de votre
-        visibilité, votre communication et votre démarchage. Vous, vous
-        validez.
+        de panneaux solaires… Une équipe d&apos;agents spécialisés
+        s&apos;occupe de votre visibilité, votre communication et votre
+        démarchage. Vous, vous validez.
       </p>
+
+      <ul className="mt-6 flex flex-wrap gap-4">
+        {TEAM.map((key) => (
+          <li key={key} className="flex flex-col items-center gap-1 text-center">
+            <PersonaAvatar agentKey={key} size={48} />
+            <span className="text-xs font-medium">{PERSONAS[key].name}</span>
+          </li>
+        ))}
+      </ul>
 
       <section className="mt-8 grid gap-4 sm:grid-cols-3">
         <div className="rounded border border-gray-200 p-4">
@@ -27,10 +40,11 @@ export default function LandingPage() {
           </p>
         </div>
         <div className="rounded border border-gray-200 p-4">
-          <h2 className="font-medium">3. Les agents proposent</h2>
+          <h2 className="font-medium">3. Paul orchestre, vous validez</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Visibilité, communication, démarchage — chaque agent propose,
-            vous validez avant toute publication ou tout envoi.
+            Paul, votre Co-CEO, échange avec vous et active les bons agents.
+            Chaque proposition attend votre feu vert avant toute publication
+            ou tout envoi.
           </p>
         </div>
       </section>

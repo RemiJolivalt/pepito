@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AppHeader } from "@/components/app-header";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -53,7 +54,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto max-w-lg p-8 font-sans">
+    <>
+      <AppHeader />
+      <main className="mx-auto max-w-lg p-8 font-sans">
       <h1 className="text-2xl font-semibold">Parlez-nous de votre activité</h1>
       <p className="mt-1 text-sm text-gray-500">
         Moins de 5 minutes. Vous pourrez tout modifier plus tard.
@@ -124,6 +127,7 @@ export default function OnboardingPage() {
         </button>
         {error && <p className="text-sm text-red-600">{error}</p>}
       </form>
-    </main>
+      </main>
+    </>
   );
 }
