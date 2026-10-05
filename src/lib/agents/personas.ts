@@ -46,3 +46,24 @@ export function objectiveLine(objective: string | null): string {
     : "";
 }
 
+/** Consigne de réorientation du dirigeant — prime sur tout le reste. */
+export function directionLine(direction: string | null): string {
+  return direction
+    ? `CONSIGNE DU DIRIGEANT (prioritaire) : ${direction}`
+    : "";
+}
+
+/** Options communes de lancement d'un agent depuis le plan de Paul. */
+export type AgentRunOptions = {
+  /** Action du plan à réaliser — l'agent doit s'y tenir plutôt que de proposer autre chose. */
+  brief?: string;
+  /** Rattache les propositions créées à l'action du plan correspondante. */
+  planItemId?: string;
+};
+
+export function briefLine(brief?: string): string {
+  return brief
+    ? `ACTION DEMANDÉE PAR PAUL (Co-CEO) : ${brief}\nTes propositions doivent réaliser précisément cette action, pas autre chose.`
+    : "";
+}
+

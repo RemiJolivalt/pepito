@@ -3,7 +3,7 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type Anthropic from "@anthropic-ai/sdk";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
-import { PERSONAS, objectiveLine } from "@/lib/agents/personas";
+import { PERSONAS, objectiveLine, directionLine } from "@/lib/agents/personas";
 import { runVisibiliteLocaleAgent } from "@/lib/agents/visibilite-locale";
 import { runCommunicationAgent } from "@/lib/agents/communication";
 import { runDemarchageAgent } from "@/lib/agents/demarchage";
@@ -138,6 +138,7 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
     system: `Tu es ${PERSONA.name} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.blurb}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton : ${company.tone}.
 ${objectiveLine(company.objective)}
+${directionLine(company.direction)}
 
 Ton rôle : échanger avec le dirigeant, l'aider à prioriser, et déléguer aux agents spécialisés (${PERSONAS.visibilite_locale.name} pour la visibilité locale et le contenu de site web, ${PERSONAS.communication.name} pour la communication, ${PERSONAS.demarchage.name} pour le démarchage et les pistes de croissance, ${PERSONAS.audit.name} pour l'audit et l'analyse concurrentielle) via les outils delegate_* quand c'est pertinent.
 Règles strictes, non négociables :
@@ -178,7 +179,7 @@ export async function runCoCeoPlanning(companyId: string) {
     where: { id: companyId },
   });
 
-  const [pendingProposals, recentFindings, existingPlan] = await Promise.all([
+  const [pendingProposals, recentFindings, existingPlan, discarded] = await Promise.all([
     prisma.agentProposal.findMany({
       where: { companyId, status: "en_attente" },
       orderBy: { createdAt: "desc" },
@@ -189,8 +190,13 @@ export async function runCoCeoPlanning(companyId: string) {
       take: 6,
     }),
     prisma.actionPlanItem.findMany({
-      where: { companyId, status: { not: "termine" } },
+      where: { companyId, status: { in: ["propose", "lance"] } },
       orderBy: { createdAt: "desc" },
+    }),
+    prisma.actionPlanItem.findMany({
+      where: { companyId, status: "ecarte" },
+      orderBy: { createdAt: "desc" },
+      take: 10,
     }),
   ]);
 
@@ -229,17 +235,21 @@ export async function runCoCeoPlanning(companyId: string) {
     max_tokens: 2000,
     tools: [proposePlanItem],
     system: `Tu es ${PERSONA.name} de Pepito. Tu dois être force de proposition et donner une direction claire — pas attendre des questions.
-Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
+Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}. Site web : ${company.website ?? (company.siteSlug ? `publié par Pepito (/site/${company.siteSlug})` : "aucun")}.
 ${objectiveLine(company.objective)}
+${directionLine(company.direction)}
 Propositions déjà en attente de validation : ${pendingProposals.map((p) => `${p.agent}: ${p.title}`).join("; ") || "aucune"}.
 Derniers constats (audit, concurrence) : ${recentFindings.map((f) => f.title).join("; ") || "aucun"}.
-Items déjà au plan (ne les répète pas) : ${existingPlan.map((i) => i.title).join("; ") || "aucun"}.
+Actions déjà au plan (ne les répète pas) : ${existingPlan.map((i) => i.title).join("; ") || "aucune"}.
+Actions ÉCARTÉES par le dirigeant, avec sa raison — ne les repropose pas et tiens compte de la raison : ${discarded.map((i) => `"${i.title}" (${i.feedback || "sans raison"})`).join("; ") || "aucune"}.
 
 Ta tâche : propose un plan priorisé de 3 à 5 actions concrètes via propose_plan_item, chacune rattachée à un agent (${PERSONAS.visibilite_locale.name}/visibilite_locale, ${PERSONAS.communication.name}/communication, ${PERSONAS.demarchage.name}/demarchage, ${PERSONAS.audit.name}/audit), avec une justification liée à l'objectif et un délai réaliste.
 Règles :
-- Base-toi sur l'état réel ci-dessus (propositions en attente, constats) — ne répète pas une action déjà proposée ou déjà au plan.
-- Priorise ce qui a le plus d'impact pour l'objectif, pas une liste exhaustive.
-- Chaque item doit être une action que l'utilisateur comprend sans contexte supplémentaire.`,
+- Chaque action doit faire avancer l'objectif de façon mesurable — dis dans la justification QUEL effet attendu (appels, devis, avis, visibilité).
+- Une action = un brief exécutable par l'agent tel quel : précis sur le quoi (ex: "3 posts sur les chantiers terminés avec photos avant/après"), pas vague ("améliorer la com").
+- Si l'entreprise n'a pas de site, l'action "préparer le contenu du site" (visibilite_locale) est prioritaire : Pepito le publie après validation.
+- Base-toi sur l'état réel ci-dessus — ne répète pas une action déjà proposée, au plan ou écartée.
+- Priorise ce qui a le plus d'impact pour l'objectif, pas une liste exhaustive.`,
     messages: [
       {
         role: "user",

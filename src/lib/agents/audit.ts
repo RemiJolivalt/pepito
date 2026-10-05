@@ -2,7 +2,12 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
-import { PERSONAS } from "@/lib/agents/personas";
+import {
+  PERSONAS,
+  directionLine,
+  briefLine,
+  type AgentRunOptions,
+} from "@/lib/agents/personas";
 
 const PERSONA = PERSONAS.audit;
 
@@ -14,7 +19,10 @@ const PERSONA = PERSONAS.audit;
  * Si aucun site n'est renseigné ou n'est pas accessible, le constat "pas de
  * site web" est un résultat normal, pas une erreur (cf. challenge produit).
  */
-export async function runAuditAgent(companyId: string) {
+export async function runAuditAgent(
+  companyId: string,
+  options: AgentRunOptions = {},
+) {
   const company = await prisma.company.findUniqueOrThrow({
     where: { id: companyId },
   });
@@ -63,6 +71,8 @@ export async function runAuditAgent(companyId: string) {
     system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 Réseaux sociaux déclarés : ${company.socialHandles ?? "aucun"}.
+${directionLine(company.direction)}
+${briefLine(options.brief)}
 
 Ton rôle : dresser un état des lieux honnête de la présence en ligne de cette entreprise ET de son positionnement concurrentiel local, en 4 à 6 constats.
 Règles strictes :

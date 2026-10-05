@@ -2,7 +2,13 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
-import { PERSONAS, objectiveLine } from "@/lib/agents/personas";
+import {
+  PERSONAS,
+  objectiveLine,
+  directionLine,
+  briefLine,
+  type AgentRunOptions,
+} from "@/lib/agents/personas";
 
 const AGENT_NAME = "visibilite_locale";
 const PERSONA = PERSONAS.visibilite_locale;
@@ -14,7 +20,10 @@ const PERSONA = PERSONAS.visibilite_locale;
  * fiche Google, publication d'une réponse) est déclenchée ailleurs, après
  * validation humaine dans le cockpit.
  */
-export async function runVisibiliteLocaleAgent(companyId: string) {
+export async function runVisibiliteLocaleAgent(
+  companyId: string,
+  options: AgentRunOptions = {},
+) {
   const company = await prisma.company.findUniqueOrThrow({
     where: { id: companyId },
   });
@@ -44,6 +53,7 @@ export async function runVisibiliteLocaleAgent(companyId: string) {
           kind: input.kind,
           title: input.title,
           content: input.content,
+          planItemId: options.planItemId,
         },
       });
       createdProposalIds.push(proposal.id);
@@ -58,16 +68,18 @@ export async function runVisibiliteLocaleAgent(companyId: string) {
     system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
 ${objectiveLine(company.objective)}
+${directionLine(company.direction)}
+${briefLine(options.brief)}
 
 Ton rôle : proposer 2 à 3 actions concrètes et courtes pour améliorer la visibilité locale de cette entreprise (fiche Google Business Profile, gestion des avis clients).
 Site web déclaré : ${company.website ?? "aucun"}. ${
       company.website
         ? ""
-        : "Aucun site déclaré : inclus une proposition site_web_content pour donner un brief de contenu prêt à l'emploi (l'utilisateur le fera construire lui-même, tu ne construis pas de site)."
+        : "Aucun site déclaré : inclus une proposition site_web_content — un brief complet (titre accrocheur, présentation, 3 à 5 services, zone d'intervention, preuve/certifications, appel à l'action avec téléphone) que Pepito pourra transformer en page web publiée après validation."
     }
 Règles strictes :
 - Tu ne fais QUE proposer, jamais exécuter : utilise uniquement l'outil propose_action pour chaque proposition.
-- Tu ne construis jamais de site web toi-même — tu fournis uniquement le contenu (texte, structure), jamais de code ni d'hébergement.
+- Pour le site web, tu fournis uniquement le contenu (texte, structure) — pas de code. C'est Pepito qui le met en page et le publie, et seulement après validation du dirigeant.
 - Reste factuel et réaliste pour ce métier et cette zone, pas de contenu générique.
 - Une proposition = une action, avec un contenu directement utilisable (pas de placeholder du type "[à compléter]").`,
     messages: [

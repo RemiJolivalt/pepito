@@ -18,8 +18,8 @@ export async function PATCH(
     );
   }
 
-  // Décision humaine actée ici — aucune exécution réelle déclenchée en V1
-  // (cf. docs/architecture-technique.md § Flux de validation humaine).
+  // Décision humaine actée ici — aucune exécution réelle déclenchée
+  // automatiquement (cf. docs/architecture-technique.md § Flux de validation).
   const proposal = await prisma.agentProposal.update({
     where: { id },
     data: {
@@ -28,6 +28,20 @@ export async function PATCH(
       decidedAt: new Date(),
     },
   });
+
+  // Lisibilité plan → propositions : quand toutes les propositions d'une
+  // action du plan sont décidées, l'action passe "terminée" d'elle-même.
+  if (proposal.planItemId) {
+    const remaining = await prisma.agentProposal.count({
+      where: { planItemId: proposal.planItemId, status: "en_attente" },
+    });
+    if (remaining === 0) {
+      await prisma.actionPlanItem.update({
+        where: { id: proposal.planItemId },
+        data: { status: "termine" },
+      });
+    }
+  }
 
   return NextResponse.json(proposal);
 }

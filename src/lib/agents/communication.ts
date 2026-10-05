@@ -2,7 +2,13 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
-import { PERSONAS, objectiveLine } from "@/lib/agents/personas";
+import {
+  PERSONAS,
+  objectiveLine,
+  directionLine,
+  briefLine,
+  type AgentRunOptions,
+} from "@/lib/agents/personas";
 
 const AGENT_NAME = "communication";
 const PERSONA = PERSONAS.communication;
@@ -20,6 +26,7 @@ const PERSONA = PERSONAS.communication;
 export async function runCommunicationAgent(
   companyId: string,
   newsContext?: string,
+  options: AgentRunOptions = {},
 ) {
   const company = await prisma.company.findUniqueOrThrow({
     where: { id: companyId },
@@ -52,6 +59,7 @@ export async function runCommunicationAgent(
           kind: "social_post",
           title: input.title,
           content,
+          planItemId: options.planItemId,
         },
       });
       createdProposalIds.push(proposal.id);
@@ -66,6 +74,8 @@ export async function runCommunicationAgent(
     system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
 ${objectiveLine(company.objective)}
+${directionLine(company.direction)}
+${briefLine(options.brief)}
 
 Ton rôle : proposer 2 à 3 posts Instagram/Facebook concrets.
 Règles strictes :

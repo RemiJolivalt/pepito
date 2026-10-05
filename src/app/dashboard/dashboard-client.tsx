@@ -1,107 +1,52 @@
 "use client";
 
 import { useState } from "react";
-import type { Company, AgentProposal, AuditFinding, ChatMessage, ActionPlanItem } from "@prisma/client";
+import type { Company, AgentProposal, ChatMessage, ActionPlanItem } from "@prisma/client";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 import { PersonaAvatar } from "@/components/persona-avatar";
+import { ProposalCard } from "@/components/proposal-card";
 
-const AGENT_RUN_ENDPOINTS: Record<Exclude<AgentKey, "co_ceo">, string> = {
-  visibilite_locale: "/api/agents/visibilite-locale/run",
-  communication: "/api/agents/communication/run",
-  demarchage: "/api/agents/demarchage/run",
-  audit: "/api/agents/audit/run",
+type PlanItemWithProposals = ActionPlanItem & { proposals: AgentProposal[] };
+
+const PLAN_STATUS: Record<string, { label: string; className: string }> = {
+  propose: { label: "À lancer", className: "bg-slate-100 text-slate-600" },
+  lance: { label: "En cours — à valider", className: "bg-amber-100 text-amber-800" },
+  termine: { label: "Terminée", className: "bg-emerald-100 text-emerald-800" },
+  ecarte: { label: "Écartée", className: "bg-slate-100 text-slate-400" },
 };
-
-const STATUS_LABELS: Record<string, string> = {
-  en_attente: "En attente",
-  validee: "Validée",
-  modifiee: "Modifiée",
-  rejetee: "Rejetée",
-  executee: "Exécutée",
-};
-
-function ProposalList({
-  proposals,
-  onDecision,
-}: {
-  proposals: AgentProposal[];
-  onDecision: (id: string, status: "validee" | "rejetee") => void;
-}) {
-  if (proposals.length === 0) {
-    return (
-      <p className="text-sm text-gray-500">Aucune proposition pour le moment.</p>
-    );
-  }
-  return (
-    <ul className="space-y-3">
-      {proposals.map((p) => (
-        <li key={p.id} className="rounded border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase text-gray-400">{p.kind}</span>
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs">
-              {STATUS_LABELS[p.status] ?? p.status}
-            </span>
-          </div>
-          <h3 className="mt-1 font-medium">{p.title}</h3>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
-            {p.content}
-          </p>
-          {p.status === "en_attente" && (
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={() => onDecision(p.id, "validee")}
-                className="rounded bg-green-600 px-3 py-1 text-sm text-white"
-              >
-                Valider
-              </button>
-              <button
-                onClick={() => onDecision(p.id, "rejetee")}
-                className="rounded bg-gray-200 px-3 py-1 text-sm"
-              >
-                Rejeter
-              </button>
-            </div>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 export function DashboardClient({
   company,
-  initialAuditFindings,
-  initialProposals,
-  initialChatMessages,
   initialPlanItems,
+  initialChatMessages,
+  pendingCount,
 }: {
   company: Company;
-  initialAuditFindings: AuditFinding[];
-  initialProposals: AgentProposal[];
+  initialPlanItems: PlanItemWithProposals[];
   initialChatMessages: ChatMessage[];
-  initialPlanItems: ActionPlanItem[];
+  pendingCount: number;
 }) {
-  const [auditFindings, setAuditFindings] = useState(initialAuditFindings);
-  const [proposals, setProposals] = useState(initialProposals);
-  const [chatMessages, setChatMessages] = useState(initialChatMessages);
   const [planItems, setPlanItems] = useState(initialPlanItems);
+  const [chatMessages, setChatMessages] = useState(initialChatMessages);
   const [chatInput, setChatInput] = useState("");
   const [chatSending, setChatSending] = useState(false);
   const [planLoading, setPlanLoading] = useState(false);
-  const [runningAgent, setRunningAgent] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [newsContext, setNewsContext] = useState("");
-  const [prospectDescription, setProspectDescription] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
+  const [direction, setDirection] = useState(company.direction ?? "");
+  const [directionSaved, setDirectionSaved] = useState(false);
+  const [discardingId, setDiscardingId] = useState<string | null>(null);
+  const [discardReason, setDiscardReason] = useState("");
+  const [showClosed, setShowClosed] = useState(false);
 
-  async function refreshAll() {
-    const [findingsRes, proposalsRes, planRes] = await Promise.all([
-      fetch(`/api/audit-findings?companyId=${company.id}`),
-      fetch(`/api/proposals?companyId=${company.id}`),
-      fetch(`/api/co-ceo/plan?companyId=${company.id}`),
-    ]);
-    if (findingsRes.ok) setAuditFindings(await findingsRes.json());
-    if (proposalsRes.ok) setProposals(await proposalsRes.json());
-    if (planRes.ok) setPlanItems(await planRes.json());
+  async function refreshPlan() {
+    const res = await fetch(`/api/co-ceo/plan?companyId=${company.id}`);
+    if (res.ok) setPlanItems(await res.json());
+  }
+
+  function fail(message: string) {
+    setError(`${message} — vérifiez la clé ANTHROPIC_API_KEY côté serveur.`);
   }
 
   async function handleGeneratePlan() {
@@ -114,74 +59,90 @@ export function DashboardClient({
         body: JSON.stringify({ companyId: company.id }),
       });
       if (!res.ok) throw new Error();
-      await refreshAll();
+      await refreshPlan();
     } catch {
-      setError(`${PERSONAS.co_ceo.name} n'a pas pu générer de plan — vérifiez la clé ANTHROPIC_API_KEY côté serveur.`);
+      fail(`${PERSONAS.co_ceo.name} n'a pas pu générer de plan`);
     } finally {
       setPlanLoading(false);
     }
   }
 
-  async function handleLaunchPlanItem(item: ActionPlanItem) {
-    const agentKey = item.agent as Exclude<AgentKey, "co_ceo">;
-    const url = AGENT_RUN_ENDPOINTS[agentKey];
-    if (!url) return;
-    setRunningAgent(item.id);
+  async function handleLaunch(item: ActionPlanItem) {
+    setBusyId(item.id);
     setError(null);
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ companyId: company.id }),
-      });
+      const res = await fetch(`/api/action-plan/${item.id}/launch`, { method: "POST" });
       if (!res.ok) throw new Error();
-      await fetch(`/api/action-plan/${item.id}`, {
+      const { producedCount } = await res.json();
+      setNotice(
+        producedCount > 0
+          ? `${producedCount} proposition(s) à valider ci-dessous.`
+          : "Action réalisée (rien à valider).",
+      );
+      await refreshPlan();
+    } catch {
+      fail("Échec du lancement de l'action");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDiscard(itemId: string) {
+    setBusyId(itemId);
+    try {
+      await fetch(`/api/action-plan/${itemId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "lance" }),
+        body: JSON.stringify({ status: "ecarte", feedback: discardReason }),
       });
-      await refreshAll();
-    } catch {
-      setError("Échec du lancement de l'action — vérifiez la clé ANTHROPIC_API_KEY côté serveur.");
+      setDiscardingId(null);
+      setDiscardReason("");
+      await refreshPlan();
     } finally {
-      setRunningAgent(null);
+      setBusyId(null);
     }
   }
 
-  async function runAgent(
-    key: string,
-    url: string,
-    body: Record<string, unknown>,
-  ) {
-    setRunningAgent(key);
+  async function handleDecision(proposalId: string, status: "validee" | "rejetee") {
+    setBusyId(proposalId);
+    try {
+      const res = await fetch(`/api/proposals/${proposalId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) await refreshPlan();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleExecute(proposalId: string) {
+    setBusyId(proposalId);
     setError(null);
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error();
-      await refreshAll();
-    } catch {
-      setError(
-        "Échec de l'exécution — vérifiez la clé ANTHROPIC_API_KEY côté serveur.",
-      );
+      const res = await fetch(`/api/proposals/${proposalId}/execute`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setNotice(`Site publié : ${window.location.origin}${data.url}`);
+      await refreshPlan();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Échec de la publication");
     } finally {
-      setRunningAgent(null);
+      setBusyId(null);
     }
   }
 
-  async function handleDecision(
-    proposalId: string,
-    status: "validee" | "rejetee",
-  ) {
-    const res = await fetch(`/api/proposals/${proposalId}`, {
-      method: "PATCH",
+  async function handleSaveDirection() {
+    const res = await fetch("/api/companies/direction", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ direction }),
     });
-    if (res.ok) await refreshAll();
+    if (res.ok) {
+      setDirectionSaved(true);
+      setTimeout(() => setDirectionSaved(false), 2000);
+    }
   }
 
   async function handleSendChat(e: React.FormEvent) {
@@ -207,304 +168,248 @@ export function DashboardClient({
         ...prev,
         { id: `tmp-${Date.now()}-a`, companyId: company.id, role: "assistant", content: reply, createdAt: new Date() },
       ]);
-      await refreshAll();
+      await refreshPlan();
     } catch {
-      setError(`${PERSONAS.co_ceo.name} n'a pas pu répondre — vérifiez la clé ANTHROPIC_API_KEY côté serveur.`);
+      fail(`${PERSONAS.co_ceo.name} n'a pas pu répondre`);
     } finally {
       setChatSending(false);
     }
   }
 
-  const pendingCount = proposals.filter((p) => p.status === "en_attente").length;
-
-  const agentCards: { key: AgentKey; persona: typeof PERSONAS[AgentKey]; stat: string }[] = [
-    { key: "audit", persona: PERSONAS.audit, stat: `${auditFindings.length} constat(s)` },
-    {
-      key: "visibilite_locale",
-      persona: PERSONAS.visibilite_locale,
-      stat: `${proposals.filter((p) => p.agent === "visibilite_locale").length} proposition(s)`,
-    },
-    {
-      key: "communication",
-      persona: PERSONAS.communication,
-      stat: `${proposals.filter((p) => p.agent === "communication").length} proposition(s)`,
-    },
-    {
-      key: "demarchage",
-      persona: PERSONAS.demarchage,
-      stat: `${proposals.filter((p) => p.agent === "demarchage").length} proposition(s)`,
-    },
-  ];
+  const openItems = planItems.filter((i) => i.status === "propose" || i.status === "lance");
+  const closedItems = planItems.filter((i) => i.status === "termine" || i.status === "ecarte");
+  const livePending = planItems.reduce(
+    (n, i) => n + i.proposals.filter((p) => p.status === "en_attente").length,
+    0,
+  );
 
   return (
-    <main className="mx-auto max-w-5xl p-8 font-sans">
-      <div className="flex items-baseline justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{company.name}</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            {company.trade} — {company.servingArea}
-            {company.objective && (
-              <>
-                {" "}
-                · Objectif : <span className="font-medium">{company.objective}</span>
-              </>
-            )}
-          </p>
-        </div>
-        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
-          {pendingCount} action(s) à valider
-        </span>
-      </div>
-
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-
-      {/* Encart Co-CEO : point de contact unique, oriente vers les agents */}
-      <section className="mt-6 rounded-lg border border-gray-300 bg-gray-50 p-4">
-        <div className="flex items-center gap-2">
-          <PersonaAvatar agentKey="co_ceo" size={36} />
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div>
+        <header className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="font-medium">{PERSONAS.co_ceo.name}</h2>
-            <p className="text-xs text-gray-500">{PERSONAS.co_ceo.blurb}</p>
-          </div>
-        </div>
-        <div className="mt-3 max-h-64 space-y-2 overflow-y-auto rounded border border-gray-200 bg-white p-3">
-          {chatMessages.length === 0 && (
-            <p className="text-sm text-gray-400">
-              Dites-moi où vous en êtes, je m&apos;occupe de prioriser et de
-              lancer les bons agents.
+            <h1 className="text-2xl font-semibold">Aujourd&apos;hui</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Objectif : <span className="font-medium text-slate-800">{company.objective ?? "non défini"}</span>
+              {company.siteSlug && (
+                <>
+                  {" · "}
+                  <a href={`/site/${company.siteSlug}`} target="_blank" className="text-indigo-600 underline">
+                    voir votre site
+                  </a>
+                </>
+              )}
             </p>
-          )}
-          {chatMessages.map((m) => (
-            <div
-              key={m.id}
-              className={m.role === "user" ? "text-right" : "text-left"}
-            >
-              <span
-                className={`inline-block max-w-[80%] rounded px-3 py-1.5 text-sm whitespace-pre-wrap ${
-                  m.role === "user"
-                    ? "bg-black text-white"
-                    : "bg-gray-100 text-gray-800"
-                }`}
-              >
-                {m.content}
-              </span>
-            </div>
-          ))}
-          {chatSending && (
-            <p className="text-sm text-gray-400">{PERSONAS.co_ceo.name} réfléchit…</p>
-          )}
-        </div>
-        <form onSubmit={handleSendChat} className="mt-2 flex gap-2">
-          <input
-            placeholder={`Écrivez à ${PERSONAS.co_ceo.name}…`}
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            className="flex-1 rounded border px-3 py-2 text-sm"
-          />
-          <button
-            type="submit"
-            disabled={chatSending || !chatInput.trim()}
-            className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
-          >
-            Envoyer
-          </button>
-        </form>
-      </section>
+          </div>
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
+            {Math.max(livePending, pendingCount)} à valider
+          </span>
+        </header>
 
-      {/* Plan d'action de Paul : "meneur", pas seulement réactif */}
-      <section className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">Plan d&apos;action de {PERSONAS.co_ceo.name}</h2>
-          <button
-            onClick={handleGeneratePlan}
-            disabled={planLoading}
-            className="rounded bg-gray-800 px-3 py-1 text-sm text-white disabled:opacity-50"
-          >
-            {planLoading ? "Génération…" : "Générer / actualiser le plan"}
-          </button>
-        </div>
-        {planItems.filter((i) => i.status !== "termine").length === 0 ? (
-          <p className="mt-2 text-sm text-gray-500">
-            Aucun plan pour le moment — cliquez sur &quot;Générer&quot; pour que{" "}
-            {PERSONAS.co_ceo.name} vous propose une direction.
+        {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        {notice && (
+          <p className="mt-4 flex items-center justify-between rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">
+            <span>{notice}</span>
+            <button onClick={() => setNotice(null)} className="text-xs underline">fermer</button>
           </p>
-        ) : (
-          <ul className="mt-3 space-y-2">
-            {planItems
-              .filter((i) => i.status !== "termine")
-              .map((item) => {
+        )}
+
+        {/* Plan d'action : le cœur du parcours */}
+        <section className="mt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium">Plan d&apos;action de {PERSONAS.co_ceo.name}</h2>
+            <button
+              onClick={handleGeneratePlan}
+              disabled={planLoading}
+              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            >
+              {planLoading ? "Paul réfléchit…" : openItems.length ? "Compléter le plan" : "Demander un plan"}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Chaque action est confiée à un agent. Vous lancez, l&apos;agent propose, vous validez. Rien ne part sans vous.
+          </p>
+
+          {openItems.length === 0 ? (
+            <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
+              Aucune action en cours. Demandez un plan à {PERSONAS.co_ceo.name}.
+            </div>
+          ) : (
+            <ol className="mt-4 space-y-3">
+              {openItems.map((item, index) => {
                 const persona = PERSONAS[item.agent as Exclude<AgentKey, "co_ceo">];
+                const status = PLAN_STATUS[item.status];
+                const busy = busyId === item.id;
                 return (
-                  <li
-                    key={item.id}
-                    className="flex items-start justify-between gap-3 rounded border border-gray-200 p-3"
-                  >
-                    <div className="flex items-start gap-2">
-                      <PersonaAvatar agentKey={item.agent as AgentKey} size={28} />
-                      <div>
-                        <p className="font-medium">{item.title}</p>
-                        <p className="text-xs text-gray-500">{item.rationale}</p>
-                        <p className="mt-1 text-xs text-gray-400">
+                  <li key={item.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 text-sm font-semibold text-slate-400">{index + 1}</span>
+                      <PersonaAvatar agentKey={item.agent as AgentKey} size={32} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-medium">{item.title}</h3>
+                          <span className={`rounded-full px-2 py-0.5 text-xs ${status.className}`}>{status.label}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-slate-600">{item.rationale}</p>
+                        <p className="mt-1 text-xs text-slate-400">
                           {persona?.name ?? item.agent} · {item.timing}
-                          {item.status === "lance" && " · lancé — vérifiez les propositions ci-dessous"}
                         </p>
                       </div>
+                      {item.status === "propose" && (
+                        <div className="flex shrink-0 flex-col gap-1">
+                          <button
+                            onClick={() => handleLaunch(item)}
+                            disabled={busyId !== null}
+                            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                          >
+                            {busy ? `${persona?.name ?? "L'agent"} travaille…` : "Lancer"}
+                          </button>
+                          <button
+                            onClick={() => setDiscardingId(discardingId === item.id ? null : item.id)}
+                            disabled={busyId !== null}
+                            className="text-xs text-slate-400 hover:text-slate-700"
+                          >
+                            Écarter
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    {item.status === "propose" && (
-                      <button
-                        onClick={() => handleLaunchPlanItem(item)}
-                        disabled={runningAgent !== null}
-                        className="shrink-0 rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
-                      >
-                        {runningAgent === item.id ? "…" : "Lancer"}
-                      </button>
+
+                    {discardingId === item.id && (
+                      <div className="mt-3 flex gap-2 rounded-lg bg-slate-50 p-2">
+                        <input
+                          autoFocus
+                          placeholder="Pourquoi ? (Paul s'en souviendra)"
+                          value={discardReason}
+                          onChange={(e) => setDiscardReason(e.target.value)}
+                          className="flex-1 rounded border px-2 py-1 text-sm"
+                        />
+                        <button
+                          onClick={() => handleDiscard(item.id)}
+                          className="rounded bg-slate-700 px-3 py-1 text-sm text-white"
+                        >
+                          Confirmer
+                        </button>
+                      </div>
+                    )}
+
+                    {item.proposals.length > 0 && (
+                      <div className="mt-3 space-y-2 border-l-2 border-indigo-100 pl-3">
+                        {item.proposals.map((p) => (
+                          <ProposalCard
+                            key={p.id}
+                            proposal={p}
+                            onDecision={handleDecision}
+                            onExecute={handleExecute}
+                            busy={busyId === p.id}
+                          />
+                        ))}
+                      </div>
                     )}
                   </li>
                 );
               })}
-          </ul>
-        )}
-      </section>
-
-      {/* Agent Overview : vue épurée des agents actifs */}
-      <section className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {agentCards.map(({ key, persona, stat }) => (
-          <div key={key} className="rounded border border-gray-200 p-4">
-            <div className="flex items-center gap-2">
-              <PersonaAvatar agentKey={key} size={32} />
-              <div>
-                <p className="font-medium leading-tight">{persona.name}</p>
-                <p className="text-xs text-gray-500">{persona.role}</p>
-              </div>
-            </div>
-            <p className="mt-2 text-xs text-gray-600">{persona.blurb}</p>
-            <p className="mt-2 text-xs font-medium text-gray-400">{stat}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="mt-10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">
-            Audit de présence en ligne — {PERSONAS.audit.name}
-          </h2>
-          <button
-            onClick={() => runAgent("audit", "/api/agents/audit/run", { companyId: company.id })}
-            disabled={runningAgent !== null}
-            className="rounded bg-gray-800 px-3 py-1 text-sm text-white disabled:opacity-50"
-          >
-            {runningAgent === "audit" ? "Audit en cours…" : "Relancer l'audit"}
-          </button>
-        </div>
-        <ul className="mt-3 space-y-2">
-          {auditFindings.length === 0 && (
-            <li className="text-sm text-gray-500">Aucun audit pour le moment.</li>
+            </ol>
           )}
-          {auditFindings.map((f) => (
-            <li key={f.id} className="rounded border border-gray-200 p-3">
-              <span className="text-xs uppercase text-gray-400">{f.category}</span>
-              <h3 className="font-medium">{f.title}</h3>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
-                {f.content}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
 
-      <section className="mt-10">
-        <h2 className="text-lg font-medium">
-          {PERSONAS.visibilite_locale.name} — Visibilité locale
-        </h2>
-        <button
-          onClick={() =>
-            runAgent("visibilite_locale", "/api/agents/visibilite-locale/run", {
-              companyId: company.id,
-            })
-          }
-          disabled={runningAgent !== null}
-          className="mt-2 rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
-        >
-          {runningAgent === "visibilite_locale"
-            ? "L'agent réfléchit…"
-            : "Lancer l'agent"}
-        </button>
-        <div className="mt-4">
-          <ProposalList
-            proposals={proposals.filter((p) => p.agent === "visibilite_locale")}
-            onDecision={handleDecision}
-          />
-        </div>
-      </section>
+          {closedItems.length > 0 && (
+            <div className="mt-4">
+              <button onClick={() => setShowClosed((v) => !v)} className="text-xs text-slate-500 underline">
+                {showClosed ? "Masquer" : "Voir"} les {closedItems.length} action(s) terminée(s) ou écartée(s)
+              </button>
+              {showClosed && (
+                <ul className="mt-2 space-y-2">
+                  {closedItems.map((item) => (
+                    <li key={item.id} className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className={`rounded-full px-2 py-0.5 text-xs ${PLAN_STATUS[item.status].className}`}>
+                          {PLAN_STATUS[item.status].label}
+                        </span>
+                        <span className="text-slate-700">{item.title}</span>
+                      </div>
+                      {item.feedback && <p className="mt-1 text-xs text-slate-400">Raison : {item.feedback}</p>}
+                      {item.proposals.length > 0 && (
+                        <div className="mt-2 space-y-2 pl-3">
+                          {item.proposals.map((p) => (
+                            <ProposalCard key={p.id} proposal={p} onDecision={handleDecision} onExecute={handleExecute} busy={busyId === p.id} />
+                          ))}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </section>
+      </div>
 
-      <section className="mt-10">
-        <h2 className="text-lg font-medium">
-          {PERSONAS.communication.name} — Communication
-        </h2>
-        <div className="mt-2 flex gap-2">
-          <input
-            placeholder="Actualité à communiquer (optionnel — sinon Martine propose ses propres idées)"
-            value={newsContext}
-            onChange={(e) => setNewsContext(e.target.value)}
-            className="flex-1 rounded border px-2 py-1 text-sm"
+      {/* Colonne Paul : réorienter + discuter */}
+      <aside className="space-y-4 lg:sticky lg:top-8 lg:self-start">
+        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <PersonaAvatar agentKey="co_ceo" size={36} />
+            <div>
+              <h2 className="font-medium">{PERSONAS.co_ceo.name}</h2>
+              <p className="text-xs text-slate-500">{PERSONAS.co_ceo.role}</p>
+            </div>
+          </div>
+
+          <label className="mt-4 block text-xs font-medium text-slate-600">Réorienter {PERSONAS.co_ceo.name}</label>
+          <textarea
+            value={direction}
+            onChange={(e) => setDirection(e.target.value)}
+            placeholder="ex: priorité au B2B, pas de démarchage de particuliers ; pas de posts le week-end"
+            rows={3}
+            className="mt-1 w-full rounded-lg border px-2 py-1.5 text-sm"
           />
           <button
-            onClick={() =>
-              runAgent("communication", "/api/agents/communication/run", {
-                companyId: company.id,
-                newsContext: newsContext || undefined,
-              })
-            }
-            disabled={runningAgent !== null}
-            className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
+            onClick={handleSaveDirection}
+            className="mt-1 rounded-lg bg-slate-100 px-3 py-1 text-xs text-slate-700 hover:bg-slate-200"
           >
-            {runningAgent === "communication" ? "…" : "Lancer l'agent"}
+            {directionSaved ? "Enregistré ✓" : "Enregistrer la consigne"}
           </button>
-        </div>
-        <div className="mt-4">
-          <ProposalList
-            proposals={proposals.filter((p) => p.agent === "communication")}
-            onDecision={handleDecision}
-          />
-        </div>
-      </section>
+          <p className="mt-1 text-xs text-slate-400">
+            Appliquée au prochain plan et à tous les agents.
+          </p>
+        </section>
 
-      <section className="mt-10">
-        <h2 className="text-lg font-medium">
-          {PERSONAS.demarchage.name} — Démarchage
-        </h2>
-        <p className="mt-1 text-xs text-gray-500">
-          Recherche des pistes de croissance publiques (actualités, événements)
-          et prépare des templates génériques — aucune liste de destinataires
-          réels, aucun envoi automatisé. Vérifiez le cadre RGPD avant tout envoi.
-        </p>
-        <div className="mt-2 flex gap-2">
-          <input
-            placeholder="Type de prospects visés (optionnel, ex: syndics d'immeubles du quartier)"
-            value={prospectDescription}
-            onChange={(e) => setProspectDescription(e.target.value)}
-            className="flex-1 rounded border px-2 py-1 text-sm"
-          />
-          <button
-            onClick={() =>
-              runAgent("demarchage", "/api/agents/demarchage/run", {
-                companyId: company.id,
-                prospectDescription: prospectDescription || undefined,
-              })
-            }
-            disabled={runningAgent !== null}
-            className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
-          >
-            {runningAgent === "demarchage" ? "…" : "Lancer l'agent"}
-          </button>
-        </div>
-        <div className="mt-4">
-          <ProposalList
-            proposals={proposals.filter((p) => p.agent === "demarchage")}
-            onDecision={handleDecision}
-          />
-        </div>
-      </section>
-    </main>
+        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="text-sm font-medium">Discuter avec {PERSONAS.co_ceo.name}</h3>
+          <div className="mt-2 max-h-80 space-y-2 overflow-y-auto rounded-lg bg-slate-50 p-2">
+            {chatMessages.length === 0 && (
+              <p className="text-xs text-slate-400">Posez une question, demandez un point, ou donnez une actualité.</p>
+            )}
+            {chatMessages.map((m) => (
+              <div key={m.id} className={m.role === "user" ? "text-right" : "text-left"}>
+                <span
+                  className={`inline-block max-w-[90%] whitespace-pre-wrap rounded-lg px-2.5 py-1.5 text-xs ${
+                    m.role === "user" ? "bg-indigo-600 text-white" : "bg-white text-slate-800 shadow-sm"
+                  }`}
+                >
+                  {m.content}
+                </span>
+              </div>
+            ))}
+            {chatSending && <p className="text-xs text-slate-400">{PERSONAS.co_ceo.name} réfléchit…</p>}
+          </div>
+          <form onSubmit={handleSendChat} className="mt-2 flex gap-2">
+            <input
+              placeholder={`Écrire à ${PERSONAS.co_ceo.name}…`}
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              className="flex-1 rounded-lg border px-2 py-1.5 text-sm"
+            />
+            <button
+              type="submit"
+              disabled={chatSending || !chatInput.trim()}
+              className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            >
+              Envoyer
+            </button>
+          </form>
+        </section>
+      </aside>
+    </div>
   );
 }

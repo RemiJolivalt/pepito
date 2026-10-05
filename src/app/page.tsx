@@ -4,62 +4,60 @@ import { PersonaAvatar } from "@/components/persona-avatar";
 
 const TEAM: AgentKey[] = ["co_ceo", "audit", "visibilite_locale", "communication", "demarchage"];
 
+const STEPS = [
+  { n: "1", title: "Vous donnez l'objectif", text: "« 10 nouveaux clients par mois ». Votre métier, votre zone, votre site s'il existe. 5 minutes." },
+  { n: "2", title: "Paul fait le plan", text: "Votre Co-CEO audite votre présence en ligne, regarde vos concurrents et vous propose 3 à 5 actions, confiées à son équipe." },
+  { n: "3", title: "Les agents proposent", text: "Fiche Google, site web, posts, prospection : chaque agent prépare le travail concret." },
+  { n: "4", title: "Vous validez, Pepito réalise", text: "Rien ne part sans votre feu vert. Validé ? Pepito publie — à commencer par votre site." },
+];
+
 export default function LandingPage() {
   return (
-    <main className="mx-auto max-w-2xl p-8 font-sans">
-      <h1 className="text-3xl font-semibold">Pepito</h1>
-      <p className="mt-3 text-lg text-gray-700">
-        Le copilote IA des indépendants et TPE — kiné, plombier, installateur
-        de panneaux solaires… Une équipe d&apos;agents spécialisés
-        s&apos;occupe de votre visibilité, votre communication et votre
-        démarchage. Vous, vous validez.
-      </p>
+    <main className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <div className="mx-auto max-w-4xl px-6 py-16">
+        <p className="text-sm font-medium text-indigo-600">Pepito</p>
+        <h1 className="mt-2 text-4xl font-semibold leading-tight tracking-tight">
+          L&apos;équipe marketing que les indépendants n&apos;ont jamais eue.
+        </h1>
+        <p className="mt-4 max-w-2xl text-lg text-slate-600">
+          Kiné, plombier, installateur solaire… Vous n&apos;avez ni le temps ni l&apos;envie de faire votre
+          communication. Paul et son équipe d&apos;agents IA s&apos;en chargent — et vous gardez le dernier mot.
+        </p>
+        <Link
+          href="/login"
+          className="mt-8 inline-block rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+        >
+          Commencer — c&apos;est gratuit pendant le pilote
+        </Link>
 
-      <ul className="mt-6 flex flex-wrap gap-4">
-        {TEAM.map((key) => (
-          <li key={key} className="flex flex-col items-center gap-1 text-center">
-            <PersonaAvatar agentKey={key} size={48} />
-            <span className="text-xs font-medium">{PERSONAS[key].name}</span>
-          </li>
-        ))}
-      </ul>
+        <section className="mt-16 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-sm font-medium text-slate-500">Votre équipe</h2>
+          <ul className="mt-4 grid gap-4 sm:grid-cols-5">
+            {TEAM.map((key) => (
+              <li key={key} className="flex flex-col items-center text-center">
+                <PersonaAvatar agentKey={key} size={56} />
+                <span className="mt-2 text-sm font-medium">{PERSONAS[key].name}</span>
+                <span className="text-xs text-slate-500">{PERSONAS[key].role}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-3">
-        <div className="rounded border border-gray-200 p-4">
-          <h2 className="font-medium">1. On fait connaissance</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Quelques infos sur votre métier, votre zone et votre site web.
-            Moins de 5 minutes.
-          </p>
-        </div>
-        <div className="rounded border border-gray-200 p-4">
-          <h2 className="font-medium">2. Audit immédiat</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Un état des lieux de votre présence en ligne (site, réseaux) pour
-            savoir où vous en êtes vraiment.
-          </p>
-        </div>
-        <div className="rounded border border-gray-200 p-4">
-          <h2 className="font-medium">3. Paul orchestre, vous validez</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Paul, votre Co-CEO, échange avec vous et active les bons agents.
-            Chaque proposition attend votre feu vert avant toute publication
-            ou tout envoi.
-          </p>
-        </div>
-      </section>
+        <section className="mt-12 grid gap-4 sm:grid-cols-2">
+          {STEPS.map((s) => (
+            <div key={s.n} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <span className="text-xs font-semibold text-indigo-600">Étape {s.n}</span>
+              <h3 className="mt-1 font-medium">{s.title}</h3>
+              <p className="mt-1 text-sm text-slate-600">{s.text}</p>
+            </div>
+          ))}
+        </section>
 
-      <p className="mt-6 text-sm text-gray-500">
-        Aucune action n&apos;est jamais exécutée sans votre validation
-        explicite.
-      </p>
-
-      <Link
-        href="/login"
-        className="mt-8 inline-block rounded bg-black px-5 py-2 text-sm text-white"
-      >
-        Commencer
-      </Link>
+        <p className="mt-10 text-xs text-slate-400">
+          Aucune action n&apos;est jamais exécutée sans votre validation. Vos accès (Google, Meta) passent par
+          OAuth officiel — jamais de mot de passe saisi chez nous.
+        </p>
+      </div>
     </main>
   );
 }

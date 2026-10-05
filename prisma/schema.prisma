@@ -20,6 +20,10 @@ model Company {
   website         String? // optionnel : beaucoup de TPE n'ont pas de site
   socialHandles   String? // ex: @cabinet_kine_demo (Instagram)
   objective       String? // objectif business déclaré, ex: "10 nouveaux clients par mois" (cf. docs/backlog.md #1)
+  direction       String? // consigne libre du dirigeant pour réorienter Paul et les agents ("Réorienter")
+  siteSlug        String?   @unique // site d'une page hébergé par Pepito : /site/[slug]
+  siteHtml        String?
+  sitePublishedAt DateTime?
   createdAt       DateTime  @default(now())
   channels        ChannelConnection[]
   proposals       AgentProposal[]
@@ -44,8 +48,10 @@ model ActionPlanItem {
   title       String
   rationale   String
   timing      String // ex: "cette semaine", "aujourd'hui"
-  status      String   @default("propose") // propose, lance, termine
+  status      String   @default("propose") // propose, lance, termine, ecarte
+  feedback    String? // raison donnée par le dirigeant quand il écarte l'action — relue par Paul au plan suivant
   createdAt   DateTime @default(now())
+  proposals   AgentProposal[]
 }
 
 model ChatMessage {
@@ -95,6 +101,8 @@ model AgentProposal {
   status      String   @default("en_attente") // en_attente, validee, modifiee, rejetee, executee
   createdAt   DateTime @default(now())
   decidedAt   DateTime?
+  planItemId  String? // action du plan de Paul dont cette proposition découle (lisibilité plan → agent → proposition)
+  planItem    ActionPlanItem? @relation(fields: [planItemId], references: [id])
   executionLog ExecutionLog?
 }
 

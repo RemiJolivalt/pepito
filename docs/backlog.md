@@ -52,6 +52,13 @@ Demande CEO : "le Co-CEO doit être force de proposition et donner la direction 
 - Testé en conditions réelles : plan de 5 actions cohérent généré pour un cas concret, item lancé avec succès, rapport reflète les chiffres réels.
 - **Non fait** : envoi automatique du rapport par email (nécessite un fournisseur d'envoi configuré, cf. point 4 ci-dessous, toujours pas construit).
 
+### 2sexies. Boucle plan → agent → réalisation, cohérente et pilotable — ✅ livré (2026-10-05)
+Demande CEO : "le plan doit déclencher les bons agents et permettre la réalisation ; je dois pouvoir valider ou réorienter".
+- **Correctif de cohérence** : "Lancer" une action du plan transmet désormais l'action comme **brief** à l'agent (avant, l'agent partait à vide et proposait autre chose). Les propositions sont **rattachées à l'action** (`AgentProposal.planItemId`) et affichées sous elle ; l'action passe "terminée" quand tout est décidé.
+- **Reprendre la main** : "Écarter" une action avec une raison (Paul la relit et ne la repropose pas) ; champ **"Réorienter Paul"** (`Company.direction`) injecté dans le plan et dans *tous* les agents, prioritaire sur le reste.
+- **Première exécution réelle** : un brief de site validé → **"Publier le site"** → page générée et hébergée par Pepito sur `/site/[slug]` (HTML nettoyé + iframe sandbox sans script). C'est la première fois que la boucle complète plan → agent → proposition → validation → résultat visible fonctionne sans dépendance externe.
+- **Refonte UI** : barre latérale (Aujourd'hui / Équipe / Rapport / Connexions / Mon entreprise), dashboard centré sur le plan avec Paul en colonne latérale, page Équipe pour le mode manuel agent par agent.
+
 ### 3. Déclenchement quotidien programmé (version dégradée de la "boucle quotidienne")
 Un job programmé (1x/jour) qui relance les agents pertinents pour chaque entreprise active et alimente le dashboard de nouvelles propositions — **mais qui propose, ne décide ni n'exécute jamais seul**. Ce n'est pas la boucle autonome complète du cahier des charges tiers (observer→décider→agir→mesurer→apprendre sans validation), qu'on rejette tant qu'on est aux niveaux d'autonomie 1-2.
 **Pourquoi maintenant** : répond au principe "le système doit réellement faire quelque chose chaque jour", sans rouvrir le débat sur l'autonomie déjà tranché.
@@ -73,6 +80,20 @@ Nadia utilise désormais `web_search` pour identifier 2-3 concurrents locaux ré
 
 ### 6. Pilote avec 5 vraies entreprises (2 semaines)
 Reprise telle quelle du cahier des charges tiers : condition de validation avant d'aller plus loin. Doit s'appuyer sur les points 1-4 au minimum.
+
+## Propositions du 2026-10-05 (challenge des demandes CEO) — à trancher
+
+**A. WordPress — reporté, contre-proposition livrée.** WordPress ajoute hébergement + API WordPress.com + un OAuth de plus, avant même que Google/Meta soient actifs. À la place, Pepito **génère et héberge lui-même** le site d'une page (livré ci-dessus, point 2sexies). WordPress reviendra comme option *"exporter mon site"* pour les clients qui veulent posséder/personnaliser — pas comme prérequis.
+
+**B. "Connexions facilement activables" — le goulot n'est pas le code.** Deux choses distinctes : (1) *se connecter à Pepito avec Google* (identification) et (2) *autoriser Pepito à agir sur la fiche Google / les pages Meta* (autorisation, permissions sensibles). Le code OAuth est livré pour (2) et (1) se fait en une heure. Ce qui bloque : la création du client OAuth chez Google (10 min, **vous seul pouvez le faire**) et surtout l'**App Review Meta** (dossier, semaines). Proposition : un seul client OAuth Google pour login + fiche (permissions incrémentales) ; checklist exacte au point 2quater. Décision attendue : lancez-vous les démarches Google cette semaine ? Sans ça, la "plateforme centrale qui arrose partout" reste une promesse.
+
+**C. Crédits — conçu, pas construit.** Design proposé : un coût indicatif par *type* d'action (ex: audit avec recherche web = 3, posts = 1, site = 5) affiché à côté de "Lancer", avec un solde mensuel inclus dans l'abonnement. Pas de prix affiché tant que le modèle n'est pas tranché avec Finance — afficher un coût est déjà une promesse commerciale. Prérequis technique à faire d'abord : **mesurer** la consommation réelle par run (`usage` de l'API) pour calibrer, sinon les crédits seront arbitraires.
+
+**D. Ce que je propose en plus (force de proposition) :**
+1. **Email du rapport + plan du lundi** (points 3-4 ci-dessous) : c'est ce qui fera revenir le dirigeant sans qu'il y pense. Un seul fournisseur d'envoi à configurer (clé API), tout le reste existe déjà.
+2. **Exécution réelle de la fiche Google** dès que l'OAuth Google est actif : une proposition `gbp_update` validée → appel API Business Profile. Même mécanique que le site ("Publier"). C'est la deuxième exécution de bout en bout, la plus attendue par la cible.
+3. **Mesure de résultat** : sans retour terrain, Paul pilote à l'aveugle. Proposition légère : à chaque plan, Paul pose *une* question ("combien d'appels cette semaine ?") et stocke la réponse — ça alimente le rapport et le plan suivant.
+4. **Pilote 5 entreprises** (point 6) : on a maintenant assez pour tester en vrai. Je recommande de ne plus ajouter de fonctionnalité avant d'avoir 5 retours réels.
 
 ## Explicitement reporté / rejeté (et pourquoi)
 

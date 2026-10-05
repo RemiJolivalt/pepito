@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-const ALLOWED_STATUSES = ["lance", "termine"] as const;
+const ALLOWED_STATUSES = ["lance", "termine", "ecarte"] as const;
 
+/** Décision du dirigeant sur une action du plan : écarter (avec raison, relue par Paul), ou clore. */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { status } = await request.json();
+  const { status, feedback } = await request.json();
 
   if (!ALLOWED_STATUSES.includes(status)) {
     return NextResponse.json(
@@ -19,7 +20,10 @@ export async function PATCH(
 
   const item = await prisma.actionPlanItem.update({
     where: { id },
-    data: { status },
+    data: {
+      status,
+      feedback: status === "ecarte" && typeof feedback === "string" ? feedback : undefined,
+    },
   });
   return NextResponse.json(item);
 }

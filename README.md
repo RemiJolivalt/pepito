@@ -4,7 +4,9 @@ Copilote IA agentique pour indépendants et TPE (kiné, plombier, installateur s
 
 ## Statut
 
-5 agents fonctionnels (Paul, Nadia, Camille, Martine, Jean-Claude), plan d'action priorisé, rapport, connexions OAuth (scaffolding). Voir [docs/backlog.md](docs/backlog.md) pour le détail à jour.
+5 agents (Paul, Nadia, Camille, Martine, Jean-Claude), plan d'action piloté par Paul avec validation/réorientation par le dirigeant, première exécution réelle (site d'une page publié sur `/site/[slug]`), rapport, connexions OAuth (code prêt, identifiants Google/Meta à fournir). Voir [docs/backlog.md](docs/backlog.md) pour le détail à jour.
+
+Parcours : `/` (landing) → `/login` → `/onboarding` → `/dashboard` (plan de Paul, validations) · `/equipe` (agents en manuel) · `/rapport` · `/connexions`.
 
 ## Démarrer en local
 

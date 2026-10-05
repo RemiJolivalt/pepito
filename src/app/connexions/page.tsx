@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionEmail } from "@/lib/session";
-import { AppHeader } from "@/components/app-header";
+import { AppShell } from "@/components/app-shell";
 import { isGoogleOAuthConfigured } from "@/lib/oauth/google";
 import { isMetaOAuthConfigured } from "@/lib/oauth/meta";
 
@@ -56,9 +56,8 @@ export default async function ConnexionsPage({
   const byChannel = new Map(existing.map((c) => [c.channel, c]));
 
   return (
-    <>
-      <AppHeader companyName={company.name} />
-      <main className="mx-auto max-w-2xl p-8 font-sans">
+    <AppShell companyName={company.name}>
+      <div className="mx-auto max-w-2xl">
         <h1 className="text-2xl font-semibold">Connexions</h1>
         <p className="mt-2 text-sm text-gray-600">
           Les agents ont besoin d&apos;accéder à vos comptes pour agir à votre
@@ -127,7 +126,7 @@ export default async function ConnexionsPage({
           leurs propositions sans accès direct à vos comptes — vous les
           recopiez vous-même après validation.
         </p>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }

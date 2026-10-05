@@ -2,7 +2,13 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
-import { PERSONAS, objectiveLine } from "@/lib/agents/personas";
+import {
+  PERSONAS,
+  objectiveLine,
+  directionLine,
+  briefLine,
+  type AgentRunOptions,
+} from "@/lib/agents/personas";
 
 const AGENT_NAME = "demarchage";
 const PERSONA = PERSONAS.demarchage;
@@ -21,6 +27,7 @@ const PERSONA = PERSONAS.demarchage;
 export async function runDemarchageAgent(
   companyId: string,
   prospectDescription?: string,
+  options: AgentRunOptions = {},
 ) {
   const company = await prisma.company.findUniqueOrThrow({
     where: { id: companyId },
@@ -50,6 +57,7 @@ export async function runDemarchageAgent(
           kind: "piste_croissance",
           title: input.title,
           content,
+          planItemId: options.planItemId,
         },
       });
       createdProposalIds.push(proposal.id);
@@ -79,6 +87,7 @@ export async function runDemarchageAgent(
           kind: "prospecting_email",
           title: input.title,
           content,
+          planItemId: options.planItemId,
         },
       });
       createdProposalIds.push(proposal.id);
@@ -97,6 +106,8 @@ export async function runDemarchageAgent(
     system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
 ${objectiveLine(company.objective)}
+${directionLine(company.direction)}
+${briefLine(options.brief)}
 
 Ton rôle a deux volets :
 1. Rechercher 1 à 3 pistes de croissance réelles via web_search (actualités locales, événements, entreprises/contacts professionnels publics pertinents pour ${company.trade} à ${company.servingArea}) — outil propose_growth_lead.

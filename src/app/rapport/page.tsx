@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionEmail } from "@/lib/session";
-import { AppHeader } from "@/components/app-header";
+import { AppShell } from "@/components/app-shell";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export default async function RapportPage() {
 
   const [validated, pending, rejected, findings, leads] = await Promise.all([
     prisma.agentProposal.findMany({
-      where: { companyId: company.id, status: { in: ["validee", "modifiee"] } },
+      where: { companyId: company.id, status: { in: ["validee", "modifiee", "executee"] } },
       orderBy: { decidedAt: "desc" },
     }),
     prisma.agentProposal.findMany({
@@ -44,9 +44,8 @@ export default async function RapportPage() {
   ]);
 
   return (
-    <>
-      <AppHeader companyName={company.name} />
-      <main className="mx-auto max-w-3xl p-8 font-sans">
+    <AppShell companyName={company.name}>
+      <div className="mx-auto max-w-3xl">
         <h1 className="text-2xl font-semibold">Rapport</h1>
         <p className="mt-1 text-sm text-gray-500">
           État réel de votre compte Pepito — ces chiffres sont calculés
@@ -56,7 +55,11 @@ export default async function RapportPage() {
         <section className="mt-6 grid grid-cols-3 gap-3 text-center">
           <div className="rounded border border-gray-200 p-4">
             <p className="text-2xl font-semibold">{validated.length}</p>
-            <p className="text-xs text-gray-500">actions validées</p>
+            <p className="text-xs text-gray-500">
+              actions validées
+              {validated.some((p) => p.status === "executee") &&
+                ` (dont ${validated.filter((p) => p.status === "executee").length} réalisée(s))`}
+            </p>
           </div>
           <div className="rounded border border-gray-200 p-4">
             <p className="text-2xl font-semibold">{pending.length}</p>
@@ -142,7 +145,7 @@ export default async function RapportPage() {
         <p className="mt-8 text-xs text-gray-400">
           Envoi automatique de ce rapport par email : pas encore en place (nécessite un fournisseur d&apos;envoi d&apos;email configuré) — cf. docs/backlog.md.
         </p>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }
