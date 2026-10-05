@@ -331,7 +331,7 @@ export function DashboardClient({
         </h2>
         <div className="mt-2 flex gap-2">
           <input
-            placeholder="Actualité à communiquer (ex: nouvelle offre, événement)"
+            placeholder="Actualité à communiquer (optionnel — sinon Martine propose ses propres idées)"
             value={newsContext}
             onChange={(e) => setNewsContext(e.target.value)}
             className="flex-1 rounded border px-2 py-1 text-sm"
@@ -340,10 +340,10 @@ export function DashboardClient({
             onClick={() =>
               runAgent("communication", "/api/agents/communication/run", {
                 companyId: company.id,
-                newsContext,
+                newsContext: newsContext || undefined,
               })
             }
-            disabled={runningAgent !== null || !newsContext.trim()}
+            disabled={runningAgent !== null}
             className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
           >
             {runningAgent === "communication" ? "…" : "Lancer l'agent"}
@@ -362,12 +362,13 @@ export function DashboardClient({
           {PERSONAS.demarchage.name} — Démarchage
         </h2>
         <p className="mt-1 text-xs text-gray-500">
-          Templates génériques uniquement — aucune liste de destinataires réels,
-          aucun envoi automatisé. Vérifiez le cadre RGPD avant tout envoi.
+          Recherche des pistes de croissance publiques (actualités, événements)
+          et prépare des templates génériques — aucune liste de destinataires
+          réels, aucun envoi automatisé. Vérifiez le cadre RGPD avant tout envoi.
         </p>
         <div className="mt-2 flex gap-2">
           <input
-            placeholder="Type de prospects visés (ex: syndics d'immeubles du quartier)"
+            placeholder="Type de prospects visés (optionnel, ex: syndics d'immeubles du quartier)"
             value={prospectDescription}
             onChange={(e) => setProspectDescription(e.target.value)}
             className="flex-1 rounded border px-2 py-1 text-sm"
@@ -376,10 +377,10 @@ export function DashboardClient({
             onClick={() =>
               runAgent("demarchage", "/api/agents/demarchage/run", {
                 companyId: company.id,
-                prospectDescription,
+                prospectDescription: prospectDescription || undefined,
               })
             }
-            disabled={runningAgent !== null || !prospectDescription.trim()}
+            disabled={runningAgent !== null}
             className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
           >
             {runningAgent === "demarchage" ? "…" : "Lancer l'agent"}

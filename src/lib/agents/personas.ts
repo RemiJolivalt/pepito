@@ -15,25 +15,25 @@ export const PERSONAS = {
     name: "Nadia",
     role: "Audit",
     blurb:
-      "Je visite votre site et vos réseaux pour dresser un état des lieux honnête de votre présence en ligne.",
+      "Je visite votre site et vos réseaux, et je regarde vos concurrents locaux pour dresser un état des lieux honnête — y compris votre positionnement face à eux.",
   },
   visibilite_locale: {
     name: "Camille",
-    role: "Visibilité locale",
+    role: "Visibilité locale & technique",
     blurb:
-      "Je m'occupe de votre fiche Google et de vos avis clients pour que vos clients vous trouvent facilement.",
+      "Je m'occupe de votre fiche Google, de vos avis clients, je prépare le contenu d'un site web si vous n'en avez pas, et je vous guide pour connecter vos outils.",
   },
   communication: {
     name: "Martine",
     role: "Communication",
     blurb:
-      "Je propose vos publications sur les réseaux sociaux à partir de votre actualité.",
+      "Je prépare vos publications sur les réseaux sociaux — à partir de votre actualité, ou de mes propres idées si vous n'en avez pas. Je ne publie jamais sans votre accord.",
   },
   demarchage: {
     name: "Jean-Claude",
     role: "Démarchage",
     blurb:
-      "Je prépare des templates de prospection pour aller chercher de nouveaux clients.",
+      "Je repère des pistes de croissance (actualités locales, événements) et je prépare des templates de prospection pour aller chercher de nouveaux clients.",
   },
 } as const;
 

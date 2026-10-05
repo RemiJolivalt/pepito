@@ -86,11 +86,12 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
   const delegateCommunication = betaZodTool({
     name: "delegate_communication",
     description:
-      "Lance l'agent Communication pour proposer des posts réseaux sociaux à partir d'une actualité. Nécessite une actualité réelle fournie par l'utilisateur dans la conversation — ne jamais inventer d'actualité.",
+      "Lance l'agent Communication pour proposer des posts réseaux sociaux. Si une actualité réelle a été mentionnée par l'utilisateur, passe-la — sinon laisse vide, l'agent proposera ses propres idées génériques. Ne jamais inventer une actualité qui n'a pas été mentionnée.",
     inputSchema: z.object({
       newsContext: z
         .string()
-        .describe("Actualité à communiquer, telle que mentionnée par l'utilisateur"),
+        .optional()
+        .describe("Actualité à communiquer, telle que mentionnée par l'utilisateur — omettre si aucune n'a été donnée"),
     }),
     run: async (input) => {
       const proposals = await runCommunicationAgent(companyId, input.newsContext);
@@ -101,21 +102,22 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
   const delegateDemarchage = betaZodTool({
     name: "delegate_demarchage",
     description:
-      "Lance l'agent Démarchage pour préparer des templates de prospection générique. Nécessite une description du type de prospects visés fournie par l'utilisateur.",
+      "Lance l'agent Démarchage : recherche des pistes de croissance réelles (actualités, événements locaux) et, si un type de prospects a été décrit par l'utilisateur, prépare des templates de prospection générique.",
     inputSchema: z.object({
       prospectDescription: z
         .string()
-        .describe("Type de prospects visés, tel que mentionné par l'utilisateur"),
+        .optional()
+        .describe("Type de prospects visés, tel que mentionné par l'utilisateur — omettre si non précisé"),
     }),
     run: async (input) => {
       const proposals = await runDemarchageAgent(companyId, input.prospectDescription);
-      return `${proposals.length} template(s) créé(s) par ${PERSONAS.demarchage.name}, en attente de validation dans le dashboard.`;
+      return `${proposals.length} proposition(s) créée(s) par ${PERSONAS.demarchage.name}, en attente de validation dans le dashboard.`;
     },
   });
 
   const delegateAudit = betaZodTool({
     name: "delegate_audit",
-    description: "Relance l'agent Audit pour rafraîchir l'état des lieux de la présence en ligne.",
+    description: "Relance l'agent Audit pour rafraîchir l'état des lieux de la présence en ligne ET l'analyse de la concurrence locale.",
     inputSchema: z.object({}),
     run: async () => {
       const findings = await runAuditAgent(companyId);
@@ -137,12 +139,14 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton : ${company.tone}.
 ${objectiveLine(company.objective)}
 
-Ton rôle : échanger avec le dirigeant, l'aider à prioriser, et déléguer aux agents spécialisés (${PERSONAS.visibilite_locale.name} pour la visibilité locale, ${PERSONAS.communication.name} pour la communication, ${PERSONAS.demarchage.name} pour le démarchage, ${PERSONAS.audit.name} pour l'audit) via les outils delegate_* quand c'est pertinent.
+Ton rôle : échanger avec le dirigeant, l'aider à prioriser, et déléguer aux agents spécialisés (${PERSONAS.visibilite_locale.name} pour la visibilité locale et le contenu de site web, ${PERSONAS.communication.name} pour la communication, ${PERSONAS.demarchage.name} pour le démarchage et les pistes de croissance, ${PERSONAS.audit.name} pour l'audit et l'analyse concurrentielle) via les outils delegate_* quand c'est pertinent.
 Règles strictes, non négociables :
 - RÈGLE ABSOLUE : ne dis JAMAIS qu'une action a été faite (proposition créée, audit relancé, fiche vue, contenu consulté) sans avoir réellement appelé l'outil correspondant DANS CE TOUR. Tu n'as aucune mémoire fiable de ce qui a été fait avant ce message — si on te demande l'état actuel, le nombre ou le contenu de propositions/constats, appelle TOUJOURS get_current_status avant de répondre. Ne devine jamais.
-- Tu ne fais JAMAIS exécuter une action réelle toi-même : déléguer ne fait que créer des propositions, qui restent soumises à la validation du dirigeant dans le dashboard. Dis-le clairement si tu délègues.
-- Tu ne peux pas créer de site web, ni publier ou modifier quoi que ce soit toi-même sur les plateformes externes — sois honnête sur ce que tu ne sais pas faire plutôt que de promettre.
-- Pour déléguer à Communication ou Démarchage, tu as besoin d'une information concrète (actualité réelle, type de prospects) — demande-la au dirigeant si elle manque, n'invente jamais.
+- Tu ne fais JAMAIS exécuter une action réelle toi-même, même automatiquement : déléguer ne fait que créer des propositions, qui restent soumises à la validation du dirigeant dans le dashboard. Dis-le clairement si tu délègues.
+- Tu ne construis pas de site web toi-même (${PERSONAS.visibilite_locale.name} ne fournit qu'un brief de contenu, pas le site), ni ne publies ou modifies quoi que ce soit toi-même sur les plateformes externes — sois honnête sur ce que tu ne sais pas faire plutôt que de promettre.
+- Si on te demande de connecter un compte (Google, Instagram, Facebook) : explique que ça se fait via OAuth sur la page /connexions, et que tu ne dois JAMAIS demander ou recevoir un mot de passe dans cette conversation.
+- Pour déléguer à Communication (sans actualité) ou Démarchage (sans cible), tu peux le faire sans information — les agents proposeront leurs propres idées génériques. Avec une info concrète donnée par le dirigeant, transmets-la pour des propositions plus ciblées.
+- Pour les pistes de prospection, seules des informations publiques et professionnelles sont acceptables — refuse poliment toute demande de cibler des particuliers avec leurs données personnelles.
 - Réponds de façon brève et directe, comme un vrai point rapide entre dirigeants, pas un rapport formel.`,
     messages,
   });

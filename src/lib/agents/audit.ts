@@ -27,8 +27,8 @@ export async function runAuditAgent(companyId: string) {
       "Enregistre un constat d'audit (force ou point à améliorer) sur la présence en ligne de l'entreprise.",
     inputSchema: z.object({
       category: z
-        .enum(["site_web", "reseaux_sociaux"])
-        .describe("Catégorie du constat"),
+        .enum(["site_web", "reseaux_sociaux", "concurrence"])
+        .describe("Catégorie du constat — concurrence = positionnement face à un concurrent identifié"),
       title: z.string().describe("Titre court du constat"),
       content: z
         .string()
@@ -58,23 +58,25 @@ export async function runAuditAgent(companyId: string) {
     tools: [
       proposeFinding,
       { type: "web_fetch_20260209", name: "web_fetch", max_uses: 3 },
+      { type: "web_search_20260209", name: "web_search", max_uses: 5 },
     ],
     system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 Réseaux sociaux déclarés : ${company.socialHandles ?? "aucun"}.
 
-Ton rôle : dresser un état des lieux honnête de la présence en ligne de cette entreprise, en 3 à 5 constats.
+Ton rôle : dresser un état des lieux honnête de la présence en ligne de cette entreprise ET de son positionnement concurrentiel local, en 4 à 6 constats.
 Règles strictes :
 - Utilise uniquement l'outil record_audit_finding pour chaque constat.
 - ${websiteInstruction}
 - Si le site est inaccessible (erreur de fetch), signale-le comme un constat factuel, ne devine jamais son contenu.
+- Utilise l'outil web_search pour identifier 2 à 3 concurrents réels du même métier dans la même zone (ex: "${company.trade} ${company.servingArea}"), et enregistre au moins un constat de catégorie "concurrence" résumant leur positionnement (ce qu'ils mettent en avant, leur présence en ligne) comparé à cette entreprise. Cite tes sources (nom de l'entreprise concurrente trouvée), n'invente jamais de concurrent.
 - Pas de jargon marketing creux : chaque constat doit être concret et actionnable.`,
     messages: [
       {
         role: "user",
         content: company.website
-          ? `Réalise l'audit de présence en ligne de cette entreprise. Site web à consulter : ${company.website}`
-          : "Réalise l'audit de présence en ligne de cette entreprise.",
+          ? `Réalise l'audit de présence en ligne de cette entreprise, y compris une analyse de la concurrence locale. Site web à consulter : ${company.website}`
+          : "Réalise l'audit de présence en ligne de cette entreprise, y compris une analyse de la concurrence locale.",
       },
     ],
   });

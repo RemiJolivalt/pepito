@@ -20,13 +20,42 @@ const PERSONA = PERSONAS.demarchage;
  */
 export async function runDemarchageAgent(
   companyId: string,
-  prospectDescription: string,
+  prospectDescription?: string,
 ) {
   const company = await prisma.company.findUniqueOrThrow({
     where: { id: companyId },
   });
 
   const createdProposalIds: string[] = [];
+
+  const proposeLead = betaZodTool({
+    name: "propose_growth_lead",
+    description:
+      "Enregistre une piste de croissance trouvée via la recherche web (actualité locale, événement, opportunité, entreprise/contact professionnel public) — jamais une donnée personnelle d'un particulier.",
+    inputSchema: z.object({
+      title: z.string().describe("Titre court de la piste"),
+      content: z
+        .string()
+        .describe("Description de la piste et pourquoi elle est pertinente pour l'objectif de l'entreprise"),
+      source: z
+        .string()
+        .describe("URL ou référence de la source ayant permis de trouver cette piste — jamais inventée"),
+    }),
+    run: async (input) => {
+      const content = `${input.content}\n\nSource : ${input.source}`;
+      const proposal = await prisma.agentProposal.create({
+        data: {
+          companyId: company.id,
+          agent: AGENT_NAME,
+          kind: "piste_croissance",
+          title: input.title,
+          content,
+        },
+      });
+      createdProposalIds.push(proposal.id);
+      return `Piste enregistrée (id: ${proposal.id}), en attente de validation.`;
+    },
+  });
 
   const proposeAction = betaZodTool({
     name: "propose_prospecting_email",
@@ -60,21 +89,31 @@ export async function runDemarchageAgent(
   await anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     max_tokens: 4000,
-    tools: [proposeAction],
+    tools: [
+      proposeLead,
+      proposeAction,
+      { type: "web_search_20260209", name: "web_search", max_uses: 5 },
+    ],
     system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
 ${objectiveLine(company.objective)}
 
-Ton rôle : proposer 1 à 2 TEMPLATES d'email de prospection génériques, à partir du type de prospects décrit par l'utilisateur.
+Ton rôle a deux volets :
+1. Rechercher 1 à 3 pistes de croissance réelles via web_search (actualités locales, événements, entreprises/contacts professionnels publics pertinents pour ${company.trade} à ${company.servingArea}) — outil propose_growth_lead.
+2. Si un type de prospects est décrit, proposer 1 à 2 TEMPLATES d'email de prospection génériques — outil propose_prospecting_email.
+
 Règles strictes, non négociables :
-- Tu ne fais QUE proposer des templates génériques, jamais de ciblage ni d'envoi réel : utilise uniquement l'outil propose_prospecting_email.
-- N'invente JAMAIS de nom, email ou coordonnée de prospect réel — utilise exclusivement des placeholders comme [Prénom].
+- Tu ne fais QUE proposer, jamais de ciblage nominatif ni d'envoi réel.
+- Pour les pistes de croissance : UNIQUEMENT des informations publiques et professionnelles (entreprises, événements, actualités), trouvées réellement via web_search avec leur source citée. JAMAIS de donnée personnelle d'un particulier (nom, adresse, email privé) — même si on te le demande, refuse poliment et explique pourquoi.
+- Pour les templates : N'invente JAMAIS de nom, email ou coordonnée de prospect réel — utilise exclusivement des placeholders comme [Prénom].
 - Reste factuel sur l'offre de l'entreprise, pas de promesse commerciale exagérée.
 - Un template = un email complet et directement adaptable, pas de placeholder du type "[à compléter]" pour le contenu métier.`,
     messages: [
       {
         role: "user",
-        content: `Type de prospects visés : ${prospectDescription}\n\nPropose les templates correspondants.`,
+        content: prospectDescription
+          ? `Type de prospects visés : ${prospectDescription}\n\nRecherche aussi des pistes de croissance et propose les templates correspondants.`
+          : "Recherche des pistes de croissance pour cette entreprise (actualités locales, événements, opportunités professionnelles).",
       },
     ],
   });

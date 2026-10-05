@@ -46,9 +46,16 @@ Un job programmé (1x/jour) qui relance les agents pertinents pour chaque entrep
 Email court envoyé chaque jour : propositions en attente, constats d'audit récents, recommandation du jour. Réutilise l'intégration email déjà identifiée comme prioritaire en architecture.
 **Pourquoi maintenant** : différenciant, techniquement simple, dépend du point 3 (il faut qu'il se passe quelque chose chaque jour pour avoir un rapport à envoyer).
 
-### 5. `web_search` pour l'agent Audit (recherche concurrents)
-Étendre l'agent Audit avec l'outil serveur `web_search` (déjà disponible côté Claude, pas encore utilisé) pour identifier 2-3 concurrents locaux et leur positionnement — reprend l'intention de l'agent "Acquisition" du cahier des charges tiers sans créer un agent séparé.
-**Pourquoi pas avant** : priorité plus faible que les points 1-4, qui touchent directement l'engagement quotidien.
+### 5. `web_search` pour l'agent Audit (recherche concurrents) — ✅ livré (2026-10-05)
+Nadia utilise désormais `web_search` pour identifier 2-3 concurrents locaux réels (nom, positionnement, source citée) en plus de l'audit du site/réseaux. Testé en conditions réelles sur un cas concret (installateur solaire à Cabriès) : 4 concurrents réels identifiés avec recommandations actionnables.
+
+### 7. US du 2026-10-05 — extension des capacités des agents (demande CEO)
+
+- **Camille devient "technique"** — ✅ livré. Nouveau type de proposition `site_web_content` : un brief de contenu de site web d'une page (textes, structure), généré automatiquement quand aucun site n'est déclaré. **Limite assumée** : Camille ne construit jamais de site réel (pas de code, pas d'hébergement) — elle fournit un brief que le dirigeant fait construire (Wix, freelance...). "Aide à la connexion des outils" couverte par Paul en conversation, qui renvoie vers `/connexions` sans jamais demander de mot de passe.
+- **Nadia fait un rapport de positionnement concurrentiel** — ✅ livré, voir point 5.
+- **Martine génère du contenu automatiquement** — ✅ livré partiellement. `newsContext` devient optionnel : sans actualité fournie, Martine propose ses propres idées génériques (conseil, FAQ, présentation de service) au lieu d'exiger une actualité réelle à chaque fois.
+  - **"...et le publie sur les différentes plateformes" — ❌ refusé.** La publication automatique sans validation contredit directement la règle "validation humaine obligatoire" actée depuis le début du projet ([agents-roster.md](agents-roster.md)) et nécessiterait de toute façon les connexions OAuth (point 2quater), pas encore fonctionnelles. Chaque post généré par Martine reste une proposition à valider dans le dashboard.
+- **Jean-Claude trouve des pistes de croissance** (news, événements, opportunités) — ✅ livré. Nouvel outil `propose_growth_lead` + `web_search`, distinct des templates de prospection. **Garde-fou RGPD renforcé** : uniquement des informations publiques et professionnelles (entreprises, événements), jamais de donnée personnelle d'un particulier — consigne explicite de refus si on lui demande de cibler des particuliers (ex: "trouve-moi les propriétaires de maison avec piscine", refusé par construction). Testé en conditions réelles : piste réelle et sourcée trouvée (projet solaire local), avec rappel explicite de ne contacter que par voie professionnelle publique.
 
 ### 6. Pilote avec 5 vraies entreprises (2 semaines)
 Reprise telle quelle du cahier des charges tiers : condition de validation avant d'aller plus loin. Doit s'appuyer sur les points 1-4 au minimum.

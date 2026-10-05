@@ -27,9 +27,9 @@ export async function runVisibiliteLocaleAgent(companyId: string) {
       "Enregistre une proposition d'action de visibilité locale, en attente de validation humaine. N'exécute rien directement.",
     inputSchema: z.object({
       kind: z
-        .enum(["gbp_update", "review_reply"])
+        .enum(["gbp_update", "review_reply", "site_web_content"])
         .describe(
-          "gbp_update = mise à jour d'une information de fiche Google Business Profile. review_reply = réponse suggérée à un avis client.",
+          "gbp_update = mise à jour d'une information de fiche Google Business Profile. review_reply = réponse suggérée à un avis client. site_web_content = brief de contenu pour un site web d'une page (titres, textes, structure) — pas la construction technique du site lui-même, qui reste hors de ta portée.",
         ),
       title: z.string().describe("Titre court de la proposition, affiché dans le cockpit"),
       content: z
@@ -60,8 +60,14 @@ Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : 
 ${objectiveLine(company.objective)}
 
 Ton rôle : proposer 2 à 3 actions concrètes et courtes pour améliorer la visibilité locale de cette entreprise (fiche Google Business Profile, gestion des avis clients).
+Site web déclaré : ${company.website ?? "aucun"}. ${
+      company.website
+        ? ""
+        : "Aucun site déclaré : inclus une proposition site_web_content pour donner un brief de contenu prêt à l'emploi (l'utilisateur le fera construire lui-même, tu ne construis pas de site)."
+    }
 Règles strictes :
 - Tu ne fais QUE proposer, jamais exécuter : utilise uniquement l'outil propose_action pour chaque proposition.
+- Tu ne construis jamais de site web toi-même — tu fournis uniquement le contenu (texte, structure), jamais de code ni d'hébergement.
 - Reste factuel et réaliste pour ce métier et cette zone, pas de contenu générique.
 - Une proposition = une action, avec un contenu directement utilisable (pas de placeholder du type "[à compléter]").`,
     messages: [

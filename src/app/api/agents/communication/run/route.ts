@@ -4,11 +4,8 @@ import { runCommunicationAgent } from "@/lib/agents/communication";
 export async function POST(request: NextRequest) {
   const { companyId, newsContext } = await request.json();
 
-  if (!companyId || !newsContext) {
-    return NextResponse.json(
-      { error: "companyId et newsContext sont requis" },
-      { status: 400 },
-    );
+  if (!companyId) {
+    return NextResponse.json({ error: "companyId requis" }, { status: 400 });
   }
 
   try {

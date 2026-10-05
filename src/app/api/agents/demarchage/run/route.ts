@@ -4,11 +4,8 @@ import { runDemarchageAgent } from "@/lib/agents/demarchage";
 export async function POST(request: NextRequest) {
   const { companyId, prospectDescription } = await request.json();
 
-  if (!companyId || !prospectDescription) {
-    return NextResponse.json(
-      { error: "companyId et prospectDescription sont requis" },
-      { status: 400 },
-    );
+  if (!companyId) {
+    return NextResponse.json({ error: "companyId requis" }, { status: 400 });
   }
 
   try {

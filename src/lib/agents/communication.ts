@@ -8,15 +8,18 @@ const AGENT_NAME = "communication";
 const PERSONA = PERSONAS.communication;
 
 /**
- * Agent "Communication / réseaux sociaux" (cf. docs/agents-roster.md).
+ * Agent "Communication / réseaux sociaux" (cf. docs/agents-roster.md,
+ * docs/backlog.md US "génération automatique de contenu").
  * Ne fait QUE créer des propositions en base (statut "en_attente") : aucune
- * publication réelle ici. Contrairement à l'agent Visibilité locale, cet
- * agent a besoin d'une actualité déclarée par l'utilisateur (il n'invente
- * pas d'événement) — fournie en paramètre, pas collectée automatiquement.
+ * publication réelle, jamais automatique — la demande d'auto-publication a
+ * été explicitement rejetée (contredit la validation humaine obligatoire).
+ * newsContext est optionnel : si fourni, l'agent s'appuie sur cette
+ * actualité réelle ; si absent, il génère ses propres idées de contenu
+ * générique (conseils, coulisses, FAQ) sans jamais inventer d'événement.
  */
 export async function runCommunicationAgent(
   companyId: string,
-  newsContext: string,
+  newsContext?: string,
 ) {
   const company = await prisma.company.findUniqueOrThrow({
     where: { id: companyId },
@@ -64,16 +67,19 @@ export async function runCommunicationAgent(
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
 ${objectiveLine(company.objective)}
 
-Ton rôle : proposer 2 à 3 posts Instagram/Facebook concrets à partir de l'actualité fournie par l'utilisateur.
+Ton rôle : proposer 2 à 3 posts Instagram/Facebook concrets.
 Règles strictes :
-- Tu ne fais QUE proposer, jamais publier : utilise uniquement l'outil propose_social_post pour chaque proposition.
-- Appuie-toi exclusivement sur l'actualité fournie par l'utilisateur — n'invente jamais un événement, une offre ou une actualité qui n'a pas été mentionnée.
+- Tu ne fais QUE proposer, JAMAIS publier toi-même, même automatiquement : utilise uniquement l'outil propose_social_post pour chaque proposition. Chaque post reste en attente de validation humaine dans le dashboard avant toute publication réelle.
+- Si une actualité réelle t'est fournie, appuie-toi exclusivement sur elle — n'invente jamais un événement, une offre ou un chiffre qui n'a pas été mentionné.
+- Si aucune actualité n'est fournie, génère tes propres idées de contenu générique et honnête (conseil pratique lié au métier, présentation d'un service, question fréquente de client) — jamais un faux événement présenté comme réel.
 - Respecte le ton de communication indiqué.
 - Une proposition = un post complet et directement utilisable (légende + suggestion de visuel + date), pas de placeholder du type "[à compléter]".`,
     messages: [
       {
         role: "user",
-        content: `Actualité à communiquer : ${newsContext}\n\nPropose les posts correspondants.`,
+        content: newsContext
+          ? `Actualité à communiquer : ${newsContext}\n\nPropose les posts correspondants.`
+          : "Aucune actualité particulière à communiquer. Propose tes propres idées de contenu générique.",
       },
     ],
   });
