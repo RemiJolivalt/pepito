@@ -4,7 +4,7 @@ Copilote IA agentique pour indépendants et TPE (kiné, plombier, installateur s
 
 ## Statut
 
-Premier agent fonctionnel : "Visibilité locale" (propositions en attente de validation humaine, cockpit de pilotage minimal). Voir [docs/](docs/) pour les décisions produit, specs et architecture.
+5 agents fonctionnels (Paul, Nadia, Camille, Martine, Jean-Claude), plan d'action priorisé, rapport, connexions OAuth (scaffolding). Voir [docs/backlog.md](docs/backlog.md) pour le détail à jour.
 
 ## Démarrer en local
 
@@ -14,6 +14,12 @@ Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/).
    ```
    DATABASE_URL="file:./dev.db"
    ANTHROPIC_API_KEY="sk-ant-..."
+
+   # Optionnel — connexions OAuth (voir docs/backlog.md #2quater pour la démarche d'enregistrement) :
+   # GOOGLE_OAUTH_CLIENT_ID=""
+   # GOOGLE_OAUTH_CLIENT_SECRET=""
+   # META_APP_ID=""
+   # META_APP_SECRET=""
    ```
 2. Installer les dépendances : `npm install`
 3. Générer le client Prisma et créer la base SQLite locale :
@@ -22,7 +28,7 @@ Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/).
    npx prisma db push
    ```
 4. Lancer le serveur de dev : `npm run dev`
-5. Ouvrir `http://localhost:3000` (redirige vers `/cockpit`) : créer une entreprise démo, puis lancer l'agent "Visibilité locale" et valider/rejeter ses propositions.
+5. Ouvrir `http://localhost:3000` : se connecter (email), remplir l'onboarding, puis sur `/dashboard` générer le plan de Paul, lancer les agents et valider leurs propositions.
 
 **Dev vs prod** : la base locale est SQLite (aucune infra externe requise). La décision d'architecture retient PostgreSQL pour la production — seule la variable `DATABASE_URL` (et le `provider` dans `prisma/schema.prisma`) changent, le schéma de données reste identique.
 

@@ -165,3 +165,90 @@ Règles strictes, non négociables :
 
   return savedReply;
 }
+
+/**
+ * Paul "meneur" : produit un plan d'action structuré (quoi, qui, quand,
+ * pourquoi) plutôt que de la prose — demande CEO explicite ("force de
+ * proposition", "donne la direction"). Séparé de runCoCeoTurn : ne touche
+ * pas à l'historique de chat, ne délègue jamais lui-même (chaque item du
+ * plan n'est lancé que si l'utilisateur clique "Lancer" dans le dashboard).
+ */
+export async function runCoCeoPlanning(companyId: string) {
+  const company = await prisma.company.findUniqueOrThrow({
+    where: { id: companyId },
+  });
+
+  const [pendingProposals, recentFindings, existingPlan] = await Promise.all([
+    prisma.agentProposal.findMany({
+      where: { companyId, status: "en_attente" },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.auditFinding.findMany({
+      where: { companyId },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+    }),
+    prisma.actionPlanItem.findMany({
+      where: { companyId, status: { not: "termine" } },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  const createdItemIds: string[] = [];
+
+  const proposePlanItem = betaZodTool({
+    name: "propose_plan_item",
+    description: "Ajoute une action au plan priorisé. Appelle cet outil une fois par action recommandée (3 à 5 fois en général).",
+    inputSchema: z.object({
+      agent: z
+        .enum(["visibilite_locale", "communication", "demarchage", "audit"])
+        .describe("Agent responsable de cette action"),
+      title: z.string().describe("Action concrète et courte, ex: 'Mettre à jour la fiche Google'"),
+      rationale: z
+        .string()
+        .describe("Pourquoi cette action, en lien avec l'objectif business du dirigeant"),
+      timing: z.string().describe("Quand, en langage naturel : 'aujourd'hui', 'cette semaine', 'dès que le site est en ligne'"),
+    }),
+    run: async (input) => {
+      const item = await prisma.actionPlanItem.create({
+        data: {
+          companyId,
+          agent: input.agent,
+          title: input.title,
+          rationale: input.rationale,
+          timing: input.timing,
+        },
+      });
+      createdItemIds.push(item.id);
+      return `Action ajoutée au plan (id: ${item.id}).`;
+    },
+  });
+
+  await anthropic.beta.messages.toolRunner({
+    model: AGENT_MODEL,
+    max_tokens: 2000,
+    tools: [proposePlanItem],
+    system: `Tu es ${PERSONA.name} de Pepito. Tu dois être force de proposition et donner une direction claire — pas attendre des questions.
+Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
+${objectiveLine(company.objective)}
+Propositions déjà en attente de validation : ${pendingProposals.map((p) => `${p.agent}: ${p.title}`).join("; ") || "aucune"}.
+Derniers constats (audit, concurrence) : ${recentFindings.map((f) => f.title).join("; ") || "aucun"}.
+Items déjà au plan (ne les répète pas) : ${existingPlan.map((i) => i.title).join("; ") || "aucun"}.
+
+Ta tâche : propose un plan priorisé de 3 à 5 actions concrètes via propose_plan_item, chacune rattachée à un agent (${PERSONAS.visibilite_locale.name}/visibilite_locale, ${PERSONAS.communication.name}/communication, ${PERSONAS.demarchage.name}/demarchage, ${PERSONAS.audit.name}/audit), avec une justification liée à l'objectif et un délai réaliste.
+Règles :
+- Base-toi sur l'état réel ci-dessus (propositions en attente, constats) — ne répète pas une action déjà proposée ou déjà au plan.
+- Priorise ce qui a le plus d'impact pour l'objectif, pas une liste exhaustive.
+- Chaque item doit être une action que l'utilisateur comprend sans contexte supplémentaire.`,
+    messages: [
+      {
+        role: "user",
+        content: "Donne-moi ton plan d'action priorisé.",
+      },
+    ],
+  });
+
+  return prisma.actionPlanItem.findMany({
+    where: { id: { in: createdItemIds } },
+  });
+}

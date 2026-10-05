@@ -1,9 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import type { Company, AgentProposal, AuditFinding, ChatMessage } from "@prisma/client";
+import type { Company, AgentProposal, AuditFinding, ChatMessage, ActionPlanItem } from "@prisma/client";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 import { PersonaAvatar } from "@/components/persona-avatar";
+
+const AGENT_RUN_ENDPOINTS: Record<Exclude<AgentKey, "co_ceo">, string> = {
+  visibilite_locale: "/api/agents/visibilite-locale/run",
+  communication: "/api/agents/communication/run",
+  demarchage: "/api/agents/demarchage/run",
+  audit: "/api/agents/audit/run",
+};
 
 const STATUS_LABELS: Record<string, string> = {
   en_attente: "En attente",
@@ -66,29 +73,79 @@ export function DashboardClient({
   initialAuditFindings,
   initialProposals,
   initialChatMessages,
+  initialPlanItems,
 }: {
   company: Company;
   initialAuditFindings: AuditFinding[];
   initialProposals: AgentProposal[];
   initialChatMessages: ChatMessage[];
+  initialPlanItems: ActionPlanItem[];
 }) {
   const [auditFindings, setAuditFindings] = useState(initialAuditFindings);
   const [proposals, setProposals] = useState(initialProposals);
   const [chatMessages, setChatMessages] = useState(initialChatMessages);
+  const [planItems, setPlanItems] = useState(initialPlanItems);
   const [chatInput, setChatInput] = useState("");
   const [chatSending, setChatSending] = useState(false);
+  const [planLoading, setPlanLoading] = useState(false);
   const [runningAgent, setRunningAgent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [newsContext, setNewsContext] = useState("");
   const [prospectDescription, setProspectDescription] = useState("");
 
   async function refreshAll() {
-    const [findingsRes, proposalsRes] = await Promise.all([
+    const [findingsRes, proposalsRes, planRes] = await Promise.all([
       fetch(`/api/audit-findings?companyId=${company.id}`),
       fetch(`/api/proposals?companyId=${company.id}`),
+      fetch(`/api/co-ceo/plan?companyId=${company.id}`),
     ]);
     if (findingsRes.ok) setAuditFindings(await findingsRes.json());
     if (proposalsRes.ok) setProposals(await proposalsRes.json());
+    if (planRes.ok) setPlanItems(await planRes.json());
+  }
+
+  async function handleGeneratePlan() {
+    setPlanLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/co-ceo/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId: company.id }),
+      });
+      if (!res.ok) throw new Error();
+      await refreshAll();
+    } catch {
+      setError(`${PERSONAS.co_ceo.name} n'a pas pu générer de plan — vérifiez la clé ANTHROPIC_API_KEY côté serveur.`);
+    } finally {
+      setPlanLoading(false);
+    }
+  }
+
+  async function handleLaunchPlanItem(item: ActionPlanItem) {
+    const agentKey = item.agent as Exclude<AgentKey, "co_ceo">;
+    const url = AGENT_RUN_ENDPOINTS[agentKey];
+    if (!url) return;
+    setRunningAgent(item.id);
+    setError(null);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId: company.id }),
+      });
+      if (!res.ok) throw new Error();
+      await fetch(`/api/action-plan/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "lance" }),
+      });
+      await refreshAll();
+    } catch {
+      setError("Échec du lancement de l'action — vérifiez la clé ANTHROPIC_API_KEY côté serveur.");
+    } finally {
+      setRunningAgent(null);
+    }
   }
 
   async function runAgent(
@@ -252,6 +309,61 @@ export function DashboardClient({
             Envoyer
           </button>
         </form>
+      </section>
+
+      {/* Plan d'action de Paul : "meneur", pas seulement réactif */}
+      <section className="mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium">Plan d&apos;action de {PERSONAS.co_ceo.name}</h2>
+          <button
+            onClick={handleGeneratePlan}
+            disabled={planLoading}
+            className="rounded bg-gray-800 px-3 py-1 text-sm text-white disabled:opacity-50"
+          >
+            {planLoading ? "Génération…" : "Générer / actualiser le plan"}
+          </button>
+        </div>
+        {planItems.filter((i) => i.status !== "termine").length === 0 ? (
+          <p className="mt-2 text-sm text-gray-500">
+            Aucun plan pour le moment — cliquez sur &quot;Générer&quot; pour que{" "}
+            {PERSONAS.co_ceo.name} vous propose une direction.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {planItems
+              .filter((i) => i.status !== "termine")
+              .map((item) => {
+                const persona = PERSONAS[item.agent as Exclude<AgentKey, "co_ceo">];
+                return (
+                  <li
+                    key={item.id}
+                    className="flex items-start justify-between gap-3 rounded border border-gray-200 p-3"
+                  >
+                    <div className="flex items-start gap-2">
+                      <PersonaAvatar agentKey={item.agent as AgentKey} size={28} />
+                      <div>
+                        <p className="font-medium">{item.title}</p>
+                        <p className="text-xs text-gray-500">{item.rationale}</p>
+                        <p className="mt-1 text-xs text-gray-400">
+                          {persona?.name ?? item.agent} · {item.timing}
+                          {item.status === "lance" && " · lancé — vérifiez les propositions ci-dessous"}
+                        </p>
+                      </div>
+                    </div>
+                    {item.status === "propose" && (
+                      <button
+                        onClick={() => handleLaunchPlanItem(item)}
+                        disabled={runningAgent !== null}
+                        className="shrink-0 rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
+                      >
+                        {runningAgent === item.id ? "…" : "Lancer"}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+          </ul>
+        )}
       </section>
 
       {/* Agent Overview : vue épurée des agents actifs */}

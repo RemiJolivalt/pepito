@@ -33,10 +33,24 @@ Point de contact conversationnel unique, délègue aux 4 agents via function cal
 ### 2ter. Navigation et avatars — ✅ livré (2026-10-05)
 Header de navigation commun (Dashboard / Connexions / Mon profil / Déconnexion) sur toutes les pages post-login. Avatars illustratifs (silhouette + couleur) par agent — **décision délibérée de ne pas utiliser de vraies photos de personnes** : Nadia/Camille/Martine/Jean-Claude/Paul sont des IA, pas des employés réels ; une photo réaliste serait trompeuse si elle apparaît un jour hors du dashboard (ex: dans un email envoyé en leur nom).
 
-### 2quater. Connexions aux plateformes externes (Google/Instagram/Facebook) — ⚠️ cadrage posé, implémentation non fonctionnelle
-Demande initiale reformulée pour raison de sécurité : **on ne collecte jamais le mot de passe de l'utilisateur** pour ces plateformes (interdit par leurs conditions d'utilisation, risque de fuite, aucune nécessité technique). La bonne approche est OAuth — l'utilisateur autorise Pepito depuis l'écran officiel Google/Meta.
-Livré : page `/connexions` avec statut par canal (`ChannelConnection`), bouton explicitement non fonctionnel ("bientôt — OAuth") plutôt qu'un faux flux.
-**Reste à faire avant que ça fonctionne réellement** : enregistrer une application développeur chez Google (Google Business Profile API) et Meta (Graph API Instagram/Facebook), avec vérification business — démarche à lancer par le CEO, délai hors de notre contrôle (cf. [architecture-technique.md](architecture-technique.md) § intégrations). Tant que ce n'est pas fait, les agents restent en mode "propose un contenu que vous recopiez vous-même".
+### 2quater. Connexions OAuth (Google/Instagram/Facebook) — ✅ code livré (2026-10-05), ⚠️ non fonctionnel sans démarche externe du CEO
+Demande initiale reformulée pour raison de sécurité : **on ne collecte jamais le mot de passe de l'utilisateur** pour ces plateformes (interdit par leurs conditions d'utilisation, risque de fuite, aucune nécessité technique).
+Livré : flux OAuth complet et fonctionnel une fois les identifiants fournis —
+- `/api/oauth/google/start` + `/callback` (Google Business Profile), `/api/oauth/meta/start` + `/callback` (Facebook + Instagram), protection CSRF standard (state aléatoire en cookie, vérifié au retour).
+- Jetons stockés dans `ChannelConnection` (accessToken/refreshToken/expiresAt). **TODO prod** : chiffrer au repos avant d'aller au-delà du pilote.
+- Page `/connexions` honnête : si les variables d'environnement d'un provider sont absentes, le bouton reste désactivé avec le détail exact de ce qui manque (variables + étape d'enregistrement externe) ; sinon le vrai flux OAuth se déclenche.
+
+**Ce qu'il reste à faire, et qui ne dépend que du CEO** (démarche externe, délai hors de notre contrôle) :
+1. **Google** : créer un projet sur [Google Cloud Console](https://console.cloud.google.com/), activer la *Business Profile API*, configurer l'écran de consentement OAuth, créer des identifiants OAuth "application web" avec comme URI de redirection autorisée `<votre-domaine>/api/oauth/google/callback`. Renseigner `GOOGLE_OAUTH_CLIENT_ID` et `GOOGLE_OAUTH_CLIENT_SECRET` dans `.env`.
+2. **Meta** : créer une app sur [developers.facebook.com](https://developers.facebook.com/), ajouter Facebook Login, demander les permissions `pages_manage_posts` et `instagram_content_publish` (passage en **App Review Meta obligatoire** — délai de plusieurs jours à semaines, hors de notre contrôle). URI de redirection : `<votre-domaine>/api/oauth/meta/callback`. Renseigner `META_APP_ID` et `META_APP_SECRET`.
+3. Une fois connecté : les agents produisent toujours des *propositions* (pas de changement du garde-fou) — l'étape suivante (hors scope de ce backlog) serait de brancher l'exécution réelle (appel API Google/Meta) une fois une proposition validée, ce qui n'est pas encore construit.
+
+### 2quinquies. Paul "meneur" — plan d'action + rapport — ✅ livré (2026-10-05, demande CEO)
+Demande CEO : "le Co-CEO doit être force de proposition et donner la direction : actions, pour quand, qui, où valider, puis un rapport."
+- **Plan d'action** (`ActionPlanItem`, bouton "Générer / actualiser le plan") : Paul propose 3-5 actions priorisées, chacune avec agent responsable, titre, justification liée à l'objectif, et délai — affiché en tête du dashboard, pas noyé dans le chat. Chaque item a un bouton "Lancer" qui déclenche l'agent correspondant (même garde-fou : ça crée des propositions, jamais une exécution directe).
+- **Rapport** (`/rapport`) : agrégation déterministe (pas d'appel LLM, pour ne pas réintroduire de risque d'hallucination) — actions validées/en attente/rejetées, dernier positionnement concurrentiel, dernières pistes de croissance.
+- Testé en conditions réelles : plan de 5 actions cohérent généré pour un cas concret, item lancé avec succès, rapport reflète les chiffres réels.
+- **Non fait** : envoi automatique du rapport par email (nécessite un fournisseur d'envoi configuré, cf. point 4 ci-dessous, toujours pas construit).
 
 ### 3. Déclenchement quotidien programmé (version dégradée de la "boucle quotidienne")
 Un job programmé (1x/jour) qui relance les agents pertinents pour chaque entreprise active et alimente le dashboard de nouvelles propositions — **mais qui propose, ne décide ni n'exécute jamais seul**. Ce n'est pas la boucle autonome complète du cahier des charges tiers (observer→décider→agir→mesurer→apprendre sans validation), qu'on rejette tant qu'on est aux niveaux d'autonomie 1-2.

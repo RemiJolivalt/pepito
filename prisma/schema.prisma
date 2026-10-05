@@ -25,6 +25,27 @@ model Company {
   proposals       AgentProposal[]
   auditFindings   AuditFinding[]
   chatMessages    ChatMessage[]
+  planItems       ActionPlanItem[]
+}
+
+/**
+ * Plan d'action proposé par Paul (Co-CEO) : "meneur" qui recommande quoi
+ * faire, par qui et quand, avant que l'utilisateur ne lance/valide quoi que
+ * ce soit (cf. docs/backlog.md — demande CEO "le Co-CEO doit être force de
+ * proposition"). Jamais exécuté automatiquement : un item "lancé" ne fait
+ * que déclencher l'agent correspondant, qui reste soumis au même garde-fou
+ * de validation que partout ailleurs.
+ */
+model ActionPlanItem {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  agent       String // visibilite_locale, communication, demarchage, audit
+  title       String
+  rationale   String
+  timing      String // ex: "cette semaine", "aujourd'hui"
+  status      String   @default("propose") // propose, lance, termine
+  createdAt   DateTime @default(now())
 }
 
 model ChatMessage {
@@ -47,12 +68,20 @@ model AuditFinding {
 }
 
 model ChannelConnection {
-  id          String   @id @default(cuid())
-  companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
-  channel     String // google_business_profile, instagram, email
-  status      String   @default("non_connecte") // non_connecte, connecte, erreur
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  channel       String // google_business_profile, instagram, facebook
+  status        String   @default("non_connecte") // non_connecte, connecte, erreur
+  // Jetons OAuth (jamais de mot de passe utilisateur — cf. docs/backlog.md).
+  // TODO prod : chiffrer au repos avant d'aller au-delà du pilote (cf.
+  // docs/architecture-technique.md § risques techniques).
+  accessToken   String?
+  refreshToken  String?
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  @@unique([companyId, channel])
 }
 
 model AgentProposal {

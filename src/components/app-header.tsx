@@ -14,6 +14,9 @@ export function AppHeader({ companyName }: { companyName?: string }) {
           <Link href="/connexions" className="hover:text-black">
             Connexions
           </Link>
+          <Link href="/rapport" className="hover:text-black">
+            Rapport
+          </Link>
           <Link href="/onboarding" className="hover:text-black">
             Mon profil
           </Link>

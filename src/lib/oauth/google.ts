@@ -1,0 +1,46 @@
+/**
+ * OAuth Google (Google Business Profile). Jamais de mot de passe utilisateur
+ * — cf. docs/backlog.md. Nécessite un projet Google Cloud avec l'API
+ * "Business Profile API" activée et un écran de consentement OAuth
+ * configuré (démarche externe à faire par le CEO, cf. docs/backlog.md).
+ */
+export const GOOGLE_SCOPE = "https://www.googleapis.com/auth/business.manage";
+
+export function isGoogleOAuthConfigured(): boolean {
+  return Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET);
+}
+
+export function buildGoogleAuthUrl(redirectUri: string, state: string): string {
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_OAUTH_CLIENT_ID!,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: GOOGLE_SCOPE,
+    access_type: "offline",
+    prompt: "consent",
+    state,
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+export async function exchangeGoogleCode(code: string, redirectUri: string) {
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: process.env.GOOGLE_OAUTH_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Échange de code Google échoué (${res.status}): ${await res.text()}`);
+  }
+  return res.json() as Promise<{
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+  }>;
+}
