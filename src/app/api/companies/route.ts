@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionEmail } from "@/lib/session";
+import { omitPasswordHash } from "@/lib/safe-company";
 
 export async function GET() {
   const ownerEmail = await getSessionEmail();
@@ -8,7 +9,7 @@ export async function GET() {
     return NextResponse.json({ error: "Non connecté" }, { status: 401 });
   }
   const company = await prisma.company.findUnique({ where: { ownerEmail } });
-  return NextResponse.json(company);
+  return NextResponse.json(company ? omitPasswordHash(company) : null);
 }
 
 export async function POST(request: NextRequest) {
@@ -56,5 +57,5 @@ export async function POST(request: NextRequest) {
     create: { ownerEmail, ...data },
     update: data,
   });
-  return NextResponse.json(company, { status: 201 });
+  return NextResponse.json(omitPasswordHash(company), { status: 201 });
 }

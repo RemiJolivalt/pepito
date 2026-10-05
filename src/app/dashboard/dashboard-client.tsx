@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { Company, AgentProposal, ChatMessage, ActionPlanItem } from "@prisma/client";
+import type { AgentProposal, ChatMessage, ActionPlanItem } from "@prisma/client";
+import type { SafeCompany } from "@/lib/safe-company";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 import { PersonaAvatar } from "@/components/persona-avatar";
 import { ProposalCard } from "@/components/proposal-card";
@@ -21,7 +22,7 @@ export function DashboardClient({
   initialChatMessages,
   pendingCount,
 }: {
-  company: Company;
+  company: SafeCompany;
   initialPlanItems: PlanItemWithProposals[];
   initialChatMessages: ChatMessage[];
   pendingCount: number;

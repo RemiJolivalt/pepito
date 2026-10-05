@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionEmail } from "@/lib/session";
 import { AppShell } from "@/components/app-shell";
+import { omitPasswordHash } from "@/lib/safe-company";
 import { EquipeClient } from "./equipe-client";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export default async function EquipePage() {
 
   return (
     <AppShell companyName={company.name}>
-      <EquipeClient company={company} initialAuditFindings={auditFindings} initialProposals={proposals} />
+      <EquipeClient company={omitPasswordHash(company)} initialAuditFindings={auditFindings} initialProposals={proposals} />
     </AppShell>
   );
 }

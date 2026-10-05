@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { Company, AgentProposal, AuditFinding } from "@prisma/client";
+import type { AgentProposal, AuditFinding } from "@prisma/client";
+import type { SafeCompany } from "@/lib/safe-company";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 import { PersonaAvatar } from "@/components/persona-avatar";
 import { ProposalCard } from "@/components/proposal-card";
@@ -12,7 +13,7 @@ export function EquipeClient({
   initialAuditFindings,
   initialProposals,
 }: {
-  company: Company;
+  company: SafeCompany;
   initialAuditFindings: AuditFinding[];
   initialProposals: AgentProposal[];
 }) {
