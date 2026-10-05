@@ -2,6 +2,9 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
+import { PERSONAS } from "@/lib/agents/personas";
+
+const PERSONA = PERSONAS.audit;
 
 /**
  * Agent "Audit" : visite le site web déclaré (s'il existe) via l'outil
@@ -56,7 +59,7 @@ export async function runAuditAgent(companyId: string) {
       proposeFinding,
       { type: "web_fetch_20260209", name: "web_fetch", max_uses: 3 },
     ],
-    system: `Tu es l'agent "Audit" de Pepito, un copilote IA pour indépendants et TPE.
+    system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 Réseaux sociaux déclarés : ${company.socialHandles ?? "aucun"}.
 

@@ -2,8 +2,10 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
+import { PERSONAS, objectiveLine } from "@/lib/agents/personas";
 
 const AGENT_NAME = "demarchage";
+const PERSONA = PERSONAS.demarchage;
 
 /**
  * Agent "Démarchage / prospection" (cf. docs/agents-roster.md) — le plus
@@ -59,8 +61,9 @@ export async function runDemarchageAgent(
     model: AGENT_MODEL,
     max_tokens: 4000,
     tools: [proposeAction],
-    system: `Tu es l'agent "Démarchage / prospection" de Pepito, un copilote IA pour indépendants et TPE.
+    system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
+${objectiveLine(company.objective)}
 
 Ton rôle : proposer 1 à 2 TEMPLATES d'email de prospection génériques, à partir du type de prospects décrit par l'utilisateur.
 Règles strictes, non négociables :

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { name, trade, servingArea, tone, website, socialHandles } = body;
+  const { name, trade, servingArea, tone, website, socialHandles, objective } = body;
 
   if (!name || !trade || !servingArea || !tone) {
     return NextResponse.json(
@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
 
   const company = await prisma.company.upsert({
     where: { ownerEmail },
-    create: { ownerEmail, name, trade, servingArea, tone, website, socialHandles },
-    update: { name, trade, servingArea, tone, website, socialHandles },
+    create: { ownerEmail, name, trade, servingArea, tone, website, socialHandles, objective },
+    update: { name, trade, servingArea, tone, website, socialHandles, objective },
   });
   return NextResponse.json(company, { status: 201 });
 }

@@ -19,10 +19,21 @@ model Company {
   tone            String // ton de communication choisi à l'onboarding
   website         String? // optionnel : beaucoup de TPE n'ont pas de site
   socialHandles   String? // ex: @cabinet_kine_demo (Instagram)
+  objective       String? // objectif business déclaré, ex: "10 nouveaux clients par mois" (cf. docs/backlog.md #1)
   createdAt       DateTime  @default(now())
   channels        ChannelConnection[]
   proposals       AgentProposal[]
   auditFindings   AuditFinding[]
+  chatMessages    ChatMessage[]
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  role        String // user, assistant
+  content     String
+  createdAt   DateTime @default(now())
 }
 
 model AuditFinding {

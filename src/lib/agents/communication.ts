@@ -2,8 +2,10 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
+import { PERSONAS, objectiveLine } from "@/lib/agents/personas";
 
 const AGENT_NAME = "communication";
+const PERSONA = PERSONAS.communication;
 
 /**
  * Agent "Communication / réseaux sociaux" (cf. docs/agents-roster.md).
@@ -58,8 +60,9 @@ export async function runCommunicationAgent(
     model: AGENT_MODEL,
     max_tokens: 4000,
     tools: [proposeAction],
-    system: `Tu es l'agent "Communication / réseaux sociaux" de Pepito, un copilote IA pour indépendants et TPE.
+    system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
+${objectiveLine(company.objective)}
 
 Ton rôle : proposer 2 à 3 posts Instagram/Facebook concrets à partir de l'actualité fournie par l'utilisateur.
 Règles strictes :

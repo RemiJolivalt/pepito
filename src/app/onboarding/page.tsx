@@ -11,6 +11,7 @@ export default function OnboardingPage() {
   const [tone, setTone] = useState("convivial_proximite");
   const [website, setWebsite] = useState("");
   const [socialHandles, setSocialHandles] = useState("");
+  const [objective, setObjective] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +30,7 @@ export default function OnboardingPage() {
           tone,
           website: website || undefined,
           socialHandles: socialHandles || undefined,
+          objective: objective || undefined,
         }),
       });
       if (!res.ok) throw new Error();
@@ -58,6 +60,15 @@ export default function OnboardingPage() {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
+        <label className="text-sm font-medium">
+          Quel est votre objectif principal ?
+        </label>
+        <input
+          placeholder="ex: 10 nouveaux clients par mois"
+          value={objective}
+          onChange={(e) => setObjective(e.target.value)}
+          className="rounded border px-3 py-2 text-sm"
+        />
         <input
           required
           placeholder="Nom commercial"

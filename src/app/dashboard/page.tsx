@@ -12,7 +12,7 @@ export default async function DashboardPage() {
   const company = await prisma.company.findUnique({ where: { ownerEmail } });
   if (!company) redirect("/onboarding");
 
-  const [auditFindings, proposals] = await Promise.all([
+  const [auditFindings, proposals, chatMessages] = await Promise.all([
     prisma.auditFinding.findMany({
       where: { companyId: company.id },
       orderBy: { createdAt: "desc" },
@@ -21,6 +21,10 @@ export default async function DashboardPage() {
       where: { companyId: company.id },
       orderBy: { createdAt: "desc" },
     }),
+    prisma.chatMessage.findMany({
+      where: { companyId: company.id },
+      orderBy: { createdAt: "asc" },
+    }),
   ]);
 
   return (
@@ -28,6 +32,7 @@ export default async function DashboardPage() {
       company={company}
       initialAuditFindings={auditFindings}
       initialProposals={proposals}
+      initialChatMessages={chatMessages}
     />
   );
 }

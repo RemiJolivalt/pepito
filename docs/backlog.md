@@ -20,13 +20,15 @@ Tout ajout au backlog doit se justifier par rapport à ce KPI, pas par exhaustiv
 
 ## Backlog ajusté (ordre de priorité)
 
-### 1. Objectif business à l'onboarding
-Ajouter un champ "objectif" (ex: "10 nouveaux clients par mois") collecté à l'onboarding, injecté dans le system prompt de chaque agent pour orienter ses propositions vers cet objectif plutôt que des actions génériques.
-**Pourquoi maintenant** : lacune réelle identifiée dans le cahier des charges tiers, coût d'ajout faible, impact direct sur la pertinence perçue (KPI).
+### 1. Objectif business à l'onboarding — ✅ livré (2026-10-05)
+Champ "objectif" collecté à l'onboarding, injecté dans le system prompt de chaque agent (y compris le Co-CEO) pour orienter les propositions.
 
-### 2. Personnification des agents (Martine, Jean-Claude, etc.)
-Donner un nom et un ton propre à chaque agent dans l'UI et les system prompts (ex: Visibilité locale → "Martine", Démarchage → "Jean-Claude"). Pas de refonte technique, juste du nommage et un peu de ton dans les contenus générés.
-**Pourquoi maintenant** : idée originelle du produit, coût quasi nul, effet d'engagement attendu fort.
+### 2. Personnification des agents — ✅ livré (2026-10-05)
+Noms et rôles centralisés dans [src/lib/agents/personas.ts](../src/lib/agents/personas.ts) : Nadia (Audit), Camille (Visibilité locale), Martine (Communication), Jean-Claude (Démarchage). Affichés dans le dashboard (cartes "Agent Overview") et dans les contenus générés.
+
+### 2bis. Agent "Co-CEO" — ✅ livré (2026-10-05, ajouté hors backlog initial à la demande du CEO)
+Point de contact conversationnel unique (encart chat sur le dashboard), qui délègue aux 4 agents existants via des outils (function calling), jamais d'exécution directe. Testé en conditions réelles : délègue correctement à Audit et Visibilité locale sans information manquante, mais demande l'information requise (actualité, type de prospects) avant de déléguer à Communication/Démarchage plutôt que d'inventer — garde-fou respecté.
+Historique conversationnel persisté (`ChatMessage`), par entreprise.
 
 ### 3. Déclenchement quotidien programmé (version dégradée de la "boucle quotidienne")
 Un job programmé (1x/jour) qui relance les agents pertinents pour chaque entreprise active et alimente le dashboard de nouvelles propositions — **mais qui propose, ne décide ni n'exécute jamais seul**. Ce n'est pas la boucle autonome complète du cahier des charges tiers (observer→décider→agir→mesurer→apprendre sans validation), qu'on rejette tant qu'on est aux niveaux d'autonomie 1-2.

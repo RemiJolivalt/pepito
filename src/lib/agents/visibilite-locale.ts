@@ -2,8 +2,10 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
+import { PERSONAS, objectiveLine } from "@/lib/agents/personas";
 
 const AGENT_NAME = "visibilite_locale";
+const PERSONA = PERSONAS.visibilite_locale;
 
 /**
  * Agent "Visibilité locale" (cf. docs/agents-roster.md).
@@ -53,8 +55,9 @@ export async function runVisibiliteLocaleAgent(companyId: string) {
     model: AGENT_MODEL,
     max_tokens: 4000,
     tools: [proposeAction],
-    system: `Tu es l'agent "Visibilité locale" de Pepito, un copilote IA pour indépendants et TPE.
+    system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
+${objectiveLine(company.objective)}
 
 Ton rôle : proposer 2 à 3 actions concrètes et courtes pour améliorer la visibilité locale de cette entreprise (fiche Google Business Profile, gestion des avis clients).
 Règles strictes :
