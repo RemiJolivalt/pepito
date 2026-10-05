@@ -91,6 +91,29 @@ export async function runMarketingAgent(
     ? `Le site web déclaré est : ${company.website}. Utilise l'outil web_fetch pour le consulter avant de conclure.`
     : `Aucun site web n'a été déclaré. Enregistre un constat "site_web" signalant l'absence de site comme premier axe d'amélioration, sans inventer de contenu.`;
 
+  // Système scindé en deux blocs pour le prompt caching (cf. doc Tool Runner /
+  // prompt caching) : le bloc stable (persona, profil entreprise, règles) ne
+  // change pas d'un run à l'autre pour une même entreprise — seul le bloc
+  // final (brief ponctuel transmis par Paul) varie par appel. Le cache_control
+  // sur le dernier bloc met aussi en cache les définitions d'outils
+  // (tools -> system -> messages, dans cet ordre de rendu).
+  const stableSystem = `Tu es ${PERSONA.name}, ${PERSONA.role} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
+Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
+Réseaux sociaux déclarés : ${company.socialHandles ?? "aucun"}.
+${companyProfileLines(company)}
+${directionLine(company.direction)}
+
+Ton rôle a deux volets, à faire tous les deux sauf si un brief ci-dessous te demande de te concentrer sur un seul :
+1. Diagnostic : état des lieux honnête de la présence en ligne (site, réseaux) ET du positionnement face à 2-3 concurrents réels locaux — outil record_audit_finding.
+2. Pilotage de la fiche Google : propositions concrètes de mise à jour (infos structurées, pas de texte créatif long) et réponses aux avis — outil propose_action.
+Règles strictes :
+- Tu ne produis PAS de contenu créatif (posts réseaux sociaux, contenu de site) — c'est le rôle de ${PERSONAS.contenu.name}, qui s'appuiera sur tes constats.
+- ${websiteInstruction}
+- Si le site est inaccessible, signale-le comme un constat factuel, ne devine jamais son contenu.
+- Utilise web_search pour identifier des concurrents réels (ex: "${company.trade} ${company.servingArea}") — cite tes sources, n'invente jamais de concurrent.
+- Tu ne fais QUE proposer/constater, jamais exécuter directement.
+- Pas de jargon marketing creux : chaque constat ou proposition doit être concret et actionnable.`;
+
   const { finalMessage, usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     // Plus elevé que les autres agents : Martine fait a la fois diagnostic
@@ -103,23 +126,10 @@ export async function runMarketingAgent(
       { type: "web_fetch_20260209", name: "web_fetch", max_uses: 3 },
       { type: "web_search_20260209", name: "web_search", max_uses: 5 },
     ],
-    system: `Tu es ${PERSONA.name}, ${PERSONA.role} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
-Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
-Réseaux sociaux déclarés : ${company.socialHandles ?? "aucun"}.
-${companyProfileLines(company)}
-${directionLine(company.direction)}
-${briefLine(options.brief)}
-
-Ton rôle a deux volets, à faire tous les deux sauf si le brief ci-dessus te demande de te concentrer sur un seul :
-1. Diagnostic : état des lieux honnête de la présence en ligne (site, réseaux) ET du positionnement face à 2-3 concurrents réels locaux — outil record_audit_finding.
-2. Pilotage de la fiche Google : propositions concrètes de mise à jour (infos structurées, pas de texte créatif long) et réponses aux avis — outil propose_action.
-Règles strictes :
-- Tu ne produis PAS de contenu créatif (posts réseaux sociaux, contenu de site) — c'est le rôle de ${PERSONAS.contenu.name}, qui s'appuiera sur tes constats.
-- ${websiteInstruction}
-- Si le site est inaccessible, signale-le comme un constat factuel, ne devine jamais son contenu.
-- Utilise web_search pour identifier des concurrents réels (ex: "${company.trade} ${company.servingArea}") — cite tes sources, n'invente jamais de concurrent.
-- Tu ne fais QUE proposer/constater, jamais exécuter directement.
-- Pas de jargon marketing creux : chaque constat ou proposition doit être concret et actionnable.`,
+    system: [
+      { type: "text", text: stableSystem, cache_control: { type: "ephemeral" } },
+      ...(options.brief ? [{ type: "text" as const, text: briefLine(options.brief) }] : []),
+    ],
     messages: [
       {
         role: "user",

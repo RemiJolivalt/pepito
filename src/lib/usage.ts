@@ -12,13 +12,40 @@ const PRICING: Record<string, { input: number; output: number }> = {
   "claude-haiku-4-5": { input: 1, output: 5 },
 };
 
-function estimateCostUsd(model: string, inputTokens: number, outputTokens: number): number {
+/**
+ * Un cache WRITE coûte ~1.25x le prix d'entrée standard (TTL 5 min, celui
+ * utilisé partout ici), un cache READ ~0.1x — tarifs génériques Anthropic,
+ * pas d'exception connue pour claude-sonnet-5-5 (cf. doc prompt caching).
+ * Si ce n'était pas pris en compte, le prompt caching ajouté le 2026-10-05
+ * (cf. agents/*.ts) referait dériver silencieusement le coût affiché en
+ * admin — exactement le bug déjà corrigé une fois sur ce fichier.
+ */
+const CACHE_WRITE_MULTIPLIER = 1.25;
+const CACHE_READ_MULTIPLIER = 0.1;
+
+function estimateCostUsd(
+  model: string,
+  tokens: { input: number; output: number; cacheWrite: number; cacheRead: number },
+): number {
   const price = PRICING[model];
   if (!price) return 0; // modèle inconnu du barème : on trace les tokens, coût à 0 plutôt qu'un chiffre inventé
-  return (inputTokens * price.input + outputTokens * price.output) / 1_000_000;
+  return (
+    (tokens.input * price.input +
+      tokens.cacheWrite * price.input * CACHE_WRITE_MULTIPLIER +
+      tokens.cacheRead * price.input * CACHE_READ_MULTIPLIER +
+      tokens.output * price.output) /
+    1_000_000
+  );
 }
 
-type UsageLike = { input_tokens?: number; output_tokens?: number } | undefined;
+type UsageLike =
+  | {
+      input_tokens?: number;
+      output_tokens?: number;
+      cache_creation_input_tokens?: number | null;
+      cache_read_input_tokens?: number | null;
+    }
+  | undefined;
 
 /**
  * `await anthropic.beta.messages.toolRunner({...})` ne résout qu'au DERNIER
@@ -27,23 +54,38 @@ type UsageLike = { input_tokens?: number; output_tokens?: number } | undefined;
  * dernier appel, pas la somme réelle facturée par Anthropic. Bug réel
  * signalé le 2026-10-05 : le crédit API se consommait bien plus vite que
  * les coûts affichés dans /admin. Corrigé en itérant la boucle
- * (`for await`, cf. doc Tool Runner) et en sommant l'usage de CHAQUE tour.
+ * (`for await`, cf. doc Tool Runner) et en sommant l'usage de CHAQUE tour,
+ * cache compris.
  */
-export async function runToolLoop<T extends { usage: { input_tokens: number; output_tokens: number } }>(
-  runner: AsyncIterable<T>,
-): Promise<{ finalMessage: T; usage: { input_tokens: number; output_tokens: number } }> {
+export async function runToolLoop<
+  T extends {
+    usage: {
+      input_tokens: number;
+      output_tokens: number;
+      cache_creation_input_tokens?: number | null;
+      cache_read_input_tokens?: number | null;
+    };
+  },
+>(runner: AsyncIterable<T>): Promise<{ finalMessage: T; usage: Required<UsageLike> }> {
   let input_tokens = 0;
   let output_tokens = 0;
+  let cache_creation_input_tokens = 0;
+  let cache_read_input_tokens = 0;
   let finalMessage: T | undefined;
   for await (const message of runner) {
     input_tokens += message.usage.input_tokens;
     output_tokens += message.usage.output_tokens;
+    cache_creation_input_tokens += message.usage.cache_creation_input_tokens ?? 0;
+    cache_read_input_tokens += message.usage.cache_read_input_tokens ?? 0;
     finalMessage = message;
   }
   if (!finalMessage) {
     throw new Error("Le modèle n'a renvoyé aucun message.");
   }
-  return { finalMessage, usage: { input_tokens, output_tokens } };
+  return {
+    finalMessage,
+    usage: { input_tokens, output_tokens, cache_creation_input_tokens, cache_read_input_tokens },
+  };
 }
 
 /** Enregistre un appel modèle pour la vue admin. Ne doit jamais faire échouer l'agent appelant en cas d'erreur d'écriture. */
@@ -55,15 +97,25 @@ export async function recordUsage(params: {
 }) {
   const inputTokens = params.usage?.input_tokens ?? 0;
   const outputTokens = params.usage?.output_tokens ?? 0;
+  const cacheWriteTokens = params.usage?.cache_creation_input_tokens ?? 0;
+  const cacheReadTokens = params.usage?.cache_read_input_tokens ?? 0;
   try {
     await prisma.usageEvent.create({
       data: {
         companyId: params.companyId,
         agent: params.agent,
         model: params.model,
-        inputTokens,
+        // Tokens "entrée" au sens large (frais + écrits en cache + lus du
+        // cache) : pas de colonne dédiée au détail cache pour l'instant,
+        // seul costUsd a besoin de la tarification différenciée.
+        inputTokens: inputTokens + cacheWriteTokens + cacheReadTokens,
         outputTokens,
-        costUsd: estimateCostUsd(params.model, inputTokens, outputTokens),
+        costUsd: estimateCostUsd(params.model, {
+          input: inputTokens,
+          output: outputTokens,
+          cacheWrite: cacheWriteTokens,
+          cacheRead: cacheReadTokens,
+        }),
       },
     });
   } catch (error) {

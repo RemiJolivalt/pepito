@@ -71,24 +71,21 @@ export async function runContenuAgent(
     },
   });
 
-  const { finalMessage, usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
-    model: AGENT_MODEL,
-    max_tokens: 6000,
-    tools: [proposeContent],
-    system: `Tu es ${PERSONA.name}, ${PERSONA.role} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
+  // Même découpage statique/dynamique que les autres agents (cf.
+  // marketing.ts) pour le prompt caching : le site déclaré et le profil ne
+  // changent qu'en cas de modification des réglages de l'entreprise, donc
+  // restent dans le bloc mis en cache ; seuls le brief et les constats de
+  // Martine (requêtés à chaque appel) changent run après run.
+  const stableSystem = `Tu es ${PERSONA.name}, ${PERSONA.role} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 ${companyProfileLines(company)}
 ${objectiveLine(company.objective)}
 ${directionLine(company.direction)}
-${briefLine(options.brief)}
-Derniers constats de ${PERSONAS.marketing.name} (audit/positionnement, à exploiter si pertinent) : ${
-      recentFindings.map((f) => `${f.title}`).join("; ") || "aucun encore"
-    }.
 Site web déclaré : ${company.website ?? "aucun"}. ${
-      company.website
-        ? ""
-        : "Aucun site déclaré : inclus une proposition site_web_content — un brief complet (titre accrocheur, présentation, 3 à 5 services, zone d'intervention, preuve/certifications, appel à l'action avec téléphone)."
-    }
+    company.website
+      ? ""
+      : "Aucun site déclaré : inclus une proposition site_web_content — un brief complet (titre accrocheur, présentation, 3 à 5 services, zone d'intervention, preuve/certifications, appel à l'action avec téléphone)."
+  }
 
 Ton rôle : produire 2 à 3 propositions de contenu concrètes (posts et/ou contenu de site) via propose_content.
 Règles strictes :
@@ -96,7 +93,21 @@ Règles strictes :
 - Pour le site, tu fournis uniquement le contenu (texte, structure) — pas de code, Pepito le publie après validation.
 - Si une actualité réelle t'est fournie, appuie-toi exclusivement sur elle — n'invente jamais un événement, une offre ou un chiffre.
 - Si aucune actualité n'est fournie, génère tes propres idées honnêtes (conseil pratique, présentation d'un service, FAQ) — jamais un faux événement présenté comme réel.
-- Une proposition = un contenu complet et directement utilisable, pas de placeholder "[à compléter]".`,
+- Une proposition = un contenu complet et directement utilisable, pas de placeholder "[à compléter]".`;
+
+  const dynamicSystem = `${briefLine(options.brief)}
+Derniers constats de ${PERSONAS.marketing.name} (audit/positionnement, à exploiter si pertinent) : ${
+    recentFindings.map((f) => `${f.title}`).join("; ") || "aucun encore"
+  }.`;
+
+  const { finalMessage, usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
+    model: AGENT_MODEL,
+    max_tokens: 6000,
+    tools: [proposeContent],
+    system: [
+      { type: "text", text: stableSystem, cache_control: { type: "ephemeral" } },
+      { type: "text", text: dynamicSystem },
+    ],
     messages: [
       {
         role: "user",

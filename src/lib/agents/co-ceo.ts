@@ -34,9 +34,19 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
     take: HISTORY_LIMIT * 2,
   });
 
-  const messages: Anthropic.MessageParam[] = history.map((m) => ({
+  // Le dernier tour est marqué pour le prompt caching : chaque nouveau
+  // message relit l'historique mis en cache au tour précédent plutôt que de
+  // le refacturer en entier (cf. doc prompt caching — pattern "conversation
+  // multi-tours"). Le système ci-dessous est lui-même entièrement stable
+  // pour une entreprise donnée (aucune donnée recalculée par appel, Paul
+  // passe par get_current_status plutôt que par un état injecté), donc mis
+  // en cache en un seul bloc.
+  const messages: Anthropic.MessageParam[] = history.map((m, i) => ({
     role: m.role === "user" ? "user" : "assistant",
-    content: m.content,
+    content:
+      i === history.length - 1
+        ? [{ type: "text" as const, text: m.content, cache_control: { type: "ephemeral" as const } }]
+        : m.content,
   }));
 
   const getCurrentStatus = betaZodTool({
@@ -127,7 +137,11 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
     model: AGENT_MODEL,
     max_tokens: 2000,
     tools: [getCurrentStatus, delegateMarketing, delegateContenu, delegateDemarchage],
-    system: `Tu es ${PERSONA.name} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.blurb}
+    system: [
+      {
+        type: "text",
+        cache_control: { type: "ephemeral" },
+        text: `Tu es ${PERSONA.name} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.blurb}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 ${companyProfileLines(company)}
 ${objectiveLine(company.objective)}
@@ -142,6 +156,8 @@ Règles strictes, non négociables :
 - Pour déléguer à Contenu (sans actualité) ou Démarchage (sans cible), tu peux le faire sans information — les agents proposeront leurs propres idées génériques. Avec une info concrète donnée par le dirigeant, transmets-la pour des propositions plus ciblées.
 - Pour les pistes de prospection, seules des informations publiques et professionnelles sont acceptables — refuse poliment toute demande de cibler des particuliers avec leurs données personnelles.
 - Réponds de façon brève et directe, comme un vrai point rapide entre dirigeants, pas un rapport formel.`,
+      },
+    ],
     messages,
   }));
 
@@ -230,27 +246,37 @@ export async function runCoCeoPlanning(companyId: string) {
     },
   });
 
-  const { usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
-    model: AGENT_MODEL,
-    max_tokens: 2000,
-    tools: [proposePlanItem],
-    system: `Tu es ${PERSONA.name} de Pepito. Tu dois être force de proposition et donner une direction claire — pas attendre des questions.
+  // Bloc stable (persona, identité entreprise, consignes de génération du
+  // plan) mis en cache ; l'état réel (propositions en attente, constats,
+  // plan existant, actions écartées) est recalculé à chaque appel et reste
+  // donc hors cache, en toute fin de system (cf. doc prompt caching).
+  const stableSystem = `Tu es ${PERSONA.name} de Pepito. Tu dois être force de proposition et donner une direction claire — pas attendre des questions.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}. Site web : ${company.website ?? (company.siteSlug ? `publié par Pepito (/site/${company.siteSlug})` : "aucun")}.
 ${companyProfileLines(company)}
 ${objectiveLine(company.objective)}
 ${directionLine(company.direction)}
-Propositions déjà en attente de validation : ${pendingProposals.map((p) => `${p.agent}: ${p.title}`).join("; ") || "aucune"}.
-Derniers constats (audit, concurrence) : ${recentFindings.map((f) => f.title).join("; ") || "aucun"}.
-Actions déjà au plan (ne les répète pas) : ${existingPlan.map((i) => i.title).join("; ") || "aucune"}.
-Actions ÉCARTÉES par le dirigeant, avec sa raison — ne les repropose pas et tiens compte de la raison : ${discarded.map((i) => `"${i.title}" (${i.feedback || "sans raison"})`).join("; ") || "aucune"}.
 
 Ta tâche : propose un plan priorisé de 3 à 5 actions concrètes via propose_plan_item, chacune rattachée à un agent (${PERSONAS.marketing.name}/marketing pour audit-positionnement-fiche Google, ${PERSONAS.contenu.name}/contenu pour posts et site web, ${PERSONAS.demarchage.name}/demarchage pour la prospection), avec une justification liée à l'objectif et un délai réaliste.
 Règles :
 - Chaque action doit faire avancer l'objectif de façon mesurable — dis dans la justification QUEL effet attendu (appels, devis, avis, visibilité).
 - Une action = un brief exécutable par l'agent tel quel : précis sur le quoi (ex: "3 posts sur les chantiers terminés avec photos avant/après"), pas vague ("améliorer la com").
 - Si l'entreprise n'a pas de site, l'action "préparer le contenu du site" (contenu) est prioritaire : Pepito le publie après validation.
-- Base-toi sur l'état réel ci-dessus — ne répète pas une action déjà proposée, au plan ou écartée.
-- Priorise ce qui a le plus d'impact pour l'objectif, pas une liste exhaustive.`,
+- Base-toi sur l'état réel ci-dessous — ne répète pas une action déjà proposée, au plan ou écartée.
+- Priorise ce qui a le plus d'impact pour l'objectif, pas une liste exhaustive.`;
+
+  const dynamicSystem = `Propositions déjà en attente de validation : ${pendingProposals.map((p) => `${p.agent}: ${p.title}`).join("; ") || "aucune"}.
+Derniers constats (audit, concurrence) : ${recentFindings.map((f) => f.title).join("; ") || "aucun"}.
+Actions déjà au plan (ne les répète pas) : ${existingPlan.map((i) => i.title).join("; ") || "aucune"}.
+Actions ÉCARTÉES par le dirigeant, avec sa raison — ne les repropose pas et tiens compte de la raison : ${discarded.map((i) => `"${i.title}" (${i.feedback || "sans raison"})`).join("; ") || "aucune"}.`;
+
+  const { usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
+    model: AGENT_MODEL,
+    max_tokens: 2000,
+    tools: [proposePlanItem],
+    system: [
+      { type: "text", text: stableSystem, cache_control: { type: "ephemeral" } },
+      { type: "text", text: dynamicSystem },
+    ],
     messages: [
       {
         role: "user",

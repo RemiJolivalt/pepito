@@ -48,10 +48,20 @@ export async function publishSiteFromProposal(proposalId: string) {
 
   const company = proposal.company;
 
+  // Prompt strictement identique pour toutes les entreprises et tous les
+  // appels (aucune donnée entreprise dans le system — elle est dans le
+  // message utilisateur ci-dessous) : candidat idéal au prompt caching,
+  // partagé par toute publication de site, quelle que soit l'entreprise.
   const response = await anthropic.messages.create({
     model: AGENT_MODEL,
     max_tokens: 8000,
-    system: `Tu produis une page web complète (un seul fichier HTML, CSS inline dans une balise <style>), sobre, professionnelle et lisible sur mobile, pour une TPE. Interdits : JavaScript, iframes, formulaires, ressources externes (polices, images distantes) — uniquement du HTML et du CSS. Pas de texte inventé : utilise uniquement les informations du brief et de l'entreprise. Si une information manque (ex: numéro de téléphone), laisse un emplacement visible "[Votre téléphone]" plutôt que d'inventer. Réponds UNIQUEMENT avec le HTML, sans commentaire ni balises markdown.`,
+    system: [
+      {
+        type: "text",
+        cache_control: { type: "ephemeral" },
+        text: `Tu produis une page web complète (un seul fichier HTML, CSS inline dans une balise <style>), sobre, professionnelle et lisible sur mobile, pour une TPE. Interdits : JavaScript, iframes, formulaires, ressources externes (polices, images distantes) — uniquement du HTML et du CSS. Pas de texte inventé : utilise uniquement les informations du brief et de l'entreprise. Si une information manque (ex: numéro de téléphone), laisse un emplacement visible "[Votre téléphone]" plutôt que d'inventer. Réponds UNIQUEMENT avec le HTML, sans commentaire ni balises markdown.`,
+      },
+    ],
     messages: [
       {
         role: "user",

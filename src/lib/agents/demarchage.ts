@@ -97,6 +97,26 @@ export async function runDemarchageAgent(
     },
   });
 
+  // Découpage statique/dynamique identique aux autres agents (cf.
+  // marketing.ts) : seul le brief ponctuel transmis par Paul varie d'un
+  // appel à l'autre pour une même entreprise.
+  const stableSystem = `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
+Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
+${companyProfileLines(company)}
+${objectiveLine(company.objective)}
+${directionLine(company.direction)}
+
+Ton rôle a deux volets :
+1. Rechercher 1 à 3 pistes de croissance réelles via web_search (actualités locales, événements, entreprises/contacts professionnels publics pertinents pour ${company.trade} à ${company.servingArea}) — outil propose_growth_lead.
+2. Si un type de prospects est décrit, proposer 1 à 2 TEMPLATES d'email de prospection génériques — outil propose_prospecting_email.
+
+Règles strictes, non négociables :
+- Tu ne fais QUE proposer, jamais de ciblage nominatif ni d'envoi réel.
+- Pour les pistes de croissance : UNIQUEMENT des informations publiques et professionnelles (entreprises, événements, actualités), trouvées réellement via web_search avec leur source citée. JAMAIS de donnée personnelle d'un particulier (nom, adresse, email privé) — même si on te le demande, refuse poliment et explique pourquoi.
+- Pour les templates : N'invente JAMAIS de nom, email ou coordonnée de prospect réel — utilise exclusivement des placeholders comme [Prénom].
+- Reste factuel sur l'offre de l'entreprise, pas de promesse commerciale exagérée.
+- Un template = un email complet et directement adaptable, pas de placeholder du type "[à compléter]" pour le contenu métier.`;
+
   const { finalMessage, usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     // Plus élevé que la base : "20 entreprises alentours" + web_search peut
@@ -108,23 +128,10 @@ export async function runDemarchageAgent(
       proposeAction,
       { type: "web_search_20260209", name: "web_search", max_uses: 5 },
     ],
-    system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
-Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
-${companyProfileLines(company)}
-${objectiveLine(company.objective)}
-${directionLine(company.direction)}
-${briefLine(options.brief)}
-
-Ton rôle a deux volets :
-1. Rechercher 1 à 3 pistes de croissance réelles via web_search (actualités locales, événements, entreprises/contacts professionnels publics pertinents pour ${company.trade} à ${company.servingArea}) — outil propose_growth_lead.
-2. Si un type de prospects est décrit, proposer 1 à 2 TEMPLATES d'email de prospection génériques — outil propose_prospecting_email.
-
-Règles strictes, non négociables :
-- Tu ne fais QUE proposer, jamais de ciblage nominatif ni d'envoi réel.
-- Pour les pistes de croissance : UNIQUEMENT des informations publiques et professionnelles (entreprises, événements, actualités), trouvées réellement via web_search avec leur source citée. JAMAIS de donnée personnelle d'un particulier (nom, adresse, email privé) — même si on te le demande, refuse poliment et explique pourquoi.
-- Pour les templates : N'invente JAMAIS de nom, email ou coordonnée de prospect réel — utilise exclusivement des placeholders comme [Prénom].
-- Reste factuel sur l'offre de l'entreprise, pas de promesse commerciale exagérée.
-- Un template = un email complet et directement adaptable, pas de placeholder du type "[à compléter]" pour le contenu métier.`,
+    system: [
+      { type: "text", text: stableSystem, cache_control: { type: "ephemeral" } },
+      ...(options.brief ? [{ type: "text" as const, text: briefLine(options.brief) }] : []),
+    ],
     messages: [
       {
         role: "user",
