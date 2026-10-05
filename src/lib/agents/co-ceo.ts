@@ -3,7 +3,7 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type Anthropic from "@anthropic-ai/sdk";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
-import { PERSONAS, objectiveLine, directionLine } from "@/lib/agents/personas";
+import { PERSONAS, objectiveLine, directionLine, companyProfileLines } from "@/lib/agents/personas";
 import { runVisibiliteLocaleAgent } from "@/lib/agents/visibilite-locale";
 import { runCommunicationAgent } from "@/lib/agents/communication";
 import { runDemarchageAgent } from "@/lib/agents/demarchage";
@@ -136,7 +136,8 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
       delegateAudit,
     ],
     system: `Tu es ${PERSONA.name} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.blurb}
-Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton : ${company.tone}.
+Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
+${companyProfileLines(company)}
 ${objectiveLine(company.objective)}
 ${directionLine(company.direction)}
 
@@ -236,6 +237,7 @@ export async function runCoCeoPlanning(companyId: string) {
     tools: [proposePlanItem],
     system: `Tu es ${PERSONA.name} de Pepito. Tu dois être force de proposition et donner une direction claire — pas attendre des questions.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}. Site web : ${company.website ?? (company.siteSlug ? `publié par Pepito (/site/${company.siteSlug})` : "aucun")}.
+${companyProfileLines(company)}
 ${objectiveLine(company.objective)}
 ${directionLine(company.direction)}
 Propositions déjà en attente de validation : ${pendingProposals.map((p) => `${p.agent}: ${p.title}`).join("; ") || "aucune"}.

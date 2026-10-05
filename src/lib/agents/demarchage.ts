@@ -7,6 +7,7 @@ import {
   objectiveLine,
   directionLine,
   briefLine,
+  companyProfileLines,
   type AgentRunOptions,
 } from "@/lib/agents/personas";
 
@@ -104,7 +105,8 @@ export async function runDemarchageAgent(
       { type: "web_search_20260209", name: "web_search", max_uses: 5 },
     ],
     system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
-Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
+Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
+${companyProfileLines(company)}
 ${objectiveLine(company.objective)}
 ${directionLine(company.direction)}
 ${briefLine(options.brief)}

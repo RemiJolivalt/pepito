@@ -7,6 +7,7 @@ import {
   objectiveLine,
   directionLine,
   briefLine,
+  companyProfileLines,
   type AgentRunOptions,
 } from "@/lib/agents/personas";
 
@@ -66,7 +67,8 @@ export async function runVisibiliteLocaleAgent(
     max_tokens: 4000,
     tools: [proposeAction],
     system: `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
-Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}, ton de communication souhaité : ${company.tone}.
+Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
+${companyProfileLines(company)}
 ${objectiveLine(company.objective)}
 ${directionLine(company.direction)}
 ${briefLine(options.brief)}

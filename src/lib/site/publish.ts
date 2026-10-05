@@ -1,5 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
+import { companyProfileLines } from "@/lib/agents/personas";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -53,7 +54,8 @@ export async function publishSiteFromProposal(proposalId: string) {
     messages: [
       {
         role: "user",
-        content: `Entreprise : ${company.name} (${company.trade}), zone : ${company.servingArea}, ton : ${company.tone}.
+        content: `Entreprise : ${company.name} (${company.trade}), zone : ${company.servingArea}.
+${companyProfileLines(company)}
 Brief validé par le dirigeant :
 ${proposal.content}`,
       },

@@ -46,6 +46,27 @@ export function objectiveLine(objective: string | null): string {
     : "";
 }
 
+type CompanyProfileFields = {
+  description?: string | null;
+  phone?: string | null;
+  certifications?: string | null;
+  openingHours?: string | null;
+};
+
+/**
+ * Profil libre de l'entreprise (remplace l'ancien champ "tone" figé) —
+ * description, téléphone, certifications, horaires, uniquement les champs
+ * renseignés. Le ton de communication se déduit de la description elle-même.
+ */
+export function companyProfileLines(company: CompanyProfileFields): string {
+  const lines: string[] = [];
+  if (company.description) lines.push(`Description donnée par le dirigeant : ${company.description}`);
+  if (company.phone) lines.push(`Téléphone à afficher : ${company.phone}`);
+  if (company.certifications) lines.push(`Certifications/labels : ${company.certifications}`);
+  if (company.openingHours) lines.push(`Horaires d'ouverture : ${company.openingHours}`);
+  return lines.join("\n");
+}
+
 /** Consigne de réorientation du dirigeant — prime sur tout le reste. */
 export function directionLine(direction: string | null): string {
   return direction

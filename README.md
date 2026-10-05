@@ -48,3 +48,4 @@ Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/).
 - [docs/agents-roster.md](docs/agents-roster.md) — rôles, responsabilités et garde-fous des agents produit
 - [docs/process-build-agentique.md](docs/process-build-agentique.md) — organisation du build en rôles agentiques
 - [docs/backlog.md](docs/backlog.md) — backlog MVP priorisé, avec décisions de scope actées
+- [docs/oauth-setup.md](docs/oauth-setup.md) — démarches externes Google/Meta pour activer les connexions OAuth

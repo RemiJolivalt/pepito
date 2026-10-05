@@ -14,12 +14,15 @@ model Company {
   id              String    @id @default(cuid())
   ownerEmail      String    @unique // identifiant de session (login minimal, cf. docs/architecture-technique.md)
   name            String
-  trade           String // métier : kine, plombier, installateur_solaire, ...
+  trade           String // métier, saisi via recherche libre (ex: Restaurant, Plombier...)
   servingArea     String // zone de chalandise
-  tone            String // ton de communication choisi à l'onboarding
   website         String? // optionnel : beaucoup de TPE n'ont pas de site
   socialHandles   String? // ex: @cabinet_kine_demo (Instagram)
   objective       String? // objectif business déclaré, ex: "10 nouveaux clients par mois" (cf. docs/backlog.md #1)
+  description     String? // description libre de l'activité et du positionnement — remplace l'ancien champ "tone" figé, injectée dans tous les prompts agents
+  phone           String? // téléphone affiché aux clients — utilisé par les agents pour éviter les placeholders "[Votre téléphone]"
+  certifications  String? // labels/certifications (ex: RGE, Qualibat) — utile pour la crédibilité locale et le contenu généré
+  openingHours    String? // horaires d'ouverture, libre — utile pour la fiche Google et le site
   direction       String? // consigne libre du dirigeant pour réorienter Paul et les agents ("Réorienter")
   siteSlug        String?   @unique // site d'une page hébergé par Pepito : /site/[slug]
   siteHtml        String?

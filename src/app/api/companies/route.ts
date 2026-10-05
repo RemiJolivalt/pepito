@@ -18,19 +18,43 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { name, trade, servingArea, tone, website, socialHandles, objective } = body;
+  const {
+    name,
+    trade,
+    servingArea,
+    website,
+    socialHandles,
+    objective,
+    description,
+    phone,
+    certifications,
+    openingHours,
+  } = body;
 
-  if (!name || !trade || !servingArea || !tone) {
+  if (!name || !trade || !servingArea) {
     return NextResponse.json(
-      { error: "name, trade, servingArea et tone sont requis" },
+      { error: "name, trade et servingArea sont requis" },
       { status: 400 },
     );
   }
 
+  const data = {
+    name,
+    trade,
+    servingArea,
+    website,
+    socialHandles,
+    objective,
+    description,
+    phone,
+    certifications,
+    openingHours,
+  };
+
   const company = await prisma.company.upsert({
     where: { ownerEmail },
-    create: { ownerEmail, name, trade, servingArea, tone, website, socialHandles, objective },
-    update: { name, trade, servingArea, tone, website, socialHandles, objective },
+    create: { ownerEmail, ...data },
+    update: data,
   });
   return NextResponse.json(company, { status: 201 });
 }
