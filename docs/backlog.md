@@ -59,6 +59,12 @@ Demande CEO : "le Co-CEO doit être force de proposition et donner la direction 
 - Testé en conditions réelles : plan de 5 actions cohérent généré pour un cas concret, item lancé avec succès, rapport reflète les chiffres réels.
 - **Non fait** : envoi automatique du rapport par email (nécessite un fournisseur d'envoi configuré, cf. point 4 ci-dessous, toujours pas construit).
 
+### 2quaterdecies. Sécurité P0 : session forgeable + force brute — ✅ corrigé (2026-10-05)
+Faille critique trouvée en testant le déploiement de prod : le cookie de session stockait l'email **en clair, non vérifié**. N'importe qui pouvait forger `pepito_session=victime@email.com` à la main (curl, devtools) et accéder à n'importe quel compte sans jamais connaître le mot de passe — testé et confirmé en prod avant correction.
+- **Cookie signé (HMAC-SHA256)** : `base64url(email).hmac(email)`, vérifié par comparaison à temps constant (`timingSafeEqual`) à chaque requête. Nécessite `SESSION_SECRET` (généré une fois, même valeur en local et sur Vercel — sinon les sessions existantes s'invalident).
+- **Anti-force-brute** : 5 échecs consécutifs verrouillent le compte 15 minutes (`Company.failedLoginAttempts`/`lockedUntil`, stocké en base pour rester valable entre plusieurs instances serverless — un compteur en mémoire ne l'aurait pas été).
+- Testé en conditions réelles contre la base de prod : cookie en clair rejeté, cookie signature-altérée rejeté, 5 échecs → verrouillage effectif même avec le bon mot de passe ensuite, déverrouillage après le délai.
+
 ### 2terdecies. Déploiement, login réel, documents légaux — ✅ code livré (2026-10-05, demande CEO)
 - **PostgreSQL** remplace SQLite partout (`prisma/schema.prisma` provider + `@prisma/adapter-pg`) — nécessaire pour tout hébergement serverless (Vercel). Pas de base locale testable depuis cet environnement sans que vous provisionniez une base réelle (Neon/Vercel Postgres) — voir README pour la démarche, zéro secret à partager en conséquence.
 - **Déploiement Vercel documenté** (README) : connexion via l'intégration GitHub native de Vercel — **aucune clé API Vercel nécessaire**, zéro secret partagé. La base Postgres se crée en un clic dans l'onglet Storage de Vercel, qui injecte `DATABASE_URL` automatiquement. Chaque push redéploie automatiquement.

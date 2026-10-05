@@ -16,6 +16,8 @@ Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/), u
    ```
    DATABASE_URL="postgres://..."
    ANTHROPIC_API_KEY="sk-ant-..."
+   # Obligatoire — signe les cookies de session (générer une fois : node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+   SESSION_SECRET="..."
 
    # Optionnel — connexions OAuth (voir docs/oauth-setup.md pour la démarche d'enregistrement) :
    # GOOGLE_OAUTH_CLIENT_ID=""
@@ -35,7 +37,7 @@ Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/), u
 
 1. Sur [vercel.com](https://vercel.com), importer le repo GitHub `RemiJolivalt/pepito` — aucune clé API Vercel n'est nécessaire, la connexion se fait directement via l'intégration GitHub native (sécurisé, zéro secret à partager).
 2. Onglet **Storage** du projet Vercel → créer une base **Postgres** → Vercel injecte automatiquement `DATABASE_URL` dans les variables d'environnement du projet.
-3. Onglet **Settings → Environment Variables** → ajouter `ANTHROPIC_API_KEY` (et les clés OAuth si prêtes). Laisser `ADMIN_EMAILS` non défini tant que l'admin doit rester ouvert à tous.
+3. Onglet **Settings → Environment Variables** → ajouter `ANTHROPIC_API_KEY` et `SESSION_SECRET` (même valeur qu'en local, sinon les sessions existantes deviennent invalides). Clés OAuth si prêtes. Laisser `ADMIN_EMAILS` non défini tant que l'admin doit rester ouvert à tous.
 4. Premier déploiement : Vercel lance `npm install` (génère le client Prisma) puis `next build` automatiquement.
 5. Créer les tables en prod : exécuter une fois `npx prisma db push` avec la `DATABASE_URL` de production dans l'environnement (copiée depuis l'onglet Storage de Vercel vers votre terminal local — jamais partagée ailleurs).
 6. Chaque `git push` sur la branche connectée redéploie automatiquement — aucune action supplémentaire.
