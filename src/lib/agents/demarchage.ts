@@ -2,7 +2,7 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
-import { recordUsage } from "@/lib/usage";
+import { recordUsage, runToolLoop } from "@/lib/usage";
 import {
   PERSONAS,
   objectiveLine,
@@ -97,7 +97,7 @@ export async function runDemarchageAgent(
     },
   });
 
-  const finalMessage = await anthropic.beta.messages.toolRunner({
+  const { finalMessage, usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     // Plus élevé que la base : "20 entreprises alentours" + web_search peut
     // consommer beaucoup de tours avant de conclure — un run à 4000 a brûlé
@@ -133,13 +133,13 @@ Règles strictes, non négociables :
           : "Recherche des pistes de croissance pour cette entreprise (actualités locales, événements, opportunités professionnelles).",
       },
     ],
-  });
+  }));
 
   await recordUsage({
     companyId: company.id,
     agent: AGENT_NAME,
     model: AGENT_MODEL,
-    usage: finalMessage.usage,
+    usage,
   });
 
   // Échec silencieux réel observé en prod (2026-10-05, entreprise "La
@@ -149,8 +149,8 @@ Règles strictes, non négociables :
   // explicite plutôt que de renvoyer un tableau vide silencieux.
   if (createdProposalIds.length === 0) {
     console.warn(
-      `Jean-Claude (demarchage) n'a rien produit — stop_reason: ${finalMessage.stop_reason}, usage:`,
-      finalMessage.usage,
+      `Jean-Claude (demarchage) n'a rien produit — stop_reason: ${finalMessage.stop_reason}, usage total:`,
+      usage,
     );
     throw new Error(
       `${PERSONA.name} n'a pas pu produire de résultat exploitable cette fois-ci. Réessayez.`,

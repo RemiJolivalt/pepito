@@ -2,7 +2,7 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
-import { recordUsage } from "@/lib/usage";
+import { recordUsage, runToolLoop } from "@/lib/usage";
 import {
   PERSONAS,
   directionLine,
@@ -91,7 +91,7 @@ export async function runMarketingAgent(
     ? `Le site web déclaré est : ${company.website}. Utilise l'outil web_fetch pour le consulter avant de conclure.`
     : `Aucun site web n'a été déclaré. Enregistre un constat "site_web" signalant l'absence de site comme premier axe d'amélioration, sans inventer de contenu.`;
 
-  const finalMessage = await anthropic.beta.messages.toolRunner({
+  const { finalMessage, usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     // Plus elevé que les autres agents : Martine fait a la fois diagnostic
     // (web_fetch/web_search) ET propositions GBP en un seul passage, ce qui
@@ -126,12 +126,12 @@ Règles strictes :
         content: "Fais le point sur la présence en ligne de cette entreprise et pilote sa fiche Google.",
       },
     ],
-  });
+  }));
 
   if (createdFindingIds.length === 0 && createdProposalIds.length === 0) {
     console.warn(
-      `Martine (marketing) n'a rien produit — stop_reason: ${finalMessage.stop_reason}, usage:`,
-      finalMessage.usage,
+      `Martine (marketing) n'a rien produit — stop_reason: ${finalMessage.stop_reason}, usage total:`,
+      usage,
     );
     const fallback = await prisma.auditFinding.create({
       data: {
@@ -144,7 +144,7 @@ Règles strictes :
     createdFindingIds.push(fallback.id);
   }
 
-  await recordUsage({ companyId: company.id, agent: AGENT_NAME, model: AGENT_MODEL, usage: finalMessage.usage });
+  await recordUsage({ companyId: company.id, agent: AGENT_NAME, model: AGENT_MODEL, usage });
 
   const [findings, proposals] = await Promise.all([
     prisma.auditFinding.findMany({ where: { id: { in: createdFindingIds } } }),

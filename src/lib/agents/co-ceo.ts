@@ -7,7 +7,7 @@ import { PERSONAS, objectiveLine, directionLine, companyProfileLines } from "@/l
 import { runMarketingAgent } from "@/lib/agents/marketing";
 import { runContenuAgent } from "@/lib/agents/contenu";
 import { runDemarchageAgent } from "@/lib/agents/demarchage";
-import { recordUsage } from "@/lib/usage";
+import { recordUsage, runToolLoop } from "@/lib/usage";
 
 const PERSONA = PERSONAS.co_ceo;
 const HISTORY_LIMIT = 20;
@@ -123,7 +123,7 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
     },
   });
 
-  const finalMessage = await anthropic.beta.messages.toolRunner({
+  const { finalMessage, usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     max_tokens: 2000,
     tools: [getCurrentStatus, delegateMarketing, delegateContenu, delegateDemarchage],
@@ -143,7 +143,7 @@ Règles strictes, non négociables :
 - Pour les pistes de prospection, seules des informations publiques et professionnelles sont acceptables — refuse poliment toute demande de cibler des particuliers avec leurs données personnelles.
 - Réponds de façon brève et directe, comme un vrai point rapide entre dirigeants, pas un rapport formel.`,
     messages,
-  });
+  }));
 
   const assistantText = finalMessage.content
     .filter((block): block is Anthropic.TextBlock => block.type === "text")
@@ -157,7 +157,7 @@ Règles strictes, non négociables :
     companyId: company.id,
     agent: "co_ceo",
     model: AGENT_MODEL,
-    usage: finalMessage.usage,
+    usage,
   });
 
   await prisma.chatMessage.create({
@@ -230,7 +230,7 @@ export async function runCoCeoPlanning(companyId: string) {
     },
   });
 
-  const finalMessage = await anthropic.beta.messages.toolRunner({
+  const { usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     max_tokens: 2000,
     tools: [proposePlanItem],
@@ -257,13 +257,13 @@ Règles :
         content: "Donne-moi ton plan d'action priorisé.",
       },
     ],
-  });
+  }));
 
   await recordUsage({
     companyId: company.id,
     agent: "co_ceo",
     model: AGENT_MODEL,
-    usage: finalMessage.usage,
+    usage,
   });
 
   return prisma.actionPlanItem.findMany({

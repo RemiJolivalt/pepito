@@ -2,7 +2,7 @@ import { z } from "zod";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
-import { recordUsage } from "@/lib/usage";
+import { recordUsage, runToolLoop } from "@/lib/usage";
 import {
   PERSONAS,
   objectiveLine,
@@ -71,7 +71,7 @@ export async function runContenuAgent(
     },
   });
 
-  const finalMessage = await anthropic.beta.messages.toolRunner({
+  const { finalMessage, usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     max_tokens: 6000,
     tools: [proposeContent],
@@ -105,16 +105,16 @@ Règles strictes :
           : "Aucune actualité particulière. Propose tes propres idées de contenu.",
       },
     ],
-  });
+  }));
 
-  await recordUsage({ companyId: company.id, agent: AGENT_NAME, model: AGENT_MODEL, usage: finalMessage.usage });
+  await recordUsage({ companyId: company.id, agent: AGENT_NAME, model: AGENT_MODEL, usage });
 
   // Même garde-fou que Jean-Claude (cf. docs/backlog.md) : un échec silencieux
   // (0 proposition) ne doit jamais ressembler à un succès vide.
   if (createdProposalIds.length === 0) {
     console.warn(
-      `Camille (contenu) n'a rien produit — stop_reason: ${finalMessage.stop_reason}, usage:`,
-      finalMessage.usage,
+      `Camille (contenu) n'a rien produit — stop_reason: ${finalMessage.stop_reason}, usage total:`,
+      usage,
     );
     throw new Error(
       `${PERSONA.name} n'a pas pu produire de résultat exploitable cette fois-ci. Réessayez.`,
