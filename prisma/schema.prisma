@@ -47,7 +47,7 @@ model UsageEvent {
   id           String   @id @default(cuid())
   companyId    String
   company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  agent        String // visibilite_locale, communication, demarchage, audit, co_ceo, site_publish
+  agent        String // marketing, contenu, demarchage, co_ceo, site_publish
   model        String // ex: claude-sonnet-5-5
   inputTokens  Int
   outputTokens Int
@@ -67,7 +67,7 @@ model ActionPlanItem {
   id          String   @id @default(cuid())
   companyId   String
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  agent       String // visibilite_locale, communication, demarchage, audit
+  agent       String // marketing, contenu, demarchage
   title       String
   rationale   String
   timing      String // ex: "cette semaine", "aujourd'hui"
@@ -117,7 +117,7 @@ model AgentProposal {
   id          String   @id @default(cuid())
   companyId   String
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  agent       String // visibilite_locale, communication, demarchage
+  agent       String // marketing, contenu, demarchage
   kind        String // ex: gbp_update, review_reply, social_post, prospecting_email
   title       String
   content     String // contenu généré, prêt à être validé/modifié

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { runVisibiliteLocaleAgent } from "@/lib/agents/visibilite-locale";
-import { runCommunicationAgent } from "@/lib/agents/communication";
+import { runMarketingAgent } from "@/lib/agents/marketing";
+import { runContenuAgent } from "@/lib/agents/contenu";
 import { runDemarchageAgent } from "@/lib/agents/demarchage";
-import { runAuditAgent } from "@/lib/agents/audit";
 import { getSessionCompany } from "@/lib/session";
 
 /**
@@ -37,29 +36,35 @@ export async function POST(
 
   try {
     let producedCount = 0;
-    let nextStatus: "lance" | "termine" = "lance";
+    // Seules les PROPOSITIONS nécessitent une validation (affichées sous
+    // l'action dans le dashboard) — les constats d'audit sont informatifs,
+    // pas une raison de garder l'action en "lancé" indéfiniment.
+    let pendingValidation = 0;
 
     switch (item.agent) {
-      case "visibilite_locale":
-        producedCount = (await runVisibiliteLocaleAgent(item.companyId, options)).length;
+      case "marketing": {
+        const { findings, proposals } = await runMarketingAgent(item.companyId, options);
+        producedCount = findings.length + proposals.length;
+        pendingValidation = proposals.length;
         break;
-      case "communication":
-        producedCount = (await runCommunicationAgent(item.companyId, undefined, options)).length;
+      }
+      case "contenu": {
+        const proposals = await runContenuAgent(item.companyId, undefined, options);
+        producedCount = proposals.length;
+        pendingValidation = proposals.length;
         break;
-      case "demarchage":
-        producedCount = (await runDemarchageAgent(item.companyId, undefined, options)).length;
+      }
+      case "demarchage": {
+        const proposals = await runDemarchageAgent(item.companyId, undefined, options);
+        producedCount = proposals.length;
+        pendingValidation = proposals.length;
         break;
-      case "audit":
-        producedCount = (await runAuditAgent(item.companyId, options)).length;
-        // L'audit ne produit pas de proposition à valider : l'action est réalisée dès la fin du run.
-        nextStatus = "termine";
-        break;
+      }
       default:
         return NextResponse.json({ error: `Agent inconnu : ${item.agent}` }, { status: 400 });
     }
 
-    // Un agent qui n'a rien produit ne laisse pas l'action bloquée en "lancé".
-    if (producedCount === 0 && nextStatus === "lance") nextStatus = "termine";
+    const nextStatus: "lance" | "termine" = pendingValidation > 0 ? "lance" : "termine";
 
     const updated = await prisma.actionPlanItem.update({
       where: { id },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runCommunicationAgent } from "@/lib/agents/communication";
+import { runContenuAgent } from "@/lib/agents/contenu";
 import { getSessionCompany } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
@@ -10,13 +10,10 @@ export async function POST(request: NextRequest) {
   const { newsContext } = await request.json();
 
   try {
-    const proposals = await runCommunicationAgent(company.id, newsContext);
+    const proposals = await runContenuAgent(company.id, newsContext);
     return NextResponse.json(proposals, { status: 201 });
   } catch (error) {
-    console.error("Erreur agent communication:", error);
-    return NextResponse.json(
-      { error: "Échec de l'exécution de l'agent" },
-      { status: 500 },
-    );
+    console.error("Erreur agent contenu:", error);
+    return NextResponse.json({ error: "Échec de l'exécution de l'agent" }, { status: 500 });
   }
 }

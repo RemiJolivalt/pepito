@@ -4,10 +4,9 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { anthropic, AGENT_MODEL } from "@/lib/anthropic";
 import { prisma } from "@/lib/prisma";
 import { PERSONAS, objectiveLine, directionLine, companyProfileLines } from "@/lib/agents/personas";
-import { runVisibiliteLocaleAgent } from "@/lib/agents/visibilite-locale";
-import { runCommunicationAgent } from "@/lib/agents/communication";
+import { runMarketingAgent } from "@/lib/agents/marketing";
+import { runContenuAgent } from "@/lib/agents/contenu";
 import { runDemarchageAgent } from "@/lib/agents/demarchage";
-import { runAuditAgent } from "@/lib/agents/audit";
 import { recordUsage } from "@/lib/usage";
 
 const PERSONA = PERSONAS.co_ceo;
@@ -15,10 +14,10 @@ const HISTORY_LIMIT = 20;
 
 /**
  * Agent "Co-CEO" : point de contact unique, orchestre les autres agents en
- * les invoquant comme des outils. Garde-fou inchangé : déléguer à un agent
- * ne fait que créer des propositions (ou des constats pour l'audit), jamais
- * d'exécution réelle — l'orchestration ne change pas le niveau d'autonomie
- * (cf. docs/agents-roster.md, docs/backlog.md).
+ * les invoquant comme des outils. Équipe rationalisée le 2026-10-05 : 4
+ * agents (Marketing/Contenu/Démarchage + lui-même), Nadia fusionnée dans
+ * Martine. Garde-fou inchangé : déléguer ne fait que créer des propositions
+ * (ou des constats), jamais d'exécution réelle.
  */
 export async function runCoCeoTurn(companyId: string, userMessage: string) {
   const company = await prisma.company.findUniqueOrThrow({
@@ -73,21 +72,21 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
     },
   });
 
-  const delegateVisibilite = betaZodTool({
-    name: "delegate_visibilite_locale",
+  const delegateMarketing = betaZodTool({
+    name: "delegate_marketing",
     description:
-      "Lance l'agent Visibilité locale (fiche Google, avis clients). Crée des propositions en attente de validation, n'exécute rien.",
+      "Lance Martine (Marketing Officer) : audit de présence en ligne, positionnement concurrentiel, et pilotage de la fiche Google (infos, avis). Ne produit pas de contenu créatif.",
     inputSchema: z.object({}),
     run: async () => {
-      const proposals = await runVisibiliteLocaleAgent(companyId);
-      return `${proposals.length} proposition(s) créée(s) par ${PERSONAS.visibilite_locale.name}, en attente de validation dans le dashboard.`;
+      const { findings, proposals } = await runMarketingAgent(companyId);
+      return `${findings.length} constat(s) et ${proposals.length} proposition(s) créé(s) par ${PERSONAS.marketing.name}, en attente de validation dans le dashboard.`;
     },
   });
 
-  const delegateCommunication = betaZodTool({
-    name: "delegate_communication",
+  const delegateContenu = betaZodTool({
+    name: "delegate_contenu",
     description:
-      "Lance l'agent Communication pour proposer des posts réseaux sociaux. Si une actualité réelle a été mentionnée par l'utilisateur, passe-la — sinon laisse vide, l'agent proposera ses propres idées génériques. Ne jamais inventer une actualité qui n'a pas été mentionnée.",
+      "Lance Camille (Contenu & Site) pour proposer des posts réseaux sociaux et/ou du contenu de site web. Si une actualité réelle a été mentionnée par l'utilisateur, passe-la — sinon laisse vide, elle proposera ses propres idées génériques. Ne jamais inventer une actualité.",
     inputSchema: z.object({
       newsContext: z
         .string()
@@ -95,8 +94,8 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
         .describe("Actualité à communiquer, telle que mentionnée par l'utilisateur — omettre si aucune n'a été donnée"),
     }),
     run: async (input) => {
-      const proposals = await runCommunicationAgent(companyId, input.newsContext);
-      return `${proposals.length} proposition(s) créée(s) par ${PERSONAS.communication.name}, en attente de validation dans le dashboard.`;
+      const proposals = await runContenuAgent(companyId, input.newsContext);
+      return `${proposals.length} proposition(s) créée(s) par ${PERSONAS.contenu.name}, en attente de validation dans le dashboard.`;
     },
   });
 
@@ -116,39 +115,23 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
     },
   });
 
-  const delegateAudit = betaZodTool({
-    name: "delegate_audit",
-    description: "Relance l'agent Audit pour rafraîchir l'état des lieux de la présence en ligne ET l'analyse de la concurrence locale.",
-    inputSchema: z.object({}),
-    run: async () => {
-      const findings = await runAuditAgent(companyId);
-      return `${findings.length} constat(s) mis à jour par ${PERSONAS.audit.name}.`;
-    },
-  });
-
   const finalMessage = await anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
     max_tokens: 2000,
-    tools: [
-      getCurrentStatus,
-      delegateVisibilite,
-      delegateCommunication,
-      delegateDemarchage,
-      delegateAudit,
-    ],
+    tools: [getCurrentStatus, delegateMarketing, delegateContenu, delegateDemarchage],
     system: `Tu es ${PERSONA.name} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.blurb}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 ${companyProfileLines(company)}
 ${objectiveLine(company.objective)}
 ${directionLine(company.direction)}
 
-Ton rôle : échanger avec le dirigeant, l'aider à prioriser, et déléguer aux agents spécialisés (${PERSONAS.visibilite_locale.name} pour la visibilité locale et le contenu de site web, ${PERSONAS.communication.name} pour la communication, ${PERSONAS.demarchage.name} pour le démarchage et les pistes de croissance, ${PERSONAS.audit.name} pour l'audit et l'analyse concurrentielle) via les outils delegate_* quand c'est pertinent.
+Ton rôle : échanger avec le dirigeant, l'aider à prioriser, et déléguer aux agents spécialisés (${PERSONAS.marketing.name} pour l'audit/positionnement/fiche Google, ${PERSONAS.contenu.name} pour les posts et le site web, ${PERSONAS.demarchage.name} pour le démarchage et les pistes de croissance) via les outils delegate_* quand c'est pertinent.
 Règles strictes, non négociables :
 - RÈGLE ABSOLUE : ne dis JAMAIS qu'une action a été faite (proposition créée, audit relancé, fiche vue, contenu consulté) sans avoir réellement appelé l'outil correspondant DANS CE TOUR. Tu n'as aucune mémoire fiable de ce qui a été fait avant ce message — si on te demande l'état actuel, le nombre ou le contenu de propositions/constats, appelle TOUJOURS get_current_status avant de répondre. Ne devine jamais.
 - Tu ne fais JAMAIS exécuter une action réelle toi-même, même automatiquement : déléguer ne fait que créer des propositions, qui restent soumises à la validation du dirigeant dans le dashboard. Dis-le clairement si tu délègues.
-- Tu ne construis pas de site web toi-même (${PERSONAS.visibilite_locale.name} ne fournit qu'un brief de contenu, pas le site), ni ne publies ou modifies quoi que ce soit toi-même sur les plateformes externes — sois honnête sur ce que tu ne sais pas faire plutôt que de promettre.
+- Tu ne construis pas de site web toi-même (${PERSONAS.contenu.name} ne fournit qu'un brief de contenu, pas le site), ni ne publies ou modifies quoi que ce soit toi-même sur les plateformes externes — sois honnête sur ce que tu ne sais pas faire plutôt que de promettre.
 - Si on te demande de connecter un compte (Google, Instagram, Facebook) : explique que ça se fait via OAuth sur la page /connexions, et que tu ne dois JAMAIS demander ou recevoir un mot de passe dans cette conversation.
-- Pour déléguer à Communication (sans actualité) ou Démarchage (sans cible), tu peux le faire sans information — les agents proposeront leurs propres idées génériques. Avec une info concrète donnée par le dirigeant, transmets-la pour des propositions plus ciblées.
+- Pour déléguer à Contenu (sans actualité) ou Démarchage (sans cible), tu peux le faire sans information — les agents proposeront leurs propres idées génériques. Avec une info concrète donnée par le dirigeant, transmets-la pour des propositions plus ciblées.
 - Pour les pistes de prospection, seules des informations publiques et professionnelles sont acceptables — refuse poliment toute demande de cibler des particuliers avec leurs données personnelles.
 - Réponds de façon brève et directe, comme un vrai point rapide entre dirigeants, pas un rapport formel.`,
     messages,
@@ -216,7 +199,7 @@ export async function runCoCeoPlanning(companyId: string) {
     description: "Ajoute une action au plan priorisé. Appelle cet outil une fois par action recommandée (3 à 5 fois en général).",
     inputSchema: z.object({
       agent: z
-        .enum(["visibilite_locale", "communication", "demarchage", "audit"])
+        .enum(["marketing", "contenu", "demarchage"])
         .describe("Agent responsable de cette action"),
       title: z.string().describe("Action concrète et courte, ex: 'Mettre à jour la fiche Google'"),
       rationale: z
@@ -253,11 +236,11 @@ Derniers constats (audit, concurrence) : ${recentFindings.map((f) => f.title).jo
 Actions déjà au plan (ne les répète pas) : ${existingPlan.map((i) => i.title).join("; ") || "aucune"}.
 Actions ÉCARTÉES par le dirigeant, avec sa raison — ne les repropose pas et tiens compte de la raison : ${discarded.map((i) => `"${i.title}" (${i.feedback || "sans raison"})`).join("; ") || "aucune"}.
 
-Ta tâche : propose un plan priorisé de 3 à 5 actions concrètes via propose_plan_item, chacune rattachée à un agent (${PERSONAS.visibilite_locale.name}/visibilite_locale, ${PERSONAS.communication.name}/communication, ${PERSONAS.demarchage.name}/demarchage, ${PERSONAS.audit.name}/audit), avec une justification liée à l'objectif et un délai réaliste.
+Ta tâche : propose un plan priorisé de 3 à 5 actions concrètes via propose_plan_item, chacune rattachée à un agent (${PERSONAS.marketing.name}/marketing pour audit-positionnement-fiche Google, ${PERSONAS.contenu.name}/contenu pour posts et site web, ${PERSONAS.demarchage.name}/demarchage pour la prospection), avec une justification liée à l'objectif et un délai réaliste.
 Règles :
 - Chaque action doit faire avancer l'objectif de façon mesurable — dis dans la justification QUEL effet attendu (appels, devis, avis, visibilité).
 - Une action = un brief exécutable par l'agent tel quel : précis sur le quoi (ex: "3 posts sur les chantiers terminés avec photos avant/après"), pas vague ("améliorer la com").
-- Si l'entreprise n'a pas de site, l'action "préparer le contenu du site" (visibilite_locale) est prioritaire : Pepito le publie après validation.
+- Si l'entreprise n'a pas de site, l'action "préparer le contenu du site" (contenu) est prioritaire : Pepito le publie après validation.
 - Base-toi sur l'état réel ci-dessus — ne répète pas une action déjà proposée, au plan ou écartée.
 - Priorise ce qui a le plus d'impact pour l'objectif, pas une liste exhaustive.`,
     messages: [

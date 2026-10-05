@@ -87,8 +87,8 @@ export function EquipeClient({
       <div className="flex items-center gap-3">
         <PersonaAvatar agentKey={agentKey} size={40} />
         <div>
-          <h2 className="text-lg font-medium">{persona.name}</h2>
-          <p className="text-xs text-slate-500">{persona.role} — {persona.blurb}</p>
+          <h2 className="text-lg font-medium">{persona.name} <span className="text-sm font-normal text-slate-400">— {persona.role}</span></h2>
+          <p className="text-xs text-slate-500">{persona.blurb}</p>
         </div>
       </div>
     );
@@ -104,15 +104,16 @@ export function EquipeClient({
       </p>
       {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
+      {/* Martine : diagnostic + fiche Google (fusion de l'ancienne Nadia, cf. docs/backlog.md) */}
       <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between gap-4">
-          <AgentHeader agentKey="audit" />
+          <AgentHeader agentKey="marketing" />
           <button
-            onClick={() => run("audit", "/api/agents/audit/run", { companyId: company.id })}
+            onClick={() => run("marketing", "/api/agents/marketing/run", {})}
             disabled={running !== null}
             className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
           >
-            {running === "audit" ? "Audit en cours…" : "Lancer l'audit"}
+            {running === "marketing" ? "Martine travaille…" : "Lancer"}
           </button>
         </div>
         <ul className="mt-4 space-y-2">
@@ -125,28 +126,18 @@ export function EquipeClient({
             </li>
           ))}
         </ul>
+        {byAgent("marketing").length > 0 && (
+          <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">
+            {byAgent("marketing").map((p) => (
+              <ProposalCard key={p.id} proposal={p} onDecision={decide} busy={busyId === p.id} />
+            ))}
+          </div>
+        )}
       </section>
 
+      {/* Camille : contenu (posts + site), s'appuie sur les constats de Martine ci-dessus */}
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
-          <AgentHeader agentKey="visibilite_locale" />
-          <button
-            onClick={() => run("visibilite_locale", "/api/agents/visibilite-locale/run", { companyId: company.id })}
-            disabled={running !== null}
-            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
-          >
-            {running === "visibilite_locale" ? "Camille travaille…" : "Lancer"}
-          </button>
-        </div>
-        <div className="mt-4 space-y-2">
-          {byAgent("visibilite_locale").map((p) => (
-            <ProposalCard key={p.id} proposal={p} onDecision={decide} onExecute={execute} busy={busyId === p.id} />
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <AgentHeader agentKey="communication" />
+        <AgentHeader agentKey="contenu" />
         <div className="mt-3 flex gap-2">
           <input
             placeholder="Actualité à communiquer (optionnel)"
@@ -155,16 +146,16 @@ export function EquipeClient({
             className="flex-1 rounded-lg border px-2 py-1.5 text-sm"
           />
           <button
-            onClick={() => run("communication", "/api/agents/communication/run", { companyId: company.id, newsContext: newsContext || undefined })}
+            onClick={() => run("contenu", "/api/agents/contenu/run", { newsContext: newsContext || undefined })}
             disabled={running !== null}
             className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
           >
-            {running === "communication" ? "Martine travaille…" : "Lancer"}
+            {running === "contenu" ? "Camille travaille…" : "Lancer"}
           </button>
         </div>
         <div className="mt-4 space-y-2">
-          {byAgent("communication").map((p) => (
-            <ProposalCard key={p.id} proposal={p} onDecision={decide} busy={busyId === p.id} />
+          {byAgent("contenu").map((p) => (
+            <ProposalCard key={p.id} proposal={p} onDecision={decide} onExecute={execute} busy={busyId === p.id} />
           ))}
         </div>
       </section>
@@ -182,7 +173,7 @@ export function EquipeClient({
             className="flex-1 rounded-lg border px-2 py-1.5 text-sm"
           />
           <button
-            onClick={() => run("demarchage", "/api/agents/demarchage/run", { companyId: company.id, prospectDescription: prospectDescription || undefined })}
+            onClick={() => run("demarchage", "/api/agents/demarchage/run", { prospectDescription: prospectDescription || undefined })}
             disabled={running !== null}
             className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
           >

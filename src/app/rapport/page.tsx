@@ -111,7 +111,7 @@ export default async function RapportPage() {
           <h2 className="text-lg font-medium">🔎 Positionnement concurrentiel</h2>
           {findings.length === 0 ? (
             <p className="mt-2 text-sm text-gray-500">
-              Aucune analyse concurrentielle encore — lancez {PERSONAS.audit.name} depuis le dashboard.
+              Aucune analyse concurrentielle encore — lancez {PERSONAS.marketing.name} depuis le dashboard.
             </p>
           ) : (
             <ul className="mt-2 space-y-2">

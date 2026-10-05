@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 import { PersonaAvatar } from "@/components/persona-avatar";
 
-const TEAM: AgentKey[] = ["co_ceo", "audit", "visibilite_locale", "communication", "demarchage"];
+const TEAM: AgentKey[] = ["co_ceo", "marketing", "contenu", "demarchage"];
 
 const STEPS = [
   { n: "1", title: "Vous donnez l'objectif", text: "« 10 nouveaux clients par mois ». Votre métier, votre zone, votre site s'il existe. 5 minutes." },
@@ -32,7 +32,7 @@ export default function LandingPage() {
 
         <section className="mt-16 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-sm font-medium text-slate-500">Votre équipe</h2>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-5">
+          <ul className="mt-4 grid gap-4 sm:grid-cols-4">
             {TEAM.map((key) => (
               <li key={key} className="flex flex-col items-center text-center">
                 <PersonaAvatar agentKey={key} size={56} />

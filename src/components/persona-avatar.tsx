@@ -1,17 +1,54 @@
 import type { AgentKey } from "@/lib/agents/personas";
 
 /**
- * Avatars illustratifs (silhouette + couleur par agent), pas des photos de
- * personnes réelles : Camille, Martine, Jean-Claude et Paul sont des IA,
- * pas des employés — une "photo" réaliste serait trompeuse pour l'utilisateur
- * final si elle apparaît un jour hors du dashboard (cf. échange avec le CEO).
+ * Identité visuelle par agent : couleur + icône propre à son rôle (pas une
+ * simple pastille générique). Toujours pas de photo réaliste de personne —
+ * aucune génération d'image disponible dans cet environnement, et une
+ * fausse photo de personne pour une IA serait trompeuse si elle sort un
+ * jour du dashboard (cf. docs/backlog.md, décision actée avec le CEO).
  */
-const COLORS: Record<AgentKey, string> = {
-  co_ceo: "#111827",
-  audit: "#0f766e",
-  visibilite_locale: "#1d4ed8",
-  communication: "#be185d",
-  demarchage: "#b45309",
+const STYLE: Record<AgentKey, { color: string; icon: React.ReactNode }> = {
+  co_ceo: {
+    color: "#111827",
+    // Boussole : donne la direction
+    icon: (
+      <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="20" cy="20" r="10" />
+        <path d="M24 16l-6 6-2 6 6-2 6-6z" fill="white" stroke="none" />
+      </g>
+    ),
+  },
+  marketing: {
+    color: "#0f766e",
+    // Loupe : diagnostic, analyse
+    icon: (
+      <g fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
+        <circle cx="17" cy="17" r="8" />
+        <path d="M23 23l6 6" />
+      </g>
+    ),
+  },
+  contenu: {
+    color: "#be185d",
+    // Stylo : création de contenu
+    icon: (
+      <g fill="white">
+        <path d="M14 26l-1.5 5.5L18 30l12-12-4.5-4.5z" />
+        <path d="M26.5 10l4.5 4.5 2-2a2 2 0 0 0 0-2.8l-1.7-1.7a2 2 0 0 0-2.8 0z" />
+      </g>
+    ),
+  },
+  demarchage: {
+    color: "#b45309",
+    // Mallette : prospection, business
+    icon: (
+      <g fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="10" y="16" width="20" height="14" rx="2" />
+        <path d="M15 16v-3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3" />
+        <path d="M10 23h20" />
+      </g>
+    ),
+  },
 };
 
 export function PersonaAvatar({
@@ -21,7 +58,7 @@ export function PersonaAvatar({
   agentKey: AgentKey;
   size?: number;
 }) {
-  const color = COLORS[agentKey];
+  const { color, icon } = STYLE[agentKey];
   return (
     <svg
       width={size}
@@ -31,12 +68,7 @@ export function PersonaAvatar({
       aria-hidden="true"
     >
       <circle cx="20" cy="20" r="20" fill={color} />
-      <circle cx="20" cy="15" r="7" fill="white" fillOpacity="0.9" />
-      <path
-        d="M6 36c1.5-8 7-12 14-12s12.5 4 14 12"
-        fill="white"
-        fillOpacity="0.9"
-      />
+      {icon}
     </svg>
   );
 }

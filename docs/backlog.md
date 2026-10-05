@@ -9,14 +9,21 @@ Décision CEO actée : garder l'esprit ("équipe virtuelle IA qui agit, pas qui 
 
 Tout ajout au backlog doit se justifier par rapport à ce KPI, pas par exhaustivité fonctionnelle.
 
+## Équipe actuelle (rationalisée le 2026-10-05, cf. section dédiée ci-dessous)
+
+- **Paul** — Co-CEO, point de contact, orchestre les autres agents et produit un plan d'action priorisé
+- **Martine** — Marketing Officer : audit, positionnement concurrentiel (`web_fetch`/`web_search`), pilotage de la fiche Google (infos, avis) — fusion de l'ancienne Nadia (Audit) et du pilotage Google de l'ancienne Camille
+- **Camille** — Contenu & Site : posts réseaux sociaux et contenu/génération de site, à partir des constats de Martine — recentrée sur la production créative
+- **Jean-Claude** — Démarchage : pistes de croissance publiques + templates de prospection générique (inchangé)
+
 ## Déjà livré
 
-- Landing page, login minimal (email, cookie de session), onboarding, dashboard, navigation (`AppHeader` : Dashboard / Connexions / Mon profil / Déconnexion)
-- Agent **Audit** (Nadia — diagnostic de présence en ligne via `web_fetch`)
-- Agent **Visibilité locale** (Camille — fiche Google, avis clients)
-- Agent **Communication / réseaux sociaux** (Martine — posts à partir d'une actualité déclarée)
-- Agent **Démarchage / prospection** (Jean-Claude — templates génériques, aucune liste réelle)
-- Agent **Co-CEO** (Paul — point de contact conversationnel, orchestre les 4 agents)
+- Landing page, login minimal (email, cookie de session), onboarding, dashboard, navigation
+- Objectif business à l'onboarding, injecté dans tous les prompts agents
+- Avatars illustratifs par agent, icône propre à chaque rôle (pas de photos de personnes réelles — cf. note ci-dessous)
+- Page "Connexions" : statut par canal (Google Business Profile, Instagram, Facebook), bouton honnête "bientôt — OAuth" plutôt qu'un faux bouton fonctionnel
+- Garde-fou commun : validation humaine obligatoire avant toute exécution réelle (niveau d'autonomie 1 = "Assistant")
+- Correctif critique (2026-10-05) : Paul affirmait parfois qu'une action avait été faite sans l'avoir réellement déclenchée (hallucination détectée via un test utilisateur réel). Corrigé par un outil `get_current_status` obligatoire avant toute affirmation sur l'état des propositions/audits — revérifié sur le scénario exact qui l'avait révélé.
 - Objectif business à l'onboarding, injecté dans tous les prompts agents
 - Avatars illustratifs par agent (pas de photos de personnes réelles — cf. note ci-dessous)
 - Page "Connexions" : statut par canal (Google Business Profile, Instagram, Facebook), bouton honnête "bientôt — OAuth" plutôt qu'un faux bouton fonctionnel
@@ -52,12 +59,19 @@ Demande CEO : "le Co-CEO doit être force de proposition et donner la direction 
 - Testé en conditions réelles : plan de 5 actions cohérent généré pour un cas concret, item lancé avec succès, rapport reflète les chiffres réels.
 - **Non fait** : envoi automatique du rapport par email (nécessite un fournisseur d'envoi configuré, cf. point 4 ci-dessous, toujours pas construit).
 
+### 2decies. Rationalisation de l'équipe : 5 agents → 4 — ✅ livré (2026-10-05, demande CEO)
+Demande : fusionner Nadia dans Martine ("Marketing Officer"), recentrer Camille sur le contenu, garder Jean-Claude. Challenge posé avant implémentation : la proposition initiale plaçait "communication Insta" à la fois sous Martine et sous Camille — ambiguïté sur qui écrit réellement un post. **Frontière tranchée** : Martine = diagnostic + pilotage structuré de la fiche Google (jamais de contenu créatif) ; Camille = production créative (posts, site), nourrie par les constats de Martine déjà en base (pas de nouveau mécanisme de handoff nécessaire).
+- `src/lib/agents/marketing.ts` (Martine, fusion de l'ancien audit.ts + volet GBP/avis de l'ancienne visibilité locale) et `src/lib/agents/contenu.ts` (Camille, posts + site) remplacent les 3 anciens fichiers agents.
+- Identité enrichie par agent : trait de personnalité ("humeur" fixe, pas dynamique — complexité non justifiée) + icône propre à chaque rôle (loupe pour Martine, stylo pour Camille, mallette pour Jean-Claude, boussole pour Paul) plutôt qu'une pastille colorée générique.
+- **Pas de vraies photos** : aucune génération d'image disponible dans cet environnement, et une fausse photo de personne pour une IA reste trompeuse si elle sort un jour du dashboard — décision maintenue.
+- Testé : toutes les pages (landing, dashboard, équipe, rapport, admin) rendent correctement avec la nouvelle équipe, y compris face à des données existantes utilisant les anciens noms d'agent (pas de crash, simple fallback d'affichage). **Le comportement réel des agents fusionnés n'a pas pu être vérifié avec un vrai appel modèle** : le compte de test a atteint sa limite de crédits Anthropic pendant la session précédente — à revalider dès que le compte est rechargé.
+
 ### 2nonies. Vue administrateur — ✅ livré (2026-10-05, demande CEO)
 - **Coût par entreprise et par modèle** : chaque appel au modèle (tous les agents, y compris la publication de site) enregistre désormais tokens + coût estimé (`UsageEvent`, barème dans [src/lib/usage.ts](../src/lib/usage.ts) — **aucune mesure n'existait avant**, c'était un vrai trou identifié dès l'architecture initiale). Vue agrégée par entreprise, par agent, par modèle.
 - **Connexions** : compteur et date de dernière connexion par entreprise (`Company.loginCount`/`lastLoginAt`).
 - **Gestion des utilisateurs** : liste des entreprises avec suppression (nettoyage pilote, cascade complète sur toutes les données liées).
 - **Proposé en plus (jugement)** : entonnoir d'activation (créées → plan généré → action validée → site publié) — révèle si Pepito "accroche" vraiment, pas seulement le nombre d'inscriptions.
-- Accès restreint par liste blanche d'emails (`ADMIN_EMAILS` dans `.env`) — pas de notion de rôle en base tant qu'il n'y a qu'un opérateur.
+- Accès : **ouvert par défaut à tout utilisateur connecté** (demande CEO, 2026-10-05, tant qu'il n'y a que des entreprises pilotes de confiance) — se referme automatiquement via `ADMIN_EMAILS` (liste blanche) dès que la variable est définie dans `.env`. **À faire avant d'ouvrir Pepito à des clients externes**, sans quoi n'importe quel utilisateur verrait les coûts de toutes les entreprises et pourrait en supprimer.
 - Testé en conditions réelles : accès refusé à un compte non-admin (page et API), autorisé à l'admin, suppression en cascade vérifiée. Le traçage de coût lui-même n'a pas pu être vérifié avec un vrai montant > 0 car le compte de test a atteint sa limite de crédits Anthropic pendant la session — le mécanisme est en place et attend un appel réussi pour afficher un premier chiffre.
 
 ### 2septies. Sécurité : isolation stricte entre entreprises — ✅ corrigé (2026-10-05, audit demandé par le CEO)
