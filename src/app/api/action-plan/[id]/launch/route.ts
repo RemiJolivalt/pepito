@@ -73,6 +73,7 @@ export async function POST(
     return NextResponse.json({ item: updated, producedCount });
   } catch (error) {
     console.error("Erreur lancement action du plan:", error);
-    return NextResponse.json({ error: "Échec du lancement de l'action" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Échec du lancement de l'action";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -73,7 +73,7 @@ export async function runContenuAgent(
 
   const finalMessage = await anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
-    max_tokens: 4000,
+    max_tokens: 6000,
     tools: [proposeContent],
     system: `Tu es ${PERSONA.name}, ${PERSONA.role} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
@@ -108,6 +108,18 @@ Règles strictes :
   });
 
   await recordUsage({ companyId: company.id, agent: AGENT_NAME, model: AGENT_MODEL, usage: finalMessage.usage });
+
+  // Même garde-fou que Jean-Claude (cf. docs/backlog.md) : un échec silencieux
+  // (0 proposition) ne doit jamais ressembler à un succès vide.
+  if (createdProposalIds.length === 0) {
+    console.warn(
+      `Camille (contenu) n'a rien produit — stop_reason: ${finalMessage.stop_reason}, usage:`,
+      finalMessage.usage,
+    );
+    throw new Error(
+      `${PERSONA.name} n'a pas pu produire de résultat exploitable cette fois-ci. Réessayez.`,
+    );
+  }
 
   return prisma.agentProposal.findMany({
     where: { id: { in: createdProposalIds } },

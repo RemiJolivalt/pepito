@@ -14,9 +14,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(proposals, { status: 201 });
   } catch (error) {
     console.error("Erreur agent demarchage:", error);
-    return NextResponse.json(
-      { error: "Échec de l'exécution de l'agent" },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Échec de l'exécution de l'agent";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -43,10 +43,11 @@ export function EquipeClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error();
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || "Échec de l'exécution de l'agent");
       await refresh();
-    } catch {
-      setError("Échec de l'exécution — vérifiez la clé ANTHROPIC_API_KEY côté serveur.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Échec de l'exécution de l'agent");
     } finally {
       setRunning(null);
     }

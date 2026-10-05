@@ -94,8 +94,12 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
         .describe("Actualité à communiquer, telle que mentionnée par l'utilisateur — omettre si aucune n'a été donnée"),
     }),
     run: async (input) => {
-      const proposals = await runContenuAgent(companyId, input.newsContext);
-      return `${proposals.length} proposition(s) créée(s) par ${PERSONAS.contenu.name}, en attente de validation dans le dashboard.`;
+      try {
+        const proposals = await runContenuAgent(companyId, input.newsContext);
+        return `${proposals.length} proposition(s) créée(s) par ${PERSONAS.contenu.name}, en attente de validation dans le dashboard.`;
+      } catch (error) {
+        return error instanceof Error ? error.message : `${PERSONAS.contenu.name} a rencontré un problème. Réessaie plus tard.`;
+      }
     },
   });
 
@@ -110,8 +114,12 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
         .describe("Type de prospects visés, tel que mentionné par l'utilisateur — omettre si non précisé"),
     }),
     run: async (input) => {
-      const proposals = await runDemarchageAgent(companyId, input.prospectDescription);
-      return `${proposals.length} proposition(s) créée(s) par ${PERSONAS.demarchage.name}, en attente de validation dans le dashboard.`;
+      try {
+        const proposals = await runDemarchageAgent(companyId, input.prospectDescription);
+        return `${proposals.length} proposition(s) créée(s) par ${PERSONAS.demarchage.name}, en attente de validation dans le dashboard.`;
+      } catch (error) {
+        return error instanceof Error ? error.message : `${PERSONAS.demarchage.name} a rencontré un problème. Réessaie plus tard.`;
+      }
     },
   });
 

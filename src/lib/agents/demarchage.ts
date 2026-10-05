@@ -99,7 +99,10 @@ export async function runDemarchageAgent(
 
   const finalMessage = await anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,
-    max_tokens: 4000,
+    // Plus élevé que la base : "20 entreprises alentours" + web_search peut
+    // consommer beaucoup de tours avant de conclure — un run à 4000 a brûlé
+    // 32k tokens d'entrée sans produire une seule proposition (cf. backlog.md).
+    max_tokens: 8000,
     tools: [
       proposeLead,
       proposeAction,
@@ -138,6 +141,21 @@ Règles strictes, non négociables :
     model: AGENT_MODEL,
     usage: finalMessage.usage,
   });
+
+  // Échec silencieux réel observé en prod (2026-10-05, entreprise "La
+  // Tonnelle") : l'agent a consommé 32k tokens sans produire une seule
+  // proposition, et rien ne prévenait l'utilisateur — l'action passait en
+  // "Terminée" comme si tout s'était bien passé. On lève une erreur
+  // explicite plutôt que de renvoyer un tableau vide silencieux.
+  if (createdProposalIds.length === 0) {
+    console.warn(
+      `Jean-Claude (demarchage) n'a rien produit — stop_reason: ${finalMessage.stop_reason}, usage:`,
+      finalMessage.usage,
+    );
+    throw new Error(
+      `${PERSONA.name} n'a pas pu produire de résultat exploitable cette fois-ci. Réessayez.`,
+    );
+  }
 
   return prisma.agentProposal.findMany({
     where: { id: { in: createdProposalIds } },

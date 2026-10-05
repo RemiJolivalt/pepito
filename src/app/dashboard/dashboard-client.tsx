@@ -177,8 +177,14 @@ export function DashboardClient({
     }
   }
 
-  const openItems = planItems.filter((i) => i.status === "propose" || i.status === "lance");
-  const closedItems = planItems.filter((i) => i.status === "termine" || i.status === "ecarte");
+  // Une action "terminée" reste visible dans la liste principale — elle ne
+  // disparaît plus en arrière-plan dès que vous validez. Correctif UX du
+  // 2026-10-05 : "je suis perdu dès que je valide une action" — la carte
+  // qu'on regarde ne doit jamais s'évaporer du champ de vision. Seules les
+  // actions explicitement écartées restent repliées : vous avez choisi de
+  // ne plus les voir.
+  const visibleItems = planItems.filter((i) => i.status !== "ecarte");
+  const discardedItems = planItems.filter((i) => i.status === "ecarte");
   const livePending = planItems.reduce(
     (n, i) => n + i.proposals.filter((p) => p.status === "en_attente").length,
     0,
@@ -224,20 +230,20 @@ export function DashboardClient({
               disabled={planLoading}
               className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
             >
-              {planLoading ? "Paul réfléchit…" : openItems.length ? "Compléter le plan" : "Demander un plan"}
+              {planLoading ? "Paul réfléchit…" : visibleItems.length ? "Compléter le plan" : "Demander un plan"}
             </button>
           </div>
           <p className="mt-1 text-xs text-slate-500">
             Chaque action est confiée à un agent. Vous lancez, l&apos;agent propose, vous validez. Rien ne part sans vous.
           </p>
 
-          {openItems.length === 0 ? (
+          {visibleItems.length === 0 ? (
             <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
               Aucune action en cours. Demandez un plan à {PERSONAS.co_ceo.name}.
             </div>
           ) : (
             <ol className="mt-4 space-y-3">
-              {openItems.map((item, index) => {
+              {visibleItems.map((item, index) => {
                 const persona = PERSONAS[item.agent as Exclude<AgentKey, "co_ceo">];
                 const status = PLAN_STATUS[item.status];
                 const busy = busyId === item.id;
@@ -313,14 +319,14 @@ export function DashboardClient({
             </ol>
           )}
 
-          {closedItems.length > 0 && (
+          {discardedItems.length > 0 && (
             <div className="mt-4">
               <button onClick={() => setShowClosed((v) => !v)} className="text-xs text-slate-500 underline">
-                {showClosed ? "Masquer" : "Voir"} les {closedItems.length} action(s) terminée(s) ou écartée(s)
+                {showClosed ? "Masquer" : "Voir"} les {discardedItems.length} action(s) écartée(s)
               </button>
               {showClosed && (
                 <ul className="mt-2 space-y-2">
-                  {closedItems.map((item) => (
+                  {discardedItems.map((item) => (
                     <li key={item.id} className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
                       <div className="flex items-center gap-2">
                         <span className={`rounded-full px-2 py-0.5 text-xs ${PLAN_STATUS[item.status].className}`}>
