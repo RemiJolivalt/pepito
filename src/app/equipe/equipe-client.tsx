@@ -6,6 +6,7 @@ import type { SafeCompany } from "@/lib/safe-company";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 import { PersonaAvatar } from "@/components/persona-avatar";
 import { ProposalCard } from "@/components/proposal-card";
+import { FindingCard } from "@/components/finding-card";
 
 /** Mode "manuel" : lancer un agent directement, sans passer par le plan de Paul. */
 export function EquipeClient({
@@ -121,10 +122,8 @@ export function EquipeClient({
         <ul className="mt-4 space-y-2">
           {auditFindings.length === 0 && <li className="text-sm text-slate-500">Aucun constat pour le moment.</li>}
           {auditFindings.map((f) => (
-            <li key={f.id} className="rounded-lg border border-slate-200 p-3">
-              <span className="text-xs uppercase text-slate-400">{f.category}</span>
-              <h3 className="font-medium">{f.title}</h3>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{f.content}</p>
+            <li key={f.id}>
+              <FindingCard finding={f} />
             </li>
           ))}
         </ul>

@@ -38,19 +38,49 @@ export async function runMarketingAgent(
   const recordFinding = betaZodTool({
     name: "record_audit_finding",
     description:
-      "Enregistre un constat d'audit ou de positionnement concurrentiel (pas une action à valider, juste un état des lieux).",
+      "Enregistre un constat d'audit ou de positionnement concurrentiel, structuré en 4 parties lisibles (pas une action à valider, juste un état des lieux).",
     inputSchema: z.object({
       category: z
         .enum(["site_web", "reseaux_sociaux", "concurrence"])
         .describe("Catégorie du constat — concurrence = positionnement face à un concurrent identifié"),
-      title: z.string().describe("Titre court du constat"),
-      content: z
+      title: z.string().describe("Titre court et concret du constat"),
+      summary: z
         .string()
-        .describe("Détail du constat et, si pertinent, une recommandation courte"),
+        .describe(
+          "Résumé en 1-2 phrases MAXIMUM, affiché sur une carte compacte sans le détail — doit donner l'essentiel à lui seul.",
+        ),
+      whatWorks: z
+        .string()
+        .describe(
+          "Ce qui fonctionne bien, en 1-3 phrases factuelles. Si rien de notable, écris-le explicitement (ex: \"Rien de particulier ne se distingue\") plutôt que d'inventer un point positif.",
+        ),
+      toImprove: z
+        .string()
+        .describe("Ce qu'il faut améliorer, en 2-4 phrases factuelles et concrètes — pas de jargon marketing creux."),
+      actionItems: z
+        .array(
+          z.object({
+            agent: z
+              .enum(["marketing", "contenu", "demarchage"])
+              .describe("Agent qui réaliserait cette action : marketing (fiche Google), contenu (posts/site), demarchage (prospection)"),
+            title: z.string().describe("Action concrète et courte, ex: \"Mettre la carte en texte HTML\""),
+            rationale: z.string().describe("Pourquoi cette action, en lien direct avec ce constat"),
+          }),
+        )
+        .max(3)
+        .describe("0 à 3 actions concrètes pour corriger ce qui a été constaté — le dirigeant pourra les ajouter au plan en un clic."),
     }),
     run: async (input) => {
       const finding = await prisma.auditFinding.create({
-        data: { companyId: company.id, category: input.category, title: input.title, content: input.content },
+        data: {
+          companyId: company.id,
+          category: input.category,
+          title: input.title,
+          content: input.summary,
+          whatWorks: input.whatWorks,
+          toImprove: input.toImprove,
+          actionItems: input.actionItems,
+        },
       });
       createdFindingIds.push(finding.id);
       return `Constat enregistré (id: ${finding.id}).`;
@@ -123,7 +153,8 @@ Règles strictes :
 - Si le site est inaccessible, signale-le comme un constat factuel, ne devine jamais son contenu.
 - Utilise web_search pour identifier des concurrents réels (ex: "${company.trade} ${company.servingArea}") — cite tes sources, n'invente jamais de concurrent.
 - Tu ne fais QUE proposer/constater, jamais exécuter directement.
-- Pas de jargon marketing creux : chaque constat ou proposition doit être concret et actionnable.`;
+- Pas de jargon marketing creux : chaque constat ou proposition doit être concret et actionnable.
+- Un seul constat large et structuré par sujet (site, réseaux, concurrence) vaut mieux que plusieurs constats fragmentés — le dirigeant doit pouvoir tout comprendre en ouvrant une seule carte.`;
 
   const { finalMessage, usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,

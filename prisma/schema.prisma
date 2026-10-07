@@ -137,9 +137,14 @@ model AuditFinding {
   id          String   @id @default(cuid())
   companyId   String
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  category    String // site_web, reseaux_sociaux
+  category    String // site_web, reseaux_sociaux, concurrence
   title       String
-  content     String
+  content     String // résumé court (1-2 phrases) affiché sur la carte compacte — cf. docs/backlog.md "lisibilité des constats"
+  // Détail structuré affiché dans la pop-up (nullable : constats créés avant
+  // cette structuration n'ont que `content`, affiché tel quel en repli).
+  whatWorks   String? // "Ce qui est bien"
+  toImprove   String? // "Ce qu'il faut améliorer"
+  actionItems Json? // Plan d'action suggéré, potentiellement exécutable par Pepito : { agent, title, rationale }[]
   createdAt   DateTime @default(now())
 }
 
