@@ -1,0 +1,50 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import type { AuditFinding } from "@prisma/client";
+import { FindingCard } from "@/components/finding-card";
+import { PersonaAvatar } from "@/components/persona-avatar";
+
+export function DiagnosticClient({ initialFindings }: { initialFindings: AuditFinding[] }) {
+  const [findings, setFindings] = useState(initialFindings);
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  async function run() {
+    setRunning(true);
+    setError(null);
+    setDone(false);
+    try {
+      const response = await fetch("/api/agents/marketing/run", { method: "POST" });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error ?? "Le diagnostic a échoué. Réessayez.");
+      const refreshed = await fetch("/api/audit-findings");
+      if (!refreshed.ok) throw new Error("Impossible d'actualiser le diagnostic. Rechargez la page.");
+      setFindings(await refreshed.json());
+      setDone(true);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Le diagnostic a échoué.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div><h1 className="text-2xl font-semibold">Diagnostic</h1><p className="mt-1 text-sm text-slate-500">Visibilité, site et positionnement concurrentiel</p></div>
+        <Link href="/dashboard" className="text-sm font-medium text-indigo-600 underline">Passer au plan d&apos;action</Link>
+      </header>
+      <section className="my-6 flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-4">
+        <div className="flex items-center gap-3"><PersonaAvatar agentKey="marketing" size={40} /><div><h2 className="text-sm font-medium">Analyse de Martine</h2><p className="text-xs text-slate-500">{findings.length} constat(s)</p></div></div>
+        <button onClick={run} disabled={running} className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50">{running ? "Analyse en cours…" : findings.length ? "Actualiser le diagnostic" : "Lancer le diagnostic"}</button>
+      </section>
+      {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+      {done && <p role="status" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">Diagnostic actualisé. <Link href="/dashboard?view=validation" className="underline">Voir les productions à valider</Link></p>}
+      {findings.length === 0 && <p className="py-6 text-sm text-slate-500">Aucun diagnostic disponible pour le moment.</p>}
+      <ul className="grid gap-3 sm:grid-cols-2">{findings.map((finding) => <li key={finding.id} className="min-w-0"><FindingCard finding={finding} /></li>)}</ul>
+    </div>
+  );
+}

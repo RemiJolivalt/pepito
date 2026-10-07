@@ -41,8 +41,8 @@ export function ProposalCard({
     onExecute;
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-2 text-xs">
+    <article className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <span className="text-slate-500">
           {showAgent && persona ? `${persona.name} · ` : ""}
           {KIND_LABELS[proposal.kind] ?? proposal.kind}

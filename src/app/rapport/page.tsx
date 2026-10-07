@@ -1,150 +1,80 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionEmail } from "@/lib/session";
 import { AppShell } from "@/components/app-shell";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
+import { computeBusinessTarget, formatEuros } from "@/lib/business-target";
+import { getFunnelStats } from "@/lib/funnel";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Rapport déterministe (pas d'appel LLM) : agrégation directe des données.
- * Choix délibéré — un rapport basé sur du texte généré risquerait de
- * répéter l'erreur d'hallucination déjà corrigée chez Paul (cf.
- * docs/backlog.md). Les chiffres ci-dessous sont toujours exacts.
- */
 export default async function RapportPage() {
   const ownerEmail = await getSessionEmail();
   if (!ownerEmail) redirect("/login");
-
   const company = await prisma.company.findUnique({ where: { ownerEmail } });
   if (!company || !company.name) redirect("/onboarding");
 
-  const [validated, pending, rejected, findings, leads] = await Promise.all([
-    prisma.agentProposal.findMany({
-      where: { companyId: company.id, status: { in: ["validee", "modifiee", "executee"] } },
-      orderBy: { decidedAt: "desc" },
-    }),
-    prisma.agentProposal.findMany({
-      where: { companyId: company.id, status: "en_attente" },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.agentProposal.count({
-      where: { companyId: company.id, status: "rejetee" },
-    }),
-    prisma.auditFinding.findMany({
-      where: { companyId: company.id, category: "concurrence" },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
-    prisma.agentProposal.findMany({
-      where: { companyId: company.id, kind: "piste_croissance" },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
+  const [approvedCount, executedCount, executed, funnel] = await Promise.all([
+    prisma.agentProposal.count({ where: { companyId: company.id, status: { in: ["validee", "modifiee"] } } }),
+    prisma.agentProposal.count({ where: { companyId: company.id, status: "executee" } }),
+    prisma.agentProposal.findMany({ where: { companyId: company.id, status: "executee" }, orderBy: { decidedAt: "desc" }, take: 10 }),
+    getFunnelStats(company.id),
   ]);
+  const target = computeBusinessTarget(company);
 
   return (
     <AppShell companyName={company.name}>
-      <div className="mx-auto max-w-3xl">
-        <h1 className="text-2xl font-semibold">Rapport</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          État réel de votre compte Pepito — ces chiffres sont calculés
-          directement en base, pas générés par un agent.
-        </p>
-
-        <section className="mt-6 grid grid-cols-3 gap-3 text-center">
-          <div className="rounded border border-gray-200 p-4">
-            <p className="text-2xl font-semibold">{validated.length}</p>
-            <p className="text-xs text-gray-500">
-              actions validées
-              {validated.some((p) => p.status === "executee") &&
-                ` (dont ${validated.filter((p) => p.status === "executee").length} réalisée(s))`}
-            </p>
+      <div className="mx-auto max-w-4xl">
+        <header className="flex flex-wrap items-start justify-between gap-3">
+          <h1 className="text-2xl font-semibold">Résultats</h1>
+          <Link href="/dashboard" className="text-sm font-medium text-indigo-600 underline">Revenir aux actions</Link>
+        </header>
+        <section className="mt-6 border-y border-slate-200 py-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-medium">Objectif de chiffre d&apos;affaires</h2>
+            <Link href="/onboarding" className="text-xs text-indigo-600 underline">Actualiser ma situation</Link>
           </div>
-          <div className="rounded border border-gray-200 p-4">
-            <p className="text-2xl font-semibold">{pending.length}</p>
-            <p className="text-xs text-gray-500">en attente de validation</p>
-          </div>
-          <div className="rounded border border-gray-200 p-4">
-            <p className="text-2xl font-semibold">{rejected}</p>
-            <p className="text-xs text-gray-500">rejetées</p>
-          </div>
+          {target ? (
+            <dl className="mt-4 grid grid-cols-2 gap-5 sm:grid-cols-4">
+              <div><dt className="text-xs text-slate-500">CA mensuel déclaré</dt><dd className="mt-1 text-xl font-semibold">{formatEuros(target.current)}</dd></div>
+              <div><dt className="text-xs text-slate-500">CA mensuel visé</dt><dd className="mt-1 text-xl font-semibold">{formatEuros(target.target)}</dd></div>
+              <div><dt className="text-xs text-slate-500">Écart à combler</dt><dd className="mt-1 text-xl font-semibold text-amber-700">{formatEuros(Math.max(0, target.gap))}</dd></div>
+              <div><dt className="text-xs text-slate-500">Clients supplémentaires / mois</dt><dd className="mt-1 text-xl font-semibold">{target.extraClientsPerMonth ?? "Non renseigné"}</dd></div>
+            </dl>
+          ) : <Link href="/onboarding" className="mt-4 inline-block text-sm text-indigo-600 underline">Renseigner mon objectif chiffré</Link>}
         </section>
-
-        {pending.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-lg font-medium">⚠️ À valider</h2>
-            <ul className="mt-2 space-y-2">
-              {pending.map((p) => {
-                const persona = PERSONAS[p.agent as Exclude<AgentKey, "co_ceo">];
-                return (
-                  <li key={p.id} className="rounded border border-gray-200 p-3 text-sm">
-                    <span className="text-xs text-gray-400">{persona?.name ?? p.agent}</span>
-                    <p className="font-medium">{p.title}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )}
-
-        <section className="mt-8">
-          <h2 className="text-lg font-medium">✅ Dernières actions validées</h2>
-          {validated.length === 0 ? (
-            <p className="mt-2 text-sm text-gray-500">Aucune action validée pour le moment.</p>
-          ) : (
-            <ul className="mt-2 space-y-2">
-              {validated.slice(0, 5).map((p) => {
-                const persona = PERSONAS[p.agent as Exclude<AgentKey, "co_ceo">];
-                return (
-                  <li key={p.id} className="rounded border border-gray-200 p-3 text-sm">
-                    <span className="text-xs text-gray-400">{persona?.name ?? p.agent}</span>
-                    <p className="font-medium">{p.title}</p>
-                  </li>
-                );
-              })}
+        <section className="py-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-medium">Prospection · ce mois-ci</h2>
+            <Link href="/prospection" className="text-sm text-indigo-600 underline">Suivre les contacts</Link>
+          </div>
+          <dl className="mt-4 grid grid-cols-2 gap-5 sm:grid-cols-4">
+            {([
+              ["Prospects contactés", funnel.thisMonth.contactes],
+              ["Réponses reçues", funnel.thisMonth.reponses],
+              ["Rendez-vous", funnel.thisMonth.rdv],
+              ["Clients gagnés déclarés", funnel.thisMonth.clients],
+            ] as const).map(([label, count]) => <div key={label}><dt className="text-xs text-slate-500">{label}</dt><dd className="mt-1 text-2xl font-semibold">{count}</dd></div>)}
+          </dl>
+        </section>
+        <section className="border-t border-slate-200 py-6">
+          <h2 className="font-medium">Productions · depuis le début</h2>
+          <dl className="mt-4 grid grid-cols-2 gap-5">
+            <div><dt className="text-sm text-slate-500">Approuvées, non exécutées</dt><dd className="mt-1 text-2xl font-semibold">{approvedCount}</dd></div>
+            <div><dt className="text-sm text-slate-500">Exécutées par Pepito</dt><dd className="mt-1 text-2xl font-semibold text-emerald-700">{executedCount}</dd></div>
+          </dl>
+          <Link href="/dashboard?view=historique" className="mt-4 inline-block text-sm text-indigo-600 underline">Consulter l&apos;historique des décisions</Link>
+        </section>
+        <section className="border-t border-slate-200 py-6">
+          <h2 className="font-medium">Dernières réalisations</h2>
+          {executed.length === 0 ? <p className="mt-3 text-sm text-slate-500">Aucune publication ou exécution enregistrée.</p> : (
+            <ul className="mt-3 divide-y divide-slate-200">
+              {executed.map((proposal) => <li key={proposal.id} className="py-3"><p className="text-xs text-slate-500">{PERSONAS[proposal.agent as AgentKey]?.name ?? proposal.agent}</p><h3 className="mt-1 text-sm font-medium">{proposal.title}</h3></li>)}
             </ul>
           )}
+          {company.siteSlug && <Link href={`/site/${company.siteSlug}`} target="_blank" rel="noopener noreferrer" className="mt-4 inline-block text-sm text-indigo-600 underline">Voir le site publié</Link>}
         </section>
-
-        <section className="mt-8">
-          <h2 className="text-lg font-medium">🔎 Positionnement concurrentiel</h2>
-          {findings.length === 0 ? (
-            <p className="mt-2 text-sm text-gray-500">
-              Aucune analyse concurrentielle encore — lancez {PERSONAS.marketing.name} depuis le dashboard.
-            </p>
-          ) : (
-            <ul className="mt-2 space-y-2">
-              {findings.map((f) => (
-                <li key={f.id} className="rounded border border-gray-200 p-3 text-sm">
-                  <p className="font-medium">{f.title}</p>
-                  <p className="mt-1 text-gray-600">{f.content}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="mt-8">
-          <h2 className="text-lg font-medium">🎯 Pistes de croissance</h2>
-          {leads.length === 0 ? (
-            <p className="mt-2 text-sm text-gray-500">
-              Aucune piste encore — lancez {PERSONAS.demarchage.name} depuis le dashboard.
-            </p>
-          ) : (
-            <ul className="mt-2 space-y-2">
-              {leads.map((l) => (
-                <li key={l.id} className="rounded border border-gray-200 p-3 text-sm">
-                  <p className="font-medium">{l.title}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <p className="mt-8 text-xs text-gray-400">
-          Envoi automatique de ce rapport par email : pas encore en place (nécessite un fournisseur d&apos;envoi d&apos;email configuré) — cf. docs/backlog.md.
-        </p>
       </div>
     </AppShell>
   );

@@ -6,7 +6,14 @@ Copilote IA agentique pour indépendants et TPE (kiné, plombier, installateur s
 
 4 agents (Paul, Martine, Camille, Jean-Claude), plan d'action piloté par Paul avec validation/réorientation par le dirigeant, première exécution réelle (site d'une page publié sur `/site/[slug]`), rapport, vue admin (coûts/usage), connexions OAuth (code prêt, identifiants Google/Meta à fournir), login par email + mot de passe. Base de données : PostgreSQL (plus de SQLite). Voir [docs/backlog.md](docs/backlog.md) pour le détail à jour.
 
-Parcours : `/` (landing) → `/login` → `/onboarding` → `/dashboard` (plan de Paul, validations) · `/equipe` (agents en manuel) · `/rapport` · `/admin` · `/connexions`.
+Parcours : `/` → `/login` → `/onboarding`, puis :
+
+- `/diagnostic` : constats de Martine et recommandations à ajouter au plan.
+- `/dashboard` (Aujourd'hui) : prochaine décision, plan à lancer, file unique de validation (`?view=validation`) et historique (`?view=historique`). Les productions du plan et les demandes ponctuelles suivent la même file. Une production approuvée n'est pas nécessairement exécutée ; les sites approuvés restent à publier dans la file.
+- `/prospection` : suivi opérationnel des contacts et rendez-vous.
+- `/rapport` (Résultats) : objectif chiffré, progression commerciale déclarée et réalisations effectives, sans duplication des analyses.
+- `/equipe` : rôles et demandes ponctuelles ; aucun second point de validation.
+- `/connexions`, `/onboarding`, `/admin` : configuration et administration.
 
 ## Démarrer en local
 
@@ -32,6 +39,11 @@ Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/), u
 3. Créer les tables dans la base : `npx prisma db push`
 4. Lancer le serveur de dev : `npm run dev`
 5. Ouvrir `http://localhost:3000` : se connecter (email + mot de passe — le compte est créé à la première connexion), remplir l'onboarding, puis sur `/dashboard` générer le plan de Paul, lancer les agents et valider leurs propositions.
+
+## Tests du parcours
+
+Avec le serveur local actif : `npx playwright install chromium`, puis `npm run test:ux`.
+Les tests utilisent `DATABASE_URL` et `SESSION_SECRET` du fichier `.env`. Ils créent uniquement des entreprises fictives `ux-test-…@example.invalid`, supprimées en fin de test. Utiliser de préférence une base de développement. Les appels aux agents et la publication sont simulés ; les décisions et l'ajout au plan utilisent les vraies API. `UX_TEST_BASE_URL` permet de changer le port (défaut : `http://localhost:3000`). Captures desktop/mobile dans `test-results/` (ignoré par Git).
 
 ## Déploiement (Vercel)
 
