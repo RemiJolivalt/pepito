@@ -88,8 +88,17 @@ export async function runMarketingAgent(
     },
   });
 
+  // L'URL ne doit JAMAIS être donnée uniquement dans le system prompt : l'outil
+  // web_fetch refuse de récupérer une URL qui n'est pas déjà apparue dans le
+  // contexte (message utilisateur ou résultat d'un outil précédent) — erreur
+  // "url_not_in_prior_context", observée en prod (La Tonnelle, 2026-10-07) :
+  // Martine n'avait lu qu'un extrait partiel via web_search au lieu du site
+  // réel. Corrigé en mettant l'URL dans le message utilisateur ci-dessous,
+  // où web_fetch peut la voir, et en imposant un repli par web_search avant
+  // tout constat "site inaccessible" — jamais une lecture partielle acceptée
+  // comme suffisante.
   const websiteInstruction = company.website
-    ? `Le site web déclaré est : ${company.website}. Utilise l'outil web_fetch pour le consulter avant de conclure.`
+    ? `Un site web est déclaré pour cette entreprise (son URL est donnée dans le message ci-dessous, pas ici) : utilise l'outil web_fetch pour le consulter EN ENTIER (page d'accueil, horaires, menu/services, contact) avant de conclure quoi que ce soit — une lecture partielle (ex: un seul extrait trouvé via web_search) n'est jamais suffisante. Si web_fetch échoue (erreur technique, page inaccessible), n'abandonne pas : fais une recherche web_search sur le nom de l'entreprise pour retrouver son contenu autrement. Ne signale "site inaccessible" qu'après avoir réellement essayé les deux.`
     : `Aucun site web n'a été déclaré. Enregistre un constat "site_web" signalant l'absence de site comme premier axe d'amélioration, sans inventer de contenu.`;
 
   // Système scindé en deux blocs pour le prompt caching (cf. doc Tool Runner /
@@ -135,7 +144,9 @@ Règles strictes :
     messages: [
       {
         role: "user",
-        content: "Fais le point sur la présence en ligne de cette entreprise et pilote sa fiche Google.",
+        content: company.website
+          ? `Fais le point sur la présence en ligne de cette entreprise et pilote sa fiche Google.\n\nSite web à consulter avec web_fetch : ${company.website}`
+          : "Fais le point sur la présence en ligne de cette entreprise et pilote sa fiche Google.",
       },
     ],
   }));
