@@ -8,6 +8,7 @@ import { runMarketingAgent } from "@/lib/agents/marketing";
 import { runContenuAgent } from "@/lib/agents/contenu";
 import { runDemarchageAgent } from "@/lib/agents/demarchage";
 import { recordUsage, runToolLoop } from "@/lib/usage";
+import { getFunnelStats, funnelLines } from "@/lib/funnel";
 
 const PERSONA = PERSONAS.co_ceo;
 const HISTORY_LIMIT = 20;
@@ -195,7 +196,7 @@ export async function runCoCeoPlanning(companyId: string) {
     where: { id: companyId },
   });
 
-  const [pendingProposals, recentFindings, existingPlan, discarded] = await Promise.all([
+  const [pendingProposals, recentFindings, existingPlan, discarded, funnel] = await Promise.all([
     prisma.agentProposal.findMany({
       where: { companyId, status: "en_attente" },
       orderBy: { createdAt: "desc" },
@@ -214,6 +215,7 @@ export async function runCoCeoPlanning(companyId: string) {
       orderBy: { createdAt: "desc" },
       take: 10,
     }),
+    getFunnelStats(companyId),
   ]);
 
   const createdItemIds: string[] = [];
@@ -267,7 +269,8 @@ Règles :
   const dynamicSystem = `Propositions déjà en attente de validation : ${pendingProposals.map((p) => `${p.agent}: ${p.title}`).join("; ") || "aucune"}.
 Derniers constats (audit, concurrence) : ${recentFindings.map((f) => f.title).join("; ") || "aucun"}.
 Actions déjà au plan (ne les répète pas) : ${existingPlan.map((i) => i.title).join("; ") || "aucune"}.
-Actions ÉCARTÉES par le dirigeant, avec sa raison — ne les repropose pas et tiens compte de la raison : ${discarded.map((i) => `"${i.title}" (${i.feedback || "sans raison"})`).join("; ") || "aucune"}.`;
+Actions ÉCARTÉES par le dirigeant, avec sa raison — ne les repropose pas et tiens compte de la raison : ${discarded.map((i) => `"${i.title}" (${i.feedback || "sans raison"})`).join("; ") || "aucune"}.
+${funnelLines(funnel)}`;
 
   const { usage } = await runToolLoop(anthropic.beta.messages.toolRunner({
     model: AGENT_MODEL,

@@ -18,6 +18,7 @@ const KIND_LABELS: Record<string, string> = {
   social_post: "Post réseaux sociaux",
   prospecting_email: "Email de prospection",
   piste_croissance: "Piste de croissance",
+  prospect: "Prospect à contacter",
 };
 
 export function ProposalCard({

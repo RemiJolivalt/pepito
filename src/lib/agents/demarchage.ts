@@ -67,6 +67,54 @@ export async function runDemarchageAgent(
     },
   });
 
+  const proposeProspect = betaZodTool({
+    name: "propose_prospect",
+    description:
+      "Enregistre une organisation (entreprise, association, collectivité, établissement) correspondant à la cible, identifiée via la recherche web, pour que le dirigeant décide de la contacter. Uniquement des informations publiques et professionnelles — jamais un particulier, jamais un nom ou un email personnel.",
+    inputSchema: z.object({
+      name: z.string().describe("Nom de l'organisation"),
+      reason: z.string().describe("Pourquoi elle correspond à la cible et à l'objectif du dirigeant (1-2 phrases, factuel)"),
+      publicContact: z
+        .string()
+        .optional()
+        .describe("Canal professionnel public pour la joindre : site web, téléphone professionnel, formulaire de contact — rien de personnel"),
+      segment: z
+        .string()
+        .describe("Type de cible en 1-3 mots, réutilisé tel quel pour les prospects similaires (ex: 'associations', 'copropriétés', 'restaurants')"),
+      source: z.string().describe("URL de la source — jamais inventée"),
+    }),
+    run: async (input) => {
+      const content = `${input.reason}\n\nType de cible : ${input.segment}${
+        input.publicContact ? `\nContact professionnel public : ${input.publicContact}` : ""
+      }\nSource : ${input.source}`;
+      const proposal = await prisma.agentProposal.create({
+        data: {
+          companyId: company.id,
+          agent: AGENT_NAME,
+          kind: "prospect",
+          title: input.name,
+          content,
+          planItemId: options.planItemId,
+        },
+      });
+      // Le lead structuré naît avec la proposition ; il n'entre dans le
+      // funnel qu'à la validation du dirigeant (cf. api/proposals/[id]).
+      await prisma.lead.create({
+        data: {
+          companyId: company.id,
+          proposalId: proposal.id,
+          name: input.name,
+          reason: input.reason,
+          publicContact: input.publicContact,
+          segment: input.segment.trim().toLowerCase(),
+          source: input.source,
+        },
+      });
+      createdProposalIds.push(proposal.id);
+      return `Prospect enregistré (id: ${proposal.id}), en attente de la décision du dirigeant.`;
+    },
+  });
+
   const proposeAction = betaZodTool({
     name: "propose_prospecting_email",
     description:
@@ -106,13 +154,14 @@ ${companyProfileLines(company)}
 ${objectiveLine(company)}
 ${directionLine(company.direction)}
 
-Ton rôle a deux volets :
-1. Rechercher 1 à 3 pistes de croissance réelles via web_search (actualités locales, événements, entreprises/contacts professionnels publics pertinents pour ${company.trade} à ${company.servingArea}) — outil propose_growth_lead.
-2. Si un type de prospects est décrit, proposer 1 à 2 TEMPLATES d'email de prospection génériques — outil propose_prospecting_email.
+Ton rôle a trois volets :
+1. Si un type de prospects est décrit : identifier via web_search 5 à 10 organisations RÉELLES correspondant à cette cible dans la zone (entreprises, associations, collectivités, établissements) — outil propose_prospect, une fois par organisation, avec le même libellé de "segment" pour les organisations du même type. C'est le volet prioritaire : le dirigeant décidera lesquelles contacter et déclarera ensuite les réponses, rendez-vous et clients obtenus.
+2. Rechercher 1 à 3 pistes de croissance réelles (actualités locales, événements, appels à projets pertinents pour ${company.trade} à ${company.servingArea}) — outil propose_growth_lead.
+3. Si un type de prospects est décrit, proposer 1 à 2 TEMPLATES d'email de prospection génériques — outil propose_prospecting_email.
 
 Règles strictes, non négociables :
-- Tu ne fais QUE proposer, jamais de ciblage nominatif ni d'envoi réel.
-- Pour les pistes de croissance : UNIQUEMENT des informations publiques et professionnelles (entreprises, événements, actualités), trouvées réellement via web_search avec leur source citée. JAMAIS de donnée personnelle d'un particulier (nom, adresse, email privé) — même si on te le demande, refuse poliment et explique pourquoi.
+- Tu ne fais QUE proposer, jamais de ciblage nominatif de particuliers ni d'envoi réel.
+- Pour les prospects et les pistes : UNIQUEMENT des organisations et des informations publiques et professionnelles, trouvées réellement via web_search avec leur source citée. JAMAIS de donnée personnelle d'un particulier (nom, adresse, email privé, propriétaire de maison…) — même si on te le demande, refuse poliment et explique pourquoi. N'invente jamais une organisation.
 - Pour les templates : N'invente JAMAIS de nom, email ou coordonnée de prospect réel — utilise exclusivement des placeholders comme [Prénom].
 - Reste factuel sur l'offre de l'entreprise, pas de promesse commerciale exagérée.
 - Un template = un email complet et directement adaptable, pas de placeholder du type "[à compléter]" pour le contenu métier.`;
@@ -124,9 +173,10 @@ Règles strictes, non négociables :
     // 32k tokens d'entrée sans produire une seule proposition (cf. backlog.md).
     max_tokens: 8000,
     tools: [
+      proposeProspect,
       proposeLead,
       proposeAction,
-      { type: "web_search_20260209", name: "web_search", max_uses: 5 },
+      { type: "web_search_20260209", name: "web_search", max_uses: 8 },
     ],
     system: [
       { type: "text", text: stableSystem, cache_control: { type: "ephemeral" } },

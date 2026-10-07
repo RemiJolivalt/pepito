@@ -4,6 +4,7 @@ import { getSessionEmail } from "@/lib/session";
 import { AppShell } from "@/components/app-shell";
 import { omitPasswordHash } from "@/lib/safe-company";
 import { DashboardClient } from "./dashboard-client";
+import { getFunnelStats } from "@/lib/funnel";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function DashboardPage() {
   const company = await prisma.company.findUnique({ where: { ownerEmail } });
   if (!company || !company.name) redirect("/onboarding");
 
-  const [planItems, chatMessages, pendingCount] = await Promise.all([
+  const [planItems, chatMessages, pendingCount, funnel] = await Promise.all([
     prisma.actionPlanItem.findMany({
       where: { companyId: company.id },
       orderBy: { createdAt: "asc" },
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
     prisma.agentProposal.count({
       where: { companyId: company.id, status: "en_attente" },
     }),
+    getFunnelStats(company.id),
   ]);
 
   return (
@@ -36,6 +38,7 @@ export default async function DashboardPage() {
         initialPlanItems={planItems}
         initialChatMessages={chatMessages}
         pendingCount={pendingCount}
+        funnel={funnel}
       />
     </AppShell>
   );

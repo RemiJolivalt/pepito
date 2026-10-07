@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const ITEMS = [
   { href: "/dashboard", label: "Aujourd'hui", hint: "Le plan de Paul et vos validations" },
   { href: "/equipe", label: "Équipe", hint: "Les agents, un par un" },
+  { href: "/prospection", label: "Prospection", hint: "Prospects, contacts, RDV, clients" },
   { href: "/rapport", label: "Rapport", hint: "Ce qui a été fait" },
   { href: "/connexions", label: "Connexions", hint: "Google, Facebook, Instagram" },
   { href: "/onboarding", label: "Mon entreprise", hint: "Objectif, zone, site" },

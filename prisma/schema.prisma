@@ -47,6 +47,36 @@ model Company {
   chatMessages    ChatMessage[]
   planItems       ActionPlanItem[]
   usageEvents     UsageEvent[]
+  leads           Lead[]
+}
+
+/**
+ * Funnel de prospection (cf. docs/backlog.md "partenaire de croissance",
+ * phase 3). Un lead = une organisation (entreprise, association,
+ * collectivité) identifiée par Jean-Claude via des informations publiques
+ * et professionnelles — jamais un particulier. Créé en même temps que la
+ * proposition `prospect` (stage "propose"), il n'entre dans le funnel
+ * qu'à la validation humaine ("a_contacter"). Les étapes suivantes sont
+ * déclarées par le dirigeant : Pepito ne prétend pas connaître les ventes.
+ */
+model Lead {
+  id            String    @id @default(cuid())
+  companyId     String
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  proposalId    String?   @unique
+  proposal      AgentProposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  name          String // organisation ciblée
+  reason        String // pourquoi elle correspond à la cible / à l'objectif
+  publicContact String? // canal professionnel public (site, téléphone pro, formulaire) — jamais de donnée personnelle
+  source        String? // URL ayant permis de l'identifier
+  segment       String? // type de cible (ex: "associations", "copropriétés") — base de la boucle d'apprentissage
+  stage         String    @default("propose") // propose, a_contacter, contacte, repondu, rdv, gagne, perdu, ecarte
+  contactedAt   DateTime?
+  repliedAt     DateTime?
+  meetingAt     DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 /**
@@ -138,6 +168,7 @@ model AgentProposal {
   planItemId  String? // action du plan de Paul dont cette proposition découle (lisibilité plan → agent → proposition)
   planItem    ActionPlanItem? @relation(fields: [planItemId], references: [id], onDelete: SetNull)
   executionLog ExecutionLog?
+  lead        Lead?
 }
 
 model ExecutionLog {

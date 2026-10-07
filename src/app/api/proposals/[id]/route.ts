@@ -40,6 +40,15 @@ export async function PATCH(
     },
   });
 
+  // Un prospect validé entre dans le funnel de prospection (cf. src/lib/funnel.ts) ;
+  // rejeté, il en sort sans être supprimé (trace pour la boucle d'apprentissage).
+  if (existing.kind === "prospect") {
+    await prisma.lead.updateMany({
+      where: { proposalId: id, stage: { in: ["propose", "a_contacter", "ecarte"] } },
+      data: { stage: status === "rejetee" ? "ecarte" : "a_contacter" },
+    });
+  }
+
   // Lisibilité plan → propositions : quand toutes les propositions d'une
   // action du plan sont décidées, l'action passe "terminée" d'elle-même.
   if (proposal.planItemId) {

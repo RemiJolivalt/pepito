@@ -7,6 +7,7 @@ import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 import { PersonaAvatar } from "@/components/persona-avatar";
 import { ProposalCard } from "@/components/proposal-card";
 import { computeBusinessTarget, formatEuros } from "@/lib/business-target";
+import type { FunnelStats } from "@/lib/funnel-shared";
 
 type PlanItemWithProposals = ActionPlanItem & { proposals: AgentProposal[] };
 
@@ -22,11 +23,13 @@ export function DashboardClient({
   initialPlanItems,
   initialChatMessages,
   pendingCount,
+  funnel,
 }: {
   company: SafeCompany;
   initialPlanItems: PlanItemWithProposals[];
   initialChatMessages: ChatMessage[];
   pendingCount: number;
+  funnel: FunnelStats;
 }) {
   const [planItems, setPlanItems] = useState(initialPlanItems);
   const [chatMessages, setChatMessages] = useState(initialChatMessages);
@@ -260,6 +263,18 @@ export function DashboardClient({
             les clients à aller chercher, et chaque action du plan devra y contribuer.{" "}
             <a href="/onboarding" className="font-medium text-indigo-600 underline">Renseigner mon objectif</a>
           </p>
+        )}
+
+        {funnel.total.identifies > 0 && (
+          <section className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border bg-white px-3 py-2 text-xs text-slate-600">
+            <span className="font-medium text-slate-800">Ce mois-ci</span>
+            <span><b>{funnel.thisMonth.identifies}</b> prospects identifiés</span>
+            <span><b>{funnel.thisMonth.contactes}</b> contactés</span>
+            <span><b>{funnel.thisMonth.reponses}</b> réponses</span>
+            <span><b>{funnel.thisMonth.rdv}</b> RDV</span>
+            <span><b>{funnel.thisMonth.clients}</b> client{funnel.thisMonth.clients > 1 ? "s" : ""} déclaré{funnel.thisMonth.clients > 1 ? "s" : ""}</span>
+            <a href="/prospection" className="ml-auto text-indigo-600 underline">voir le funnel</a>
+          </section>
         )}
 
         {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
