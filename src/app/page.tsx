@@ -6,7 +6,7 @@ const TEAM: AgentKey[] = ["co_ceo", "marketing", "contenu", "demarchage"];
 
 const STEPS = [
   { n: "1", title: "Vous donnez l'objectif", text: "« 10 nouveaux clients par mois ». Votre métier, votre zone, votre site s'il existe. 5 minutes." },
-  { n: "2", title: "Paul fait le plan", text: "Votre Co-CEO audite votre présence en ligne, regarde vos concurrents et vous propose 3 à 5 actions, confiées à son équipe." },
+  { n: "2", title: "Paul fait le plan", text: "Votre partenaire de croissance audite votre présence en ligne, regarde vos concurrents et vous propose 3 à 5 actions, confiées à son équipe." },
   { n: "3", title: "Les agents proposent", text: "Fiche Google, site web, posts, prospection : chaque agent prépare le travail concret." },
   { n: "4", title: "Vous validez, Pepito réalise", text: "Rien ne part sans votre feu vert. Validé ? Pepito publie — à commencer par votre site." },
 ];

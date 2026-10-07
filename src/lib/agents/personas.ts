@@ -3,9 +3,16 @@
  * 2026-10-05 (demande CEO) : Nadia (audit) fusionnée dans Martine, qui
  * devient Marketing Officer (diagnostic + pilotage de la fiche Google) ;
  * Camille se recentre sur la production de contenu (posts, site), en
- * s'appuyant sur les constats de Martine. Le Co-CEO n'a volontairement pas
- * de prénom donnant un genre marqué inutilement — c'est le point de
- * contact, pas un personnage.
+ * s'appuyant sur les constats de Martine.
+ *
+ * Paul (ex-"Co-CEO") renommé "Partenaire de croissance" le 2026-10-07 —
+ * cf. docs/backlog.md "partenaire de croissance" : "Co-CEO" évoquait un
+ * statut hiérarchique factice, alors que son rôle réel (et celui qui doit
+ * se lire dans son prompt, pas seulement dans son étiquette) est de
+ * comprendre le métier et le marché du dirigeant, l'aider à fixer un
+ * objectif chiffré, décider des priorités, déléguer, mesurer et apprendre
+ * de ce qui fonctionne. Toujours pas de prénom donnant un genre marqué
+ * inutilement par ailleurs — "Paul" reste un prénom neutre dans ce choix.
  *
  * "humeur" = un trait de personnalité fixe qui infuse le ton de l'agent
  * (pas un indicateur d'humeur dynamique en V1 — complexité non justifiée
@@ -22,10 +29,10 @@ import { businessTargetLines } from "@/lib/business-target";
 export const PERSONAS = {
   co_ceo: {
     name: "Paul",
-    role: "Co-CEO — votre point de contact",
+    role: "Partenaire de croissance",
     trait: "Direct et synthétique, ne promet jamais ce qu'il ne peut pas faire.",
     blurb:
-      "Je connais votre entreprise et votre objectif. Je fais le point, je priorise et j'active les bons agents pour vous — toujours avec votre validation avant toute action réelle.",
+      "Je comprends votre métier et votre marché, je fixe avec vous un objectif chiffré, je décide des priorités, je délègue aux bons agents, je mesure ce que ça produit et j'ajuste la suite — toujours avec votre validation avant toute action réelle.",
   },
   marketing: {
     name: "Martine",
@@ -106,7 +113,7 @@ export type AgentRunOptions = {
 
 export function briefLine(brief?: string): string {
   return brief
-    ? `ACTION DEMANDÉE PAR PAUL (Co-CEO) : ${brief}\nTes propositions doivent réaliser précisément cette action, pas autre chose.`
+    ? `ACTION DEMANDÉE PAR PAUL : ${brief}\nTes propositions doivent réaliser précisément cette action, pas autre chose.`
     : "";
 }
 

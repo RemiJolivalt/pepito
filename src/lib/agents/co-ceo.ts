@@ -14,11 +14,12 @@ const PERSONA = PERSONAS.co_ceo;
 const HISTORY_LIMIT = 20;
 
 /**
- * Agent "Co-CEO" : point de contact unique, orchestre les autres agents en
- * les invoquant comme des outils. Équipe rationalisée le 2026-10-05 : 4
- * agents (Marketing/Contenu/Démarchage + lui-même), Nadia fusionnée dans
- * Martine. Garde-fou inchangé : déléguer ne fait que créer des propositions
- * (ou des constats), jamais d'exécution réelle.
+ * Agent "Partenaire de croissance" (Paul, ex-"Co-CEO" — cf. docs/backlog.md) :
+ * point de contact unique, orchestre les autres agents en les invoquant
+ * comme des outils. Équipe rationalisée le 2026-10-05 : 4 agents
+ * (Marketing/Contenu/Démarchage + lui-même), Nadia fusionnée dans Martine.
+ * Garde-fou inchangé : déléguer ne fait que créer des propositions (ou des
+ * constats), jamais d'exécution réelle.
  */
 export async function runCoCeoTurn(companyId: string, userMessage: string) {
   const company = await prisma.company.findUniqueOrThrow({
@@ -148,7 +149,8 @@ ${companyProfileLines(company)}
 ${objectiveLine(company)}
 ${directionLine(company.direction)}
 
-Ton rôle : échanger avec le dirigeant, l'aider à prioriser, et déléguer aux agents spécialisés (${PERSONAS.marketing.name} pour l'audit/positionnement/fiche Google, ${PERSONAS.contenu.name} pour les posts et le site web, ${PERSONAS.demarchage.name} pour le démarchage et les pistes de croissance) via les outils delegate_* quand c'est pertinent.
+Tu es un partenaire business, pas un simple assistant qui répond aux questions : tu comprends le métier et le marché du dirigeant, tu l'aides à fixer un objectif chiffré, tu décides avec lui des priorités, tu délègues aux agents spécialisés, tu t'appuies sur les résultats mesurés (écart vers l'objectif, funnel de prospection) pour ajuster ce qui vient ensuite — pas sur des recommandations génériques déconnectées de ce qui se passe réellement.
+Ton rôle concret : échanger avec le dirigeant, l'aider à prioriser, et déléguer aux agents spécialisés (${PERSONAS.marketing.name} pour l'audit/positionnement/fiche Google, ${PERSONAS.contenu.name} pour les posts et le site web, ${PERSONAS.demarchage.name} pour le démarchage et les pistes de croissance) via les outils delegate_* quand c'est pertinent.
 Règles strictes, non négociables :
 - RÈGLE ABSOLUE : ne dis JAMAIS qu'une action a été faite (proposition créée, audit relancé, fiche vue, contenu consulté) sans avoir réellement appelé l'outil correspondant DANS CE TOUR. Tu n'as aucune mémoire fiable de ce qui a été fait avant ce message — si on te demande l'état actuel, le nombre ou le contenu de propositions/constats, appelle TOUJOURS get_current_status avant de répondre. Ne devine jamais.
 - Tu ne fais JAMAIS exécuter une action réelle toi-même, même automatiquement : déléguer ne fait que créer des propositions, qui restent soumises à la validation du dirigeant dans le dashboard. Dis-le clairement si tu délègues.
