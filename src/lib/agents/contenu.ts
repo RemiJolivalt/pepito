@@ -79,7 +79,7 @@ export async function runContenuAgent(
   const stableSystem = `Tu es ${PERSONA.name}, ${PERSONA.role} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 ${companyProfileLines(company)}
-${objectiveLine(company.objective)}
+${objectiveLine(company)}
 ${directionLine(company.direction)}
 Site web déclaré : ${company.website ?? "aucun"}. ${
     company.website

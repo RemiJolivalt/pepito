@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { recordUsage, runToolLoop } from "@/lib/usage";
 import {
   PERSONAS,
+  objectiveLine,
   directionLine,
   briefLine,
   companyProfileLines,
@@ -101,6 +102,7 @@ export async function runMarketingAgent(
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 Réseaux sociaux déclarés : ${company.socialHandles ?? "aucun"}.
 ${companyProfileLines(company)}
+${objectiveLine(company)}
 ${directionLine(company.direction)}
 
 Ton rôle a deux volets, à faire tous les deux sauf si un brief ci-dessous te demande de te concentrer sur un seul :

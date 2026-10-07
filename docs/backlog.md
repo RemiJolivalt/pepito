@@ -133,6 +133,22 @@ Nadia utilise désormais `web_search` pour identifier 2-3 concurrents locaux ré
 ### 6. Pilote avec 5 vraies entreprises (2 semaines)
 Reprise telle quelle du cahier des charges tiers : condition de validation avant d'aller plus loin. Doit s'appuyer sur les points 1-4 au minimum.
 
+## Axe "partenaire de croissance" (cahier des charges CEO du 2026-10-07)
+
+Promesse : *Pépito travaille pour développer votre activité et mesure ce que cela produit* — mesurer avant / agir / mesurer après / apprendre / réorienter. Découpage validé par le CEO le 2026-10-07 :
+
+1. **Profil business + écart chiffré — ✅ livré (2026-10-07).** Champs déclaratifs sur `Company` (CA mensuel actuel, CA visé, échéance, valeur moyenne d'un client, nouveaux clients/mois) saisis à l'onboarding/"Mon entreprise". Calcul déterministe sans LLM ([src/lib/business-target.ts](../src/lib/business-target.ts)) : écart, croissance, mois restants, clients supplémentaires nécessaires par mois. Injecté dans les prompts de Paul et des 3 agents via `objectiveLine(company)` : chaque action doit être justifiée par sa contribution à l'écart. En-tête du dashboard : Objectif / Situation déclarée / Écart / Clients à aller chercher. Choix assumé : **"valeur moyenne d'un client" plutôt que "panier moyen"** — pour une activité récurrente (kiné, restaurant) c'est la valeur sur la durée qui détermine le nombre de clients à aller chercher, le panier sous-estimerait.
+2. **Snapshots métriques** (note Google, nb avis, site, réseaux — source `auto`/`déclaré`) et tableau Départ / Aujourd'hui / Évolution. **Décision CEO : la récupération automatique des métriques Google est reportée** (dépend de l'OAuth Google) — on commence par le déclaratif.
+3. **Funnel prospection** : les pistes de Jean-Claude deviennent des leads avec statut (identifié → contacté → répondu → RDV → client oui/non/ne sais pas), compteurs "Ce que Pépito a fait ce mois-ci".
+4. **Boucle d'apprentissage** : Paul lit les stats du funnel par segment dans son plan et produit la "Prochaine priorité" — avec règle d'honnêteté : sous un seuil de contacts par segment (~20), "trop tôt pour conclure", jamais "A fonctionne 5× mieux" sur 5 réponses.
+5. **Repositionnement** landing + promesse "14 jours", une fois qu'il y a des résultats à montrer.
+
+**Décision CEO (2026-10-07) — prise de contact déléguée à Pepito : opt-in.** Revient sur l'exclusion précédente : l'utilisateur pourra choisir de laisser Pepito effectuer la prise de contact (défaut : non, c'est lui qui décide, par entreprise). Prérequis avant de l'ouvrir : un canal d'envoi (fournisseur email à configurer), le cadre RGPD/prospection B2B à valider avec Conformité/Juridique, et le funnel (point 3) pour mesurer. À implémenter avec le point 3 comme réglage `Company`, exécution réelle dans un second temps.
+
+**Bug à traiter (signalé CEO 2026-10-07)** : l'audit de Martine échoue souvent sur les sites web — URL déclarées non accessibles via `web_fetch` (sites bloquant les robots, redirections, http→https, www manquant…). À ajouter au plan : normaliser l'URL (schéma, www), tenter les variantes, et sinon basculer sur `web_search "site:domaine"` avant de conclure "site inaccessible".
+
+**Point de conformité** : CA, panier/valeur client et marge d'un indépendant en nom propre sont des données personnelles au sens RGPD (la personne = l'entreprise). Non bloquant pour le MVP mais à mentionner dans la politique de confidentialité et à faire valider par le Data Privacy Officer avant le pilote avec de vraies entreprises.
+
 ## Propositions du 2026-10-05 (challenge des demandes CEO) — à trancher
 
 **A. WordPress — reporté, contre-proposition livrée.** WordPress ajoute hébergement + API WordPress.com + un OAuth de plus, avant même que Google/Meta soient actifs. À la place, Pepito **génère et héberge lui-même** le site d'une page (livré ci-dessus, point 2sexies). WordPress reviendra comme option *"exporter mon site"* pour les clients qui veulent posséder/personnaliser — pas comme prérequis.

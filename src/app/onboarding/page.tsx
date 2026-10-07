@@ -17,6 +17,11 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState("");
   const [certifications, setCertifications] = useState("");
   const [openingHours, setOpeningHours] = useState("");
+  const [monthlyRevenue, setMonthlyRevenue] = useState("");
+  const [revenueTarget, setRevenueTarget] = useState("");
+  const [targetDate, setTargetDate] = useState("");
+  const [averageClientValue, setAverageClientValue] = useState("");
+  const [newClientsPerMonth, setNewClientsPerMonth] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isNew, setIsNew] = useState(true);
@@ -38,6 +43,11 @@ export default function OnboardingPage() {
         setPhone(c.phone ?? "");
         setCertifications(c.certifications ?? "");
         setOpeningHours(c.openingHours ?? "");
+        setMonthlyRevenue(c.monthlyRevenue?.toString() ?? "");
+        setRevenueTarget(c.revenueTarget?.toString() ?? "");
+        setTargetDate(c.targetDate ? String(c.targetDate).slice(0, 7) : "");
+        setAverageClientValue(c.averageClientValue?.toString() ?? "");
+        setNewClientsPerMonth(c.newClientsPerMonth?.toString() ?? "");
       })
       .catch(() => {});
   }, []);
@@ -61,6 +71,12 @@ export default function OnboardingPage() {
           phone: phone || undefined,
           certifications: certifications || undefined,
           openingHours: openingHours || undefined,
+          monthlyRevenue: monthlyRevenue || null,
+          revenueTarget: revenueTarget || null,
+          // <input type="month"> renvoie "AAAA-MM" : on vise la fin du mois choisi.
+          targetDate: targetDate ? new Date(Number(targetDate.slice(0, 4)), Number(targetDate.slice(5, 7)), 0).toISOString() : null,
+          averageClientValue: averageClientValue || null,
+          newClientsPerMonth: newClientsPerMonth || null,
         }),
       });
       if (!res.ok) throw new Error();
@@ -100,6 +116,61 @@ export default function OnboardingPage() {
             onChange={(e) => setObjective(e.target.value)}
             className="rounded border px-3 py-2 text-sm"
           />
+
+          <fieldset className="mt-1 rounded-lg border border-indigo-100 bg-indigo-50/40 p-3">
+            <legend className="px-1 text-sm font-medium">Votre objectif en chiffres</legend>
+            <p className="mb-3 text-xs text-slate-500">
+              Déclaratif et approximatif, ça suffit. Pepito calcule l&apos;écart et le nombre de clients à aller chercher,
+              puis mesure si ses actions vous en rapprochent. Rien n&apos;est partagé.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input
+                type="number"
+                min={0}
+                placeholder="CA mensuel actuel (€)"
+                value={monthlyRevenue}
+                onChange={(e) => setMonthlyRevenue(e.target.value)}
+                className="rounded border px-3 py-2 text-sm"
+              />
+              <input
+                type="number"
+                min={0}
+                placeholder="CA mensuel visé (€)"
+                value={revenueTarget}
+                onChange={(e) => setRevenueTarget(e.target.value)}
+                className="rounded border px-3 py-2 text-sm"
+              />
+              <label className="flex flex-col gap-1 text-xs text-slate-500">
+                Échéance
+                <input
+                  type="month"
+                  value={targetDate}
+                  onChange={(e) => setTargetDate(e.target.value)}
+                  className="rounded border px-3 py-2 text-sm text-slate-900"
+                />
+              </label>
+              <input
+                type="number"
+                min={0}
+                placeholder="Valeur moyenne d'un client (€)"
+                value={averageClientValue}
+                onChange={(e) => setAverageClientValue(e.target.value)}
+                className="rounded border px-3 py-2 text-sm"
+              />
+              <input
+                type="number"
+                min={0}
+                placeholder="Nouveaux clients par mois aujourd'hui"
+                value={newClientsPerMonth}
+                onChange={(e) => setNewClientsPerMonth(e.target.value)}
+                className="rounded border px-3 py-2 text-sm sm:col-span-2"
+              />
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              Valeur d&apos;un client = ce qu&apos;il vous rapporte en tout (pas un seul achat) — pour une activité
+              récurrente, comptez la durée de la relation.
+            </p>
+          </fieldset>
 
           <input
             required

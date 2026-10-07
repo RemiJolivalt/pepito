@@ -6,6 +6,7 @@ import type { SafeCompany } from "@/lib/safe-company";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 import { PersonaAvatar } from "@/components/persona-avatar";
 import { ProposalCard } from "@/components/proposal-card";
+import { computeBusinessTarget, formatEuros } from "@/lib/business-target";
 
 type PlanItemWithProposals = ActionPlanItem & { proposals: AgentProposal[] };
 
@@ -189,6 +190,10 @@ export function DashboardClient({
     (n, i) => n + i.proposals.filter((p) => p.status === "en_attente").length,
     0,
   );
+  const target = computeBusinessTarget({
+    ...company,
+    targetDate: company.targetDate ? new Date(company.targetDate) : null,
+  });
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
@@ -212,6 +217,50 @@ export function DashboardClient({
             {Math.max(livePending, pendingCount)} à valider
           </span>
         </header>
+
+        {/* Objectif chiffré : la question à laquelle le dashboard doit répondre
+            est "Pepito fait-il progresser mon activité ?" (cf. backlog). */}
+        {target ? (
+          <section className="mt-4 grid gap-3 sm:grid-cols-4">
+            <div className="rounded-lg border bg-white p-3">
+              <p className="text-xs text-slate-500">Votre objectif</p>
+              <p className="mt-1 text-lg font-semibold">{formatEuros(target.target)}<span className="text-xs font-normal text-slate-400">/mois</span></p>
+              {target.monthsRemaining != null && (
+                <p className="text-xs text-slate-400">
+                  {target.monthsRemaining === 0 ? "échéance atteinte" : `dans ${target.monthsRemaining} mois`}
+                </p>
+              )}
+            </div>
+            <div className="rounded-lg border bg-white p-3">
+              <p className="text-xs text-slate-500">Situation déclarée</p>
+              <p className="mt-1 text-lg font-semibold">{formatEuros(target.current)}<span className="text-xs font-normal text-slate-400">/mois</span></p>
+              <a href="/onboarding" className="text-xs text-indigo-600 underline">mettre à jour</a>
+            </div>
+            <div className="rounded-lg border bg-white p-3">
+              <p className="text-xs text-slate-500">Écart</p>
+              <p className={`mt-1 text-lg font-semibold ${target.gap > 0 ? "text-amber-700" : "text-emerald-700"}`}>
+                {target.gap > 0 ? "+" : ""}{formatEuros(target.gap)}
+              </p>
+              <p className="text-xs text-slate-400">{target.growthPct > 0 ? "+" : ""}{target.growthPct} %</p>
+            </div>
+            <div className="rounded-lg border bg-white p-3">
+              <p className="text-xs text-slate-500">Clients à aller chercher</p>
+              <p className="mt-1 text-lg font-semibold">
+                {target.extraClientsPerMonth != null ? `≈ ${target.extraClientsPerMonth}` : "—"}
+                <span className="text-xs font-normal text-slate-400">/mois en plus</span>
+              </p>
+              {target.extraClientsPerMonth == null && (
+                <a href="/onboarding" className="text-xs text-indigo-600 underline">indiquer la valeur d&apos;un client</a>
+              )}
+            </div>
+          </section>
+        ) : (
+          <p className="mt-4 rounded-lg border border-dashed border-indigo-200 bg-indigo-50/40 p-3 text-sm text-slate-600">
+            Donnez un objectif chiffré à {PERSONAS.co_ceo.name} (CA actuel, CA visé, échéance) : il calculera l&apos;écart et
+            les clients à aller chercher, et chaque action du plan devra y contribuer.{" "}
+            <a href="/onboarding" className="font-medium text-indigo-600 underline">Renseigner mon objectif</a>
+          </p>
+        )}
 
         {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {notice && (

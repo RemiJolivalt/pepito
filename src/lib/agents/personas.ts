@@ -17,6 +17,8 @@
  * agent a une illustration propre (PersonaAvatar) plutôt qu'une pastille
  * générique.
  */
+import { businessTargetLines } from "@/lib/business-target";
+
 export const PERSONAS = {
   co_ceo: {
     name: "Paul",
@@ -50,11 +52,20 @@ export const PERSONAS = {
 
 export type AgentKey = keyof typeof PERSONAS;
 
-/** Ligne d'objectif business à injecter dans les prompts, si déclaré (cf. docs/backlog.md #1). */
-export function objectiveLine(objective: string | null): string {
-  return objective
-    ? `Objectif business du dirigeant : ${objective}. Oriente tes propositions vers cet objectif en priorité.`
-    : "";
+/**
+ * Objectif business à injecter dans les prompts : phrase libre du dirigeant
+ * + écart chiffré (CA actuel / cible / clients nécessaires) si renseigné.
+ */
+export function objectiveLine(
+  company: { objective: string | null } & Parameters<typeof businessTargetLines>[0],
+): string {
+  const parts: string[] = [];
+  if (company.objective) {
+    parts.push(`Objectif business du dirigeant : ${company.objective}. Oriente tes propositions vers cet objectif en priorité.`);
+  }
+  const numbers = businessTargetLines(company);
+  if (numbers) parts.push(numbers);
+  return parts.join("\n");
 }
 
 type CompanyProfileFields = {

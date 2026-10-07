@@ -103,7 +103,7 @@ export async function runDemarchageAgent(
   const stableSystem = `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 ${companyProfileLines(company)}
-${objectiveLine(company.objective)}
+${objectiveLine(company)}
 ${directionLine(company.direction)}
 
 Ton rôle a deux volets :

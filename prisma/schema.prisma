@@ -20,6 +20,16 @@ model Company {
   website         String? // optionnel : beaucoup de TPE n'ont pas de site
   socialHandles   String? // ex: @cabinet_kine_demo (Instagram)
   objective       String? // objectif business déclaré, ex: "10 nouveaux clients par mois" (cf. docs/backlog.md #1)
+  // Profil business chiffré (cf. docs/backlog.md, "partenaire de croissance") — déclaratif,
+  // jamais calculé par Pepito : CA mensuel actuel, cible et échéance, valeur moyenne
+  // d'un client (pas "panier" : pour une activité récurrente c'est la valeur sur la
+  // durée qui compte). Sert au calcul déterministe de l'écart et du nombre de clients
+  // nécessaires (src/lib/business-target.ts), injecté dans les prompts.
+  monthlyRevenue     Int? // € / mois
+  revenueTarget      Int? // € / mois visés
+  targetDate         DateTime?
+  averageClientValue Int? // € par client
+  newClientsPerMonth Int?
   description     String? // description libre de l'activité et du positionnement — remplace l'ancien champ "tone" figé, injectée dans tous les prompts agents
   phone           String? // téléphone affiché aux clients — utilisé par les agents pour éviter les placeholders "[Votre téléphone]"
   certifications  String? // labels/certifications (ex: RGE, Qualibat) — utile pour la crédibilité locale et le contenu généré

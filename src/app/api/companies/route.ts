@@ -30,6 +30,11 @@ export async function POST(request: NextRequest) {
     phone,
     certifications,
     openingHours,
+    monthlyRevenue,
+    revenueTarget,
+    targetDate,
+    averageClientValue,
+    newClientsPerMonth,
   } = body;
 
   if (!name || !trade || !servingArea) {
@@ -38,6 +43,18 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+
+  const amounts = { monthlyRevenue, revenueTarget, averageClientValue, newClientsPerMonth };
+  for (const [key, value] of Object.entries(amounts)) {
+    if (value != null && value !== "" && (!Number.isInteger(Number(value)) || Number(value) < 0)) {
+      return NextResponse.json({ error: `${key} doit être un entier positif` }, { status: 400 });
+    }
+  }
+  const parsedTargetDate = targetDate ? new Date(targetDate) : null;
+  if (parsedTargetDate && Number.isNaN(parsedTargetDate.getTime())) {
+    return NextResponse.json({ error: "targetDate invalide" }, { status: 400 });
+  }
+  const toInt = (v: unknown) => (v == null || v === "" ? null : Number(v));
 
   const data = {
     name,
@@ -50,6 +67,11 @@ export async function POST(request: NextRequest) {
     phone,
     certifications,
     openingHours,
+    monthlyRevenue: toInt(monthlyRevenue),
+    revenueTarget: toInt(revenueTarget),
+    targetDate: parsedTargetDate,
+    averageClientValue: toInt(averageClientValue),
+    newClientsPerMonth: toInt(newClientsPerMonth),
   };
 
   const company = await prisma.company.upsert({
