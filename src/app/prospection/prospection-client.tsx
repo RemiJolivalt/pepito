@@ -38,10 +38,39 @@ function pct(part: number, whole: number) {
   return whole > 0 ? `${Math.round((part / whole) * 100)} %` : "—";
 }
 
-export function ProspectionClient({ initialLeads }: { initialLeads: Lead[] }) {
+export function ProspectionClient({
+  initialLeads,
+  initialAutoOutreach,
+  sendingConfigured,
+}: {
+  initialLeads: Lead[];
+  initialAutoOutreach: boolean;
+  sendingConfigured: boolean;
+}) {
   const [leads, setLeads] = useState(initialLeads);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [autoOutreach, setAutoOutreach] = useState(initialAutoOutreach);
+  const [outreachSaving, setOutreachSaving] = useState(false);
+
+  async function toggleAutoOutreach(next: boolean) {
+    setOutreachSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/companies/outreach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || "Impossible d'enregistrer");
+      setAutoOutreach(data.autoOutreachEnabled);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Impossible d'enregistrer");
+    } finally {
+      setOutreachSaving(false);
+    }
+  }
 
   async function declare(id: string, stage: LeadStage) {
     setBusyId(id);
@@ -90,6 +119,29 @@ export function ProspectionClient({ initialLeads }: { initialLeads: Lead[] }) {
         {PERSONAS.demarchage.name} identifie des organisations correspondant à votre cible ; vous décidez lesquelles contacter
         et déclarez ce qui s&apos;est passé. Chiffres calculés en base, jamais estimés par un agent.
       </p>
+
+      <section className="mt-4 rounded-lg border bg-white p-3">
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={autoOutreach}
+            disabled={outreachSaving || !sendingConfigured}
+            onChange={(e) => toggleAutoOutreach(e.target.checked)}
+            className="mt-0.5 h-4 w-4"
+          />
+          <span className="text-sm">
+            <span className="font-medium text-slate-800">Laisser {PERSONAS.demarchage.name} prendre contact lui-même</span>{" "}
+            avec les prospects que vous validez, sans que vous ayez à envoyer l&apos;email vous-même. Désactivé par défaut :
+            c&apos;est vous qui décidez, prospect par prospect, de l&apos;activer ou non.
+            {!sendingConfigured && (
+              <span className="mt-1 block text-xs text-amber-600">
+                Pas encore activable : aucun fournisseur d&apos;envoi d&apos;email n&apos;est configuré côté serveur. Le réglage
+                sera mémorisé et appliqué dès qu&apos;un canal d&apos;envoi sera en place.
+              </span>
+            )}
+          </span>
+        </label>
+      </section>
 
       <section className="mt-6 grid grid-cols-5 gap-2">
         {steps.map((s) => (

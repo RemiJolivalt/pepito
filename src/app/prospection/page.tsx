@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionEmail } from "@/lib/session";
 import { AppShell } from "@/components/app-shell";
+import { isOutreachSendingConfigured } from "@/lib/outreach";
 import { ProspectionClient } from "./prospection-client";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,11 @@ export default async function ProspectionPage() {
 
   return (
     <AppShell companyName={company.name}>
-      <ProspectionClient initialLeads={leads} />
+      <ProspectionClient
+        initialLeads={leads}
+        initialAutoOutreach={company.autoOutreachEnabled}
+        sendingConfigured={isOutreachSendingConfigured()}
+      />
     </AppShell>
   );
 }

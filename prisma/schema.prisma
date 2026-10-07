@@ -35,6 +35,12 @@ model Company {
   certifications  String? // labels/certifications (ex: RGE, Qualibat) — utile pour la crédibilité locale et le contenu généré
   openingHours    String? // horaires d'ouverture, libre — utile pour la fiche Google et le site
   direction       String? // consigne libre du dirigeant pour réorienter Paul et les agents ("Réorienter")
+  // Décision CEO du 2026-10-07 (cf. docs/backlog.md "partenaire de croissance") :
+  // le dirigeant peut choisir de laisser Pepito prendre contact lui-même avec les
+  // prospects validés, par défaut non. Capture la décision dès maintenant ; l'envoi
+  // réel reste bloqué tant qu'aucun fournisseur d'envoi n'est configuré (même
+  // principe honnête que les connexions OAuth "bientôt" — cf. src/app/connexions).
+  autoOutreachEnabled Boolean @default(false)
   siteSlug        String?   @unique // site d'une page hébergé par Pepito : /site/[slug]
   siteHtml        String?
   sitePublishedAt DateTime?

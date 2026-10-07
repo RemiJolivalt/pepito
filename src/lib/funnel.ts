@@ -34,3 +34,29 @@ export async function getFunnelStats(companyId: string): Promise<FunnelStats> {
       .sort((a, b) => b.counts.contactes - a.counts.contactes),
   };
 }
+
+export type WeeklyDelta = {
+  identifies: number;
+  contactes: number;
+  reponses: number;
+  rdv: number;
+  clients: number;
+};
+
+/**
+ * Évènements de la semaine écoulée, par date réelle de l'étape (pas par date
+ * de création du lead) — pour le check-in hebdomadaire automatique
+ * (cf. api/cron/weekly-review). Déterministe : aucun appel modèle, donc
+ * aucun risque d'hallucination dans un message envoyé sans supervision
+ * humaine (cf. src/app/rapport/page.tsx, même principe).
+ */
+export async function getWeeklyDelta(companyId: string, since: Date): Promise<WeeklyDelta> {
+  const [identifies, contactes, reponses, rdv, clients] = await Promise.all([
+    prisma.lead.count({ where: { companyId, createdAt: { gte: since }, stage: { not: "ecarte" } } }),
+    prisma.lead.count({ where: { companyId, contactedAt: { gte: since } } }),
+    prisma.lead.count({ where: { companyId, repliedAt: { gte: since } } }),
+    prisma.lead.count({ where: { companyId, meetingAt: { gte: since } } }),
+    prisma.lead.count({ where: { companyId, stage: "gagne", closedAt: { gte: since } } }),
+  ]);
+  return { identifies, contactes, reponses, rdv, clients };
+}
