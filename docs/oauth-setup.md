@@ -17,6 +17,8 @@ Le code du flux "Connecter" est déjà prêt ([backlog.md #2quater](backlog.md))
 
 ## 1. Google (fiche Google Business Profile)
 
+**Ne pas confondre avec Gmail** : les variables `GOOGLE_OAUTH_*`, le callback `/api/oauth/google/callback` et `business.manage` concernent GBP uniquement. Le flux Gmail est indépendant, décrit plus bas, et n'est pas soumis au prérequis GBP des 60 jours.
+
 **Statut au 2026-10-09 (déclaré par le CEO)** : domaine opérationnel, compte Google, fiche créée/vérifiée et projet Cloud créé. **Project Number : `915822663727`** (identifiant public, pas une clé). La fiche gérée actuellement a moins de 60 jours : demande d'accès API en attente d'éligibilité. Date exacte à renseigner ; aucune échéance calculée sans cette date.
 
 ### Prérequis et demande d'accès : avant l'activation des APIs
@@ -55,6 +57,43 @@ Le branding OAuth, la propriété du domaine et les documents publics peuvent ê
 En mode OAuth **Testing**, les autorisations avec des scopes comme `business.manage` et les refresh tokens sont limités à **7 jours** : prévoir une réautorisation pendant le pilote. Le renouvellement du jeton d'accès ne supprime pas cette limite. [Durée des autorisations Google](https://support.google.com/cloud/answer/15549945).
 
 **Pour sortir du mode Test** (accepter n'importe quel utilisateur, pas seulement les comptes test ajoutés manuellement) : revenir à l'écran de consentement OAuth et cliquer *Publier l'application*. Pour un scope sensible comme `business.manage`, Google peut demander une **vérification** (quelques jours) avant la mise en production réelle à grande échelle — mais le mode Test suffit largement pour le pilote à 5 entreprises.
+
+## Gmail : envoi manuel, indépendant de GBP
+
+Le CEO a confirmé l'usage **envoyer des emails depuis Gmail**, pas la connexion GBP ni le login Google. Callback implémenté : **`https://www.biendecider.com/api/oauth/gmail/callback`**. Démarrage : `/api/oauth/gmail/start`, depuis `/connexions`.
+
+### À configurer hors du chat
+
+1. **Révoquer/remplacer le secret OAuth divulgué**, dans Google Cloud > Google Auth Platform > Clients. Ne pas le réutiliser, le consigner dans le dépôt ou transmettre son remplaçant au chat.
+2. Dans le projet Cloud existant, activer **Gmail API** (indépendant de Business Profile), configurer l'audience External et ajouter le compte Gmail aux utilisateurs test si l'application est en Testing.
+3. Ajouter le scope **`https://www.googleapis.com/auth/gmail.send`** au consentement. Les scopes standard **`openid` et `email`** identifient le compte expéditeur (signature du jeton d'identité vérifiée côté serveur). Aucun scope de lecture, de suppression de messages ni `business.manage` n'est demandé par ce flux. Gmail send est un scope sensible : la vérification OAuth de production reste nécessaire selon les exigences Google.
+4. Conserver l'URI autorisée exacte **`https://www.biendecider.com/api/oauth/gmail/callback`**. Ajouter séparément un callback localhost si souhaité ; lancer et terminer OAuth sur le même hôte afin de conserver les cookies de session et de state.
+5. Dans **Vercel > pepito > Settings > Environment Variables > Production**, saisir directement :
+
+   ```text
+   GMAIL_OAUTH_CLIENT_ID=<identifiant du client web Google>
+   GMAIL_OAUTH_CLIENT_SECRET=<nouveau secret non divulgué>
+   OAUTH_TOKEN_ENCRYPTION_KEY=<clé aléatoire de 32 octets, encodée en 64 caractères hexadécimaux>
+   ```
+
+   Générer la clé **dans votre terminal privé**, puis la saisir dans Vercel sans la partager : `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Conserver cette clé dans un gestionnaire de secrets. Ne pas utiliser `SESSION_SECRET` ni une clé d'exemple. Changer cette clé sans migration rend les jetons existants illisibles : déconnecter/réautoriser ou prévoir une migration de rotation.
+6. Redéployer après modification des variables. En local, utiliser `.env` ignoré par Git avec une clé propre à l'environnement. Les noms `GOOGLE_OAUTH_*` continuent à servir uniquement GBP.
+   Avant ouverture aux clients externes, restreindre aussi `ADMIN_EMAILS` : l'administration reste ouverte aux utilisateurs connectés si cette variable est absente (décision du pilote), avec visibilité sur les entreprises et possibilité de suppression.
+7. Ouvrir **`https://www.biendecider.com/connexions`**, **Autoriser Gmail**, choisir le compte expéditeur et accepter l'envoi. Ouvrir **Écrire un email**, renseigner le destinataire, l'objet et le texte, confirmer puis envoyer. Commencer par un message à une adresse de test que vous contrôlez.
+
+### Fonctionnement livré et limites
+
+- Autorisation avec state lié à l'entreprise, cookie HTTP-only de 10 minutes et PKCE ; contrôle serveur du scope accordé. Un retour sans nouveau refresh token est refusé plutôt que de risquer de réutiliser celui d'un autre compte.
+- Jetons Gmail chiffrés AES-256-GCM, liés à l'entreprise. Renouvellement par la bibliothèque Google avant l'envoi ; aucun jeton envoyé au navigateur, à Anthropic ou dans les logs applicatifs.
+- Envoi texte manuel via Gmail API, confirmation obligatoire, un seul destinataire, sans pièce jointe ni lecture de la boîte. Les permissions n'installent pas un alias expéditeur `contact@biendecider.com` : l'expéditeur est le compte choisi chez Google.
+- Chaque demande possède un identifiant unique enregistré avant l'appel Gmail ; un double clic avec le même identifiant ne renvoie pas l'email. Après résultat incertain, vérifier les messages envoyés dans Gmail avant de refaire une demande. Pas de retry automatique de l'appel d'envoi.
+- Objet, destinataire et message enregistrés dans l'historique des productions ; réussite confirmée par Gmail tracée comme exécution. L'acceptation par Gmail ne prouve pas la livraison au destinataire.
+- Déconnexion : tentative de révocation Google, puis suppression locale des jetons. Si la révocation échoue, l'interface invite à retirer l'accès depuis le compte Google. Google peut révoquer les autres scopes du même projet : confirmation explicite requise.
+- Aucun envoi autonome des rapports ou du funnel de prospection, aucun remplacement de `OUTREACH_EMAIL_PROVIDER_API_KEY`. Ces parcours doivent être branchés et validés séparément. Le pilote OAuth Testing peut nécessiter une nouvelle autorisation après 7 jours.
+
+Tests : `npm run test:gmail` (sans réseau) et `npm run test:ux` (refus/callback/UI sans appel Google). L'autorisation et la livraison réelles restent à valider avec le nouveau secret dans l'environnement cible.
+
+Sources : [scopes Gmail](https://developers.google.com/workspace/gmail/api/auth/scopes), [envoi Gmail](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/send), [OAuth serveur Google](https://developers.google.com/identity/protocols/oauth2/web-server).
 
 ## 2. Meta (Facebook + Instagram)
 

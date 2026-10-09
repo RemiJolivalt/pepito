@@ -9,6 +9,8 @@ export const STATUS_LABELS: Record<string, string> = {
   modifiee: "Modifiée",
   rejetee: "Rejetée",
   executee: "Réalisée",
+  envoi_en_cours: "Envoi en cours",
+  envoi_incertain: "Envoi à vérifier dans Gmail",
 };
 
 const KIND_LABELS: Record<string, string> = {
@@ -19,6 +21,7 @@ const KIND_LABELS: Record<string, string> = {
   prospecting_email: "Email de prospection",
   piste_croissance: "Piste de croissance",
   prospect: "Prospect à contacter",
+  gmail_email: "Email Gmail manuel",
 };
 
 export function ProposalCard({
@@ -35,6 +38,17 @@ export function ProposalCard({
   showAgent?: boolean;
 }) {
   const persona = PERSONAS[proposal.agent as Exclude<AgentKey, "co_ceo">];
+  let displayContent = proposal.content;
+  if (proposal.kind === "gmail_email") {
+    try {
+      const message: unknown = JSON.parse(proposal.content);
+      if (message && typeof message === "object" && "to" in message && "text" in message && typeof message.to === "string" && typeof message.text === "string") {
+        displayContent = `Destinataire : ${message.to}\n\n${message.text}`;
+      }
+    } catch {
+      displayContent = proposal.content;
+    }
+  }
   const canPublishSite =
     proposal.kind === "site_web_content" &&
     ["validee", "modifiee"].includes(proposal.status) &&
@@ -49,7 +63,7 @@ export function ProposalCard({
         </span>
         <span
           className={`rounded-full px-2 py-0.5 ${
-            proposal.status === "en_attente"
+            ["en_attente", "envoi_en_cours", "envoi_incertain"].includes(proposal.status)
               ? "bg-amber-100 text-amber-800"
               : proposal.status === "rejetee"
                 ? "bg-slate-100 text-slate-500"
@@ -62,7 +76,7 @@ export function ProposalCard({
       <h3 className="mt-1 font-medium">{proposal.title}</h3>
       <details className="mt-1">
         <summary className="cursor-pointer text-xs text-indigo-600">Voir le contenu</summary>
-        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{proposal.content}</p>
+        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{displayContent}</p>
       </details>
       {proposal.status === "en_attente" && (
         <div className="mt-3 flex gap-2">

@@ -49,7 +49,11 @@ export default function ConfidentialitePage() {
         <p className="mt-1">
           Google : l&apos;autorisation demandée est <code>business.manage</code>, destinée à
           la gestion des fiches Business Profile. Elle ne demande pas l&apos;accès à vos
-          emails Gmail, à votre Drive ou à vos contacts. Meta : le flux Facebook Login
+          emails Gmail, à votre Drive ou à vos contacts. La connexion Gmail est distincte :
+          elle demande uniquement <code>gmail.send</code>, pour envoyer le message que vous
+          rédigez et confirmez, ainsi que <code>openid</code> et <code>email</code> pour vérifier
+          et afficher l&apos;adresse du compte expéditeur. Elle ne lit pas votre boîte de réception et ne supprime pas
+          vos emails. Meta : le flux Facebook Login
           demande des permissions relatives aux Pages et aux comptes Instagram professionnels.
         </p>
         <p className="mt-2">
@@ -60,7 +64,17 @@ export default function ConfidentialitePage() {
           d&apos;IA Anthropic.
         </p>
         <p className="mt-2">
-          Les jetons ne sont pas affichés dans l&apos;interface. Leur chiffrement applicatif
+          Pour Gmail, les jetons et l&apos;adresse expéditeur sont chiffrés avec une clé serveur dédiée et les jetons sont renouvelés
+          avant l&apos;envoi. Le destinataire, l&apos;objet et le texte du message confirmé sont
+          transmis à Google pour l&apos;envoi et conservés dans votre historique BienDecider.
+          Aucun rapport ni message de prospection n&apos;est envoyé automatiquement.
+          Vous pouvez déconnecter Gmail dans Connexions : les jetons locaux sont supprimés
+          et une révocation Google est tentée. Si elle échoue, retirez également l&apos;accès
+          dans les paramètres de votre compte Google. La révocation peut affecter les autres
+          autorisations de ce même projet Google.
+        </p>
+        <p className="mt-2">
+          Les jetons ne sont pas affichés dans l&apos;interface. Pour GBP et Meta, leur chiffrement applicatif
           au repos et leur renouvellement automatique ne sont pas encore implémentés ;
           ces mesures sont des prérequis avant ouverture de ces connexions aux clients externes.
           Les permissions accordées sont conservées chez Google/Meta ; leur vérification
@@ -70,9 +84,9 @@ export default function ConfidentialitePage() {
           Vous pouvez retirer l&apos;autorisation depuis votre compte Google ou les
           intégrations professionnelles Meta. Cette révocation bloque l&apos;accès chez
           le fournisseur mais ne supprime pas automatiquement les jetons stockés par
-          BienDecider. Pour leur suppression et celle des données de votre compte,
+          BienDecider pour les intégrations GBP/Meta. Pour leur suppression et celle des données de votre compte,
           contactez <a href="mailto:contact@biendecider.com" className="underline">contact@biendecider.com</a>.
-          La déconnexion et la suppression automatique depuis l&apos;application sont en préparation.
+          La déconnexion GBP/Meta et la suppression automatique du compte depuis l&apos;application sont en préparation.
         </p>
 
         <h2 className="mt-6 font-medium text-slate-900">Sous-traitants et destinataires</h2>

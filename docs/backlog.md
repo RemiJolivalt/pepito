@@ -22,6 +22,20 @@ Procédure : [domain-email-setup.md](domain-email-setup.md). La redirection entr
 
 ## Priorité OAuth / Meta du 2026-10-09
 
+### Gmail manuel : flux distinct livré le 2026-10-09
+
+Usage confirmé par le CEO : envoyer des emails depuis Gmail. Callback `/api/oauth/gmail/callback`, variables `GMAIL_OAUTH_CLIENT_ID`, `GMAIL_OAUTH_CLIENT_SECRET`, clé serveur dédiée `OAUTH_TOKEN_ENCRYPTION_KEY`. Ce n'est ni GBP, ni l'authentification Google et ce flux n'est pas soumis à l'ancienneté GBP.
+
+- [x] Autorisation Gmail send-only avec PKCE/state, contrôle du scope accordé, jetons chiffrés AES-256-GCM par entreprise et renouvellement avant envoi.
+- [x] Formulaire d'envoi manuel confirmé dans Connexions, validation MIME, origine contrôlée, identifiant unique contre les doubles envois, historique et résultat incertain signalé.
+- [x] Déconnexion : révocation tentée + effacement local, message explicite si retrait Google non confirmé.
+- [x] Tests locaux chiffrement/scope/MIME et gardes OAuth/envoi sans appel Google ; documentation et confidentialité mises à jour.
+- [ ] Remplacer le secret partagé dans le chat, configurer les trois variables directement dans Vercel, activer Gmail API et `gmail.send`, ajouter utilisateurs test et redéployer. Aucun secret stocké par l'agent.
+- [ ] Vérifier le consentement et un premier envoi réel avec le nouveau secret ; compléter la vérification OAuth de production avant ouverture externe.
+- [ ] Brancher séparément rapports/prospection après décision produit, conformité et tests ; aucun envoi automatique activé par cette livraison.
+
+Le chiffrement/renouvellement/déconnexion ci-dessus concerne **Gmail uniquement**. Les tâches GBP/Meta qui suivent restent nécessaires. Procédure complète : [oauth-setup.md](oauth-setup.md).
+
 **État Google déclaré** : compte Gmail, fiche Business Profile créée/vérifiée, projet Cloud BienDecider **`915822663727`** créé. La fiche actuelle a moins de 60 jours ; suspendre la demande GBP jusqu'à éligibilité, sans inventer de date (date de vérification/activité à renseigner). Google autorise aussi une fiche cliente gérée par le demandeur si elle est vérifiée, active 60+ jours et comporte le site de l'entreprise. La règle des 60 jours est un prérequis de candidature, pas la garantie que tout le reste est prêt.
 
 ### Maintenant : dossier public et préparation externe

@@ -3,6 +3,7 @@ import { PrismaClient, type Company } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { createHmac, randomUUID } from "node:crypto";
 import { config } from "dotenv";
+import { encryptGmailToken } from "../src/lib/oauth/gmail";
 
 config({ quiet: true });
 
@@ -29,6 +30,96 @@ const test = base.extend<{ company: Company }>({
   },
 });
 
+test("Gmail compose requires confirmation and handles uncertain sends", async ({ page, company }, testInfo) => {
+  test.skip(process.env.GMAIL_UI_TEST !== "1", "Requires the isolated Gmail UI test server with dummy credentials.");
+  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
+  try {
+    process.env.OAUTH_TOKEN_ENCRYPTION_KEY = "c".repeat(64);
+    await prisma.channelConnection.create({ data: {
+      companyId: company.id, channel: "gmail", status: "connecte",
+      accessToken: encryptGmailToken("dummy-access", company.id),
+      refreshToken: encryptGmailToken(JSON.stringify({ token: "dummy-refresh", email: "sender@example.invalid" }), company.id),
+      expiresAt: new Date(Date.now() + 3600000),
+    } });
+    const requestId = randomUUID();
+    const message = { to: "recipient@example.invalid", subject: "Message déjà traité", text: "Contenu confirmé", confirmed: true, requestId };
+    await prisma.agentProposal.create({ data: {
+      id: `gmail-${requestId}`, companyId: company.id, agent: "contenu", kind: "gmail_email", title: message.subject,
+      content: JSON.stringify({ to: message.to, text: message.text }), status: "executee",
+    } });
+    const repeated = await page.request.post(`${baseURL}/api/gmail/send`, { headers: { Origin: baseURL }, data: message });
+    expect(repeated.status()).toBe(200);
+    expect(await repeated.json()).toEqual({ sent: true });
+    const changed = await page.request.post(`${baseURL}/api/gmail/send`, { headers: { Origin: baseURL }, data: { ...message, text: "Autre contenu" } });
+    expect(changed.status()).toBe(409);
+    const unconfirmed = await page.request.post(`${baseURL}/api/gmail/send`, { headers: { Origin: baseURL }, data: { ...message, confirmed: false } });
+    expect(unconfirmed.status()).toBe(400);
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.goto(`${baseURL}/connexions`);
+    await expect(page.getByText("sender@example.invalid", { exact: true })).toBeVisible();
+    await expect(page.locator("main")).not.toContainText("dummy-access");
+    await page.getByText("Écrire un email", { exact: true }).click();
+    await page.getByLabel("Destinataire", { exact: true }).fill("recipient@example.invalid");
+    await page.getByLabel("Objet", { exact: true }).fill("Test manuel");
+    await page.getByLabel("Message", { exact: true }).fill("Contenu confirmé");
+    await expect(page.getByRole("button", { name: "Envoyer avec Gmail" })).toBeDisabled();
+    await page.getByLabel("Je confirme le destinataire et le contenu de cet envoi.").check();
+    let firstId: string | undefined;
+    await page.route("**/api/gmail/send", async (route) => {
+      const body = route.request().postDataJSON();
+      expect(body.confirmed).toBe(true);
+      expect(body.to).toBe("recipient@example.invalid");
+      expect(body.text).toBe("Contenu confirmé");
+      if (firstId) expect(body.requestId).toBe(firstId);
+      firstId = body.requestId;
+      await route.fulfill({ status: 502, json: { error: "Résultat incertain. Vérifiez Gmail." } });
+    });
+    await page.getByRole("button", { name: "Envoyer avec Gmail" }).click();
+    await expect(page.locator("main").getByRole("alert")).toContainText("Résultat incertain");
+    await page.getByRole("button", { name: "Envoyer avec Gmail" }).click();
+    await expect(page.locator("main").getByRole("alert")).toContainText("Résultat incertain");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath("gmail-compose-mobile.png"), fullPage: true });
+    await page.getByLabel("Objet", { exact: true }).fill("Objet modifié");
+    await expect(page.getByRole("button", { name: "Envoyer avec Gmail" })).toBeDisabled();
+    await page.unroute("**/api/gmail/send");
+    await page.route("**/api/gmail/send", (route) => route.fulfill({ json: { sent: true } }));
+    await page.getByLabel("Je confirme le destinataire et le contenu de cet envoi.").check();
+    await page.getByRole("button", { name: "Envoyer avec Gmail" }).click();
+    await expect(page.locator("main").getByRole("status")).toContainText("confirmé l'envoi");
+    await expect(page.getByLabel("Message", { exact: true })).toHaveValue("");
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.screenshot({ path: testInfo.outputPath("gmail-compose-desktop.png"), fullPage: true });
+  } finally { await prisma.$disconnect(); }
+});
+
+test("Gmail start, refusal and send guards do not contact providers", async ({ page, company }) => {
+  expect(company.id).toBeTruthy();
+  await page.goto(`${baseURL}/connexions`);
+  await expect(page.getByRole("heading", { name: "Gmail · envoi de messages" })).toBeVisible();
+  const start = await page.request.get(`${baseURL}/api/oauth/gmail/start`, { maxRedirects: 0 });
+  expect(start.status()).toBe(307);
+  const location = start.headers().location;
+  if (location.includes("accounts.google.com")) {
+    const authorization = new URL(location);
+    expect(authorization.searchParams.get("scope")?.split(" ")).toEqual(["https://www.googleapis.com/auth/gmail.send", "openid", "email"]);
+    expect(authorization.searchParams.get("redirect_uri")).toBe(`${baseURL}/api/oauth/gmail/callback`);
+    expect(authorization.searchParams.get("code_challenge_method")).toBe("S256");
+    await page.goto(`${baseURL}/api/oauth/gmail/callback?state=${authorization.searchParams.get("state")}&error=access_denied`);
+    await expect(page).toHaveURL(/error=gmail_denied/);
+  } else {
+    expect(location).toContain("error=gmail_config");
+  }
+  await page.goto(`${baseURL}/api/oauth/gmail/callback?state=invalid&code=not-a-real-code`);
+  await expect(page).toHaveURL(/error=gmail_state/);
+  const denied = await page.request.post(`${baseURL}/api/gmail/send`, { headers: { Origin: "https://untrusted.example" }, data: {} });
+  expect(denied.status()).toBe(403);
+  const missingConnection = await page.request.post(`${baseURL}/api/gmail/send`, {
+    headers: { Origin: baseURL }, data: { to: "recipient@example.invalid", subject: "Test", text: "Test", confirmed: true, requestId: randomUUID() },
+  });
+  expect([409, 503]).toContain(missingConnection.status());
+});
+
 test("OAuth authorization is not advertised as a verified business connection", async ({ page, company }, testInfo) => {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
   try {
@@ -50,7 +141,7 @@ test("OAuth authorization is not advertised as a verified business connection", 
     }
     await prisma.channelConnection.deleteMany({ where: { companyId: company.id } });
     await page.reload();
-    await expect(page.getByText("Non autorisé", { exact: true })).toHaveCount(3);
+    await expect(page.locator("main ul").getByText("Non autorisé", { exact: true })).toHaveCount(3);
   } finally { await prisma.$disconnect(); }
 });
 

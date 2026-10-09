@@ -4,6 +4,8 @@ import { getSessionEmail } from "@/lib/session";
 import { AppShell } from "@/components/app-shell";
 import { isGoogleOAuthConfigured } from "@/lib/oauth/google";
 import { isMetaOAuthConfigured } from "@/lib/oauth/meta";
+import { decryptGmailAccount, isGmailConfigured } from "@/lib/oauth/gmail";
+import { GmailPanel } from "./gmail-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +41,14 @@ const CHANNELS = [
 
 async function getConnectionSnapshot(companyId: string) {
   const connections = await prisma.channelConnection.findMany({ where: { companyId } });
-  return { connections, checkedAt: Date.now() };
+  let gmailEmail: string | null = null;
+  const gmail = connections.find((connection) => connection.channel === "gmail");
+  try {
+    if (gmail?.refreshToken) gmailEmail = decryptGmailAccount(gmail.refreshToken, companyId).email;
+  } catch {
+    gmailEmail = null;
+  }
+  return { connections, checkedAt: Date.now(), gmailEmail };
 }
 
 export default async function ConnexionsPage({
@@ -55,7 +64,7 @@ export default async function ConnexionsPage({
 
   const { connected, error } = await searchParams;
 
-  const { connections: existing, checkedAt } = await getConnectionSnapshot(company.id);
+  const { connections: existing, checkedAt, gmailEmail } = await getConnectionSnapshot(company.id);
   const byChannel = new Map(existing.map((c) => [c.channel, c]));
 
   return (
@@ -76,7 +85,7 @@ export default async function ConnexionsPage({
 
         {connected && (
           <p role="status" className="mt-4 rounded bg-green-50 p-3 text-sm text-green-700">
-            Autorisation OAuth enregistrée. Le compte professionnel reste à vérifier.
+            {connected === "gmail" ? "Gmail autorisé pour l'envoi manuel." : "Autorisation OAuth enregistrée. Le compte professionnel reste à vérifier."}
           </p>
         )}
         {error && (
@@ -84,6 +93,13 @@ export default async function ConnexionsPage({
             La connexion a échoué ({error}). Réessayez ou contactez le support.
           </p>
         )}
+
+        <GmailPanel
+          configured={isGmailConfigured()}
+          authorized={byChannel.get("gmail")?.status === "connecte" && gmailEmail !== null}
+          failed={byChannel.get("gmail")?.status === "erreur" || (byChannel.has("gmail") && !gmailEmail)}
+          senderEmail={gmailEmail}
+        />
 
         <ul className="mt-6 space-y-3">
           {CHANNELS.map((c) => {
