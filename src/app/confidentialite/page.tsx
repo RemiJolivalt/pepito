@@ -32,7 +32,8 @@ export default function ConfidentialitePage() {
           <li>Propositions générées par les agents et vos décisions de validation.</li>
           <li>Statistiques d&apos;usage (nombre de connexions, tokens et coût d&apos;appel au modèle d&apos;IA).</li>
           <li>
-            Si vous connectez un compte externe (Google, Meta) : un jeton d&apos;accès OAuth,
+            Si vous autorisez un compte externe (Google, Meta) : un jeton d&apos;accès OAuth,
+            sa date d&apos;expiration et, lorsque fourni, un jeton de renouvellement,
             jamais votre mot de passe sur ces plateformes.
           </li>
         </ul>
@@ -42,6 +43,36 @@ export default function ConfidentialitePage() {
           Pour fournir le service : générer des propositions de contenu et
           d&apos;actions marketing pertinentes pour votre entreprise, et vous
           permettre de les valider avant toute publication.
+        </p>
+
+        <h2 className="mt-6 font-medium text-slate-900">Accès aux données Google et Meta</h2>
+        <p className="mt-1">
+          Google : l&apos;autorisation demandée est <code>business.manage</code>, destinée à
+          la gestion des fiches Business Profile. Elle ne demande pas l&apos;accès à vos
+          emails Gmail, à votre Drive ou à vos contacts. Meta : le flux Facebook Login
+          demande des permissions relatives aux Pages et aux comptes Instagram professionnels.
+        </p>
+        <p className="mt-2">
+          Dans la version pilote actuelle, BienDecider échange le code OAuth contre des
+          jetons et les conserve dans sa base PostgreSQL, rattachés à votre entreprise.
+          La récupération des fiches, Pages, médias ou avis et la publication sur Google/Meta
+          ne sont pas encore implémentées. Aucun jeton OAuth n&apos;est envoyé au modèle
+          d&apos;IA Anthropic.
+        </p>
+        <p className="mt-2">
+          Les jetons ne sont pas affichés dans l&apos;interface. Leur chiffrement applicatif
+          au repos et leur renouvellement automatique ne sont pas encore implémentés ;
+          ces mesures sont des prérequis avant ouverture de ces connexions aux clients externes.
+          Les permissions accordées sont conservées chez Google/Meta ; leur vérification
+          détaillée dans BienDecider reste à construire.
+        </p>
+        <p className="mt-2">
+          Vous pouvez retirer l&apos;autorisation depuis votre compte Google ou les
+          intégrations professionnelles Meta. Cette révocation bloque l&apos;accès chez
+          le fournisseur mais ne supprime pas automatiquement les jetons stockés par
+          BienDecider. Pour leur suppression et celle des données de votre compte,
+          contactez <a href="mailto:contact@biendecider.com" className="underline">contact@biendecider.com</a>.
+          La déconnexion et la suppression automatique depuis l&apos;application sont en préparation.
         </p>
 
         <h2 className="mt-6 font-medium text-slate-900">Sous-traitants et destinataires</h2>
@@ -75,8 +106,10 @@ export default function ConfidentialitePage() {
 
         <h2 className="mt-6 font-medium text-slate-900">Cookies</h2>
         <p className="mt-1">
-          Un seul cookie technique est utilisé, nécessaire au fonctionnement du service
-          (maintenir votre session connectée). Aucun cookie publicitaire ou de traçage tiers.
+          Un cookie technique maintient votre session connectée. Lors d&apos;une autorisation
+          OAuth, un cookie temporaire protège le retour de Google/Meta contre la falsification
+          de requête et est supprimé au retour. Aucun cookie publicitaire ou de traçage tiers
+          n&apos;est ajouté par BienDecider.
         </p>
       </div>
     </AppShell>

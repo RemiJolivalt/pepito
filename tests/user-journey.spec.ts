@@ -29,6 +29,31 @@ const test = base.extend<{ company: Company }>({
   },
 });
 
+test("OAuth authorization is not advertised as a verified business connection", async ({ page, company }, testInfo) => {
+  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
+  try {
+    await prisma.channelConnection.createMany({ data: [
+      { companyId: company.id, channel: "google_business_profile", status: "connecte", accessToken: "test-token-never-visible", expiresAt: new Date(Date.now() - 60000) },
+      { companyId: company.id, channel: "facebook", status: "connecte", accessToken: "test-token-never-visible", expiresAt: new Date(Date.now() + 3600000) },
+      { companyId: company.id, channel: "instagram", status: "erreur" },
+    ] });
+    for (const width of [320, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`${baseURL}/connexions`);
+      await expect(page.getByText("Autorisation expirée", { exact: true })).toBeVisible();
+      await expect(page.getByText("Autorisation enregistrée · compte à vérifier", { exact: true })).toBeVisible();
+      await expect(page.getByText("Erreur d'autorisation", { exact: true })).toBeVisible();
+      await expect(page.locator("main")).not.toContainText("test-token-never-visible");
+      await expect(page.getByText("Connecté", { exact: true })).toHaveCount(0);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      await page.screenshot({ path: testInfo.outputPath(`oauth-${width}.png`), fullPage: true });
+    }
+    await prisma.channelConnection.deleteMany({ where: { companyId: company.id } });
+    await page.reload();
+    await expect(page.getByText("Non autorisé", { exact: true })).toHaveCount(3);
+  } finally { await prisma.$disconnect(); }
+});
+
 test("single validation queue, persistent decisions, publishing and error recovery", async ({ page, company }, testInfo) => {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
   try {

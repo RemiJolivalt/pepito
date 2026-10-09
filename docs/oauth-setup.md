@@ -17,13 +17,28 @@ Le code du flux "Connecter" est déjà prêt ([backlog.md #2quater](backlog.md))
 
 ## 1. Google (fiche Google Business Profile)
 
-**Durée estimée : 30-60 minutes, pas d'attente de validation pour démarrer en mode test.**
+**Statut au 2026-10-09 (déclaré par le CEO)** : domaine opérationnel, compte Google, fiche créée/vérifiée et projet Cloud créé. **Project Number : `915822663727`** (identifiant public, pas une clé). La fiche gérée actuellement a moins de 60 jours : demande d'accès API en attente d'éligibilité. Date exacte à renseigner ; aucune échéance calculée sans cette date.
+
+### Prérequis et demande d'accès : avant l'activation des APIs
+
+Google exige de gérer une fiche **vérifiée et active depuis 60 jours ou plus**, avec un site représentant l'entreprise renseigné sur cette fiche. Cette fiche peut être celle du demandeur **ou d'un client qu'il gère**. Une fiche cliente déjà éligible peut donc permettre de déposer plus tôt, sans contourner les conditions Google.
+
+1. Vérifier ces conditions et que le compte demandeur est **propriétaire ou gestionnaire** de la fiche.
+2. Ouvrir le [formulaire GBP](https://support.google.com/business/contact/api_default), choisir **Application for Basic API Access**, fournir le Project Number **`915822663727`** et les informations demandées.
+3. Attendre la décision de Google. Les quotas GBP donnent un indicateur : **0 QPM = non approuvé**, **300 QPM = approuvé** selon la documentation des prérequis. L'âge de la fiche ne garantit pas l'approbation.
+4. Après approbation, activer les APIs Business Profile selon le [guide Basic setup](https://developers.google.com/my-business/content/basic-setup), dont Account Management et Business Information pour identifier comptes et établissements. L'approbation GBP et la vérification de l'application OAuth sont **deux démarches distinctes**.
+
+Source : [prérequis Google](https://developers.google.com/my-business/content/prereqs).
+
+### Préparer OAuth maintenant, tester GBP après approbation
+
+Le branding OAuth, la propriété du domaine et les documents publics peuvent être préparés pendant l'attente ; cela ne donne pas l'accès GBP.
 
 1. Aller sur [console.cloud.google.com](https://console.cloud.google.com/) et créer un nouveau projet (ex: "BienDecider"), ou conserver le projet existant.
-2. Menu **API et services → Bibliothèque** → rechercher *"Business Profile API"* (ou *"My Business Business Information API"*) → **Activer**.
+2. Vérifier la propriété de `biendecider.com` via Search Console et le domaine autorisé dans Google Auth Platform. Accueil : `https://www.biendecider.com`, confidentialité : `https://www.biendecider.com/confidentialite`, CGU : `https://www.biendecider.com/cgu`. Les pages existent et sont liées depuis l'accueil, mais les documents restent des brouillons juridiques à compléter/valider.
 3. Menu **API et services → Écran de consentement OAuth** :
    - Type d'utilisateur : *Externe*.
-   - Nom de l'application : "BienDecider", email de support `contact@biendecider.com` une fois la redirection testée, logo (optionnel au départ).
+   - Nom de l'application : "BienDecider". Sélectionner un email de support disponible dans la console ; une simple redirection `contact@biendecider.com` vers Gmail ne rend pas forcément cette adresse sélectionnable. Valider la réception et l'éligibilité de l'adresse, sinon utiliser le compte Google gestionnaire pour ce champ. Logo final à préparer.
    - Champs d'application (scopes) : ajouter `https://www.googleapis.com/auth/business.manage`.
    - Tant que l'app est en statut **Test**, seuls les comptes Google que vous ajoutez explicitement comme "utilisateurs test" peuvent se connecter — suffisant pour le pilote, pas besoin de validation Google immédiatement.
 4. Menu **API et services → Identifiants** → **Créer des identifiants → ID client OAuth** :
@@ -34,11 +49,20 @@ Le code du flux "Connecter" est déjà prêt ([backlog.md #2quater](backlog.md))
    GOOGLE_OAUTH_CLIENT_ID="..."
    GOOGLE_OAUTH_CLIENT_SECRET="..."
    ```
-6. Redémarrer l'app. Sur `/connexions`, le bouton "Connecter" devient actif pour Google Business Profile.
+6. En production, ajouter `GOOGLE_OAUTH_CLIENT_ID` et `GOOGLE_OAUTH_CLIENT_SECRET` dans **Vercel > pepito > Settings > Environment Variables > Production**, puis redéployer. Ne jamais les envoyer dans un chat, les commiter ou les afficher dans des logs. En local, utiliser `.env` (ignoré par Git).
+7. Tester `/connexions` avec un compte test autorisé. Le code actuel échange le code OAuth et enregistre un jeton ; il **ne liste pas encore les fiches, ne sélectionne pas d'établissement et ne publie pas**. Ne pas considérer cette seule étape comme une connexion métier validée.
+
+En mode OAuth **Testing**, les autorisations avec des scopes comme `business.manage` et les refresh tokens sont limités à **7 jours** : prévoir une réautorisation pendant le pilote. Le renouvellement du jeton d'accès ne supprime pas cette limite. [Durée des autorisations Google](https://support.google.com/cloud/answer/15549945).
 
 **Pour sortir du mode Test** (accepter n'importe quel utilisateur, pas seulement les comptes test ajoutés manuellement) : revenir à l'écran de consentement OAuth et cliquer *Publier l'application*. Pour un scope sensible comme `business.manage`, Google peut demander une **vérification** (quelques jours) avant la mise en production réelle à grande échelle — mais le mode Test suffit largement pour le pilote à 5 entreprises.
 
 ## 2. Meta (Facebook + Instagram)
+
+**Priorité externe pendant l'attente Google. Choix retenu : Facebook Login**, cohérent avec l'intégration déjà codée et le besoin Facebook + Instagram professionnel lié à une Page. Pas d'ajout d'Instagram Login en parallèle : les flux et permissions diffèrent. BienDecider sert plusieurs entreprises : scénario **Tech Provider**, **Advanced Access et App Review requis** pour les permissions concernées.
+
+Préparer un Business Portfolio, relier l'app BienDecider et compléter la Business Verification selon les exigences du dashboard Meta. Préparer également identité légale, support testé, icône finale (1024 × 1024 pour le dossier), politique publique validée et procédure de suppression des données. Ne pas demander de permissions de publication avant de pouvoir démontrer leur usage réel de bout en bout : l'exécution n'est pas encore implémentée.
+
+Source : [App Review Instagram](https://developers.facebook.com/documentation/instagram-platform/app-review/). Les menus Meta peuvent varier selon les cas d'usage et le type d'app proposés par la console.
 
 **Durée estimée : 1-2h de configuration, puis plusieurs jours à plusieurs semaines d'attente pour l'App Review — hors de notre contrôle.**
 
@@ -60,4 +84,8 @@ Le code du flux "Connecter" est déjà prêt ([backlog.md #2quater](backlog.md))
 
 ## Ce que je peux faire dès que vous avez les identifiants
 
-Rien à recoder : ajoutez les 4 variables dans `.env`, redémarrez, le flux `/connexions` devient actif. La prochaine étape de développement (brancher l'exécution réelle sur la fiche Google une fois connectée) est déjà identifiée dans le backlog, point D.2.
+Les variables rendent le démarrage OAuth disponible ; elles ne suffisent pas à finaliser l'intégration. Le callback Meta enregistre aujourd'hui le même jeton pour Facebook et Instagram **sans vérifier la Page ni le compte Instagram associé**. Il reste à découvrir et sélectionner les ressources de chaque entreprise, vérifier les permissions effectivement accordées, sécuriser et renouveler les jetons, gérer la révocation et implémenter l'exécution validée avant un dossier App Review.
+
+Le stockage actuel des tokens est en clair dans les champs de la base (pas de chiffrement applicatif), sans renouvellement automatique ni déconnexion applicative. `/connexions` distingue maintenant autorisation enregistrée, expirée et erreur, sans prétendre confirmer une fiche ou une Page. Ces limites sont des tâches prioritaires, pas des fonctionnalités livrées.
+
+Pour les scopes Meta, vérifier le nom exact et les dépendances dans la documentation du flux choisi : le code utilise actuellement `instagram_content_publish`, alors que la documentation App Review actuelle mentionne `instagram_content_publishing`. Confirmer le contrat de la version Graph cible avant activation ; ne pas mélanger les permissions `instagram_business_*` d'Instagram Login avec Facebook Login.

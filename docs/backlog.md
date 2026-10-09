@@ -12,13 +12,48 @@ Le nom public devient **BienDecider**, domaine cible **https://www.biendecider.c
 - [x] Prompts actifs des quatre agents mis à jour. Pas de réécriture des productions ou conversations historiques.
 - [x] Contact public `contact@biendecider.com` ajouté aux liens de contact et aux documents légaux ; Gmail personnel non exposé dans l'interface ni consigné dans le dépôt.
 - [x] Dépôt/package/cookies inchangés : aucune migration de base, aucune rupture technique liée au renommage.
-- [ ] Ajouter `www.biendecider.com` et `biendecider.com` au projet Vercel existant ; rediriger le domaine nu vers `https://www.biendecider.com`.
-- [ ] Modifier uniquement les DNS web OVH selon les valeurs fournies par Vercel ; conserver les DNS de messagerie. Au contrôle du 2026-10-09, `www` résout vers `213.186.33.5` (OVH) et les MX vers `mx1/2/3.mail.ovh.net` : la bascule web n'est pas faite, la redirection email n'est pas vérifiable par DNS.
+- [x] Domaine configuré et `www.biendecider.com` opérationnel sur Vercel, confirmé par le CEO le 2026-10-09. Vérifier séparément la redirection du domaine nu et la conservation des chemins.
+- [x] Bascule DNS web déclarée réalisée par le CEO après le premier contrôle OVH du 2026-10-09. Conserver les MX/TXT de messagerie ; une résolution DNS ne confirme pas la redirection email.
 - [ ] Créer la redirection OVH `contact@biendecider.com` vers le Gmail indiqué par le CEO, puis tester la réception depuis une autre adresse (inbox et spam). Configuration externe, pas une route Next.js.
 - [ ] Mettre à jour les écrans de consentement Google/Meta (BienDecider), domaine autorisé, URLs légales et callbacks exacts du nouveau domaine. Reconnexion nécessaire sur le nouveau domaine.
 - [ ] Vérifier HTTPS, domaine nu/www, connexion, publication d'un site et réception des demandes de contact avant d'annoncer le domaine actif.
 
 Procédure : [domain-email-setup.md](domain-email-setup.md). La redirection entrante ne configure ni l'envoi automatique des rapports ni la prospection sortante ; ces chantiers restent séparés. Les brouillons légaux restent à compléter et à faire valider.
+
+## Priorité OAuth / Meta du 2026-10-09
+
+**État Google déclaré** : compte Gmail, fiche Business Profile créée/vérifiée, projet Cloud BienDecider **`915822663727`** créé. La fiche actuelle a moins de 60 jours ; suspendre la demande GBP jusqu'à éligibilité, sans inventer de date (date de vérification/activité à renseigner). Google autorise aussi une fiche cliente gérée par le demandeur si elle est vérifiée, active 60+ jours et comporte le site de l'entreprise. La règle des 60 jours est un prérequis de candidature, pas la garantie que tout le reste est prêt.
+
+### Maintenant : dossier public et préparation externe
+
+- [x] Homepage explicative, confidentialité et CGU accessibles depuis l'accueil : pages déjà livrées, pas à recréer.
+- [x] Confidentialité complétée avec portée Google/Meta, jetons stockés par entreprise, absence d'envoi des jetons à Anthropic, limites de sécurité et procédure actuelle de retrait/suppression. Aucun engagement de fonctionnalité non implémentée.
+- [ ] Compléter identité légale, base légale et durées de conservation ; revue juriste/DPO ; ne pas masquer le statut de brouillon pour obtenir une validation fournisseur.
+- [ ] Tester la réception réelle de `contact@biendecider.com`, vérifier l'adresse de support sélectionnable chez Google (une redirection seule peut ne pas suffire).
+- [ ] Finaliser logo BienDecider et icône de dossier Meta 1024 × 1024, puis reporter dans les consoles. Le nom textuel livré n'est pas un logo final.
+- [ ] Vérifier la propriété de `biendecider.com` pour Google OAuth ; préparer branding, audience External, URLs publiques, utilisateurs test et client web.
+- [ ] Créer/relier Meta Business Portfolio et app BienDecider ; effectuer Business Verification selon les exigences Meta.
+- [x] Architecture Instagram retenue pour la V1 : **Facebook Login**, cohérent avec Facebook + Instagram professionnel lié à une Page. Pas de second flux Instagram Login simultané.
+- [ ] Préparer le dossier **Tech Provider / Advanced Access / App Review** : justifications par permission, compte test et vidéo d'un usage réel. Ne pas demander des permissions que l'app ne sait pas démontrer.
+
+### Code : prérequis à l'ouverture OAuth aux entreprises externes
+
+- [x] `/connexions` distingue autorisation enregistrée, expirée, erreur et absence d'autorisation ; ne dit plus « Connecté » sur la seule présence d'un jeton. Publication Google/Meta explicitement indisponible.
+- [ ] Chiffrer access/refresh tokens au repos avec clé serveur dédiée, migration contrôlée et rotation ; ne pas envoyer les tokens au client ou aux logs. Remplacer les logs d'exception OAuth bruts par des erreurs filtrées.
+- [ ] Renouveler les jetons selon chaque fournisseur, préserver le refresh token Google lors d'une réautorisation sans nouveau refresh token, gérer révocation/expiration/refus et éviter les renouvellements concurrents. En Google Testing, autorisation et refresh token expirent après 7 jours pour ces scopes : renouveler l'access token ne contourne pas cette limite.
+- [ ] Vérifier les permissions accordées ; lister/sélectionner comptes GBP, établissements et Pages Meta ; récupérer un jeton de Page et identifier le compte Instagram lié. Persister les IDs de ressources et leur association à l'entreprise. Ne pas déclarer deux canaux connectés à partir du même jeton utilisateur non vérifié.
+- [ ] Compléter les états réels connexion en cours / connecté après vérification / erreur / réautoriser / déconnecter, avec révocation fournisseur et effacement local isolés par entreprise. Tester refus OAuth, CSRF, expiration, retrait et accès croisés.
+- [ ] Valider scopes et version Graph Meta sur un compte test : divergence entre `instagram_content_publish` utilisé et `instagram_content_publishing` cité dans la documentation App Review actuelle ; vérifier le contrat avant modification/activation et les permissions dépendantes.
+- [ ] Implémenter publication validée Google/Meta, tracer les résultats sans secrets, puis fournir une vidéo de bout en bout à la review. L'autorisation OAuth seule ne démontre pas la publication.
+
+### Google : après éligibilité de la fiche
+
+1. Demande **Application for Basic API Access**, Project Number **`915822663727`**, depuis un compte owner/manager de la fiche.
+2. Attendre l'approbation ; quotas GBP **0 QPM = non approuvé**, **300 QPM = approuvé** selon Google.
+3. Activer les APIs GBP conformément à Basic setup ; configurer le scope `business.manage`, le callback web et les variables Production sur Vercel ; redéployer.
+4. Vérifier l'accès effectif à la fiche du compte test, puis l'exécution validée. Distinguer approbation API GBP et vérification OAuth de production.
+
+Procédure et sources : [oauth-setup.md](oauth-setup.md). Ordre : socle légal/support/logo → préparation Meta → sécurité et sélection des comptes → exécution démontrable → review. Les agents continuent à produire des propositions pendant l'attente Google.
 
 ## Parcours livré le 2026-10-07
 

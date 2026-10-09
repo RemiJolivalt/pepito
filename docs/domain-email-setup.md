@@ -4,7 +4,7 @@ Décision du 2026-10-09 : marque BienDecider, URL de référence `https://www.bi
 
 ## Statut
 
-Le code est prêt pour la nouvelle marque. Les configurations de comptes OVH/Vercel ne sont pas effectuées par le code. Contrôle DNS public du 2026-10-09 : `www.biendecider.com` résout vers `213.186.33.5`, les MX vers `mx1.mail.ovh.net`, `mx2.mail.ovh.net`, `mx3.mail.ovh.net`. Cela ne prouve ni l'existence de `contact`, ni le fonctionnement de sa redirection.
+Le domaine et `www.biendecider.com` sur Vercel sont déclarés opérationnels par le CEO le 2026-10-09, après le contrôle initial qui pointait encore vers OVH. Les étapes ci-dessous restent une procédure de référence, pas une demande de refaire la zone. La réception de `contact`, la redirection du domaine nu et les callbacks OAuth restent à tester séparément. Le DNS seul ne prouve pas le fonctionnement du transfert email.
 
 ## 1. Relier le domaine à Vercel
 
