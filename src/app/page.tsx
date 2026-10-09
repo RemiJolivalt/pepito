@@ -8,17 +8,17 @@ const STEPS = [
   { n: "1", title: "Vous donnez l'objectif", text: "« 10 nouveaux clients par mois ». Votre métier, votre zone, votre site s'il existe. 5 minutes." },
   { n: "2", title: "Paul fait le plan", text: "Votre partenaire de croissance audite votre présence en ligne, regarde vos concurrents et vous propose 3 à 5 actions, confiées à son équipe." },
   { n: "3", title: "Les agents proposent", text: "Fiche Google, site web, posts, prospection : chaque agent prépare le travail concret." },
-  { n: "4", title: "Vous validez, Pepito réalise", text: "Rien ne part sans votre feu vert. Validé ? Pepito publie — à commencer par votre site." },
+  { n: "4", title: "Vous validez, BienDecider réalise", text: "Rien ne part sans votre feu vert. Après validation, vous pouvez publier votre site avec BienDecider." },
 ];
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <div className="mx-auto max-w-4xl px-6 py-16">
-        <p className="text-sm font-medium text-indigo-600">Pepito</p>
-        <h1 className="mt-2 text-4xl font-semibold leading-tight tracking-tight">
-          L&apos;équipe marketing que les indépendants n&apos;ont jamais eue.
+        <h1 className="text-4xl font-semibold leading-tight">
+          BienDecider
         </h1>
+        <p className="mt-3 text-xl font-medium text-slate-800">L&apos;équipe marketing des indépendants et des TPE.</p>
         <p className="mt-4 max-w-2xl text-lg text-slate-600">
           Kiné, plombier, installateur solaire… Vous n&apos;avez ni le temps ni l&apos;envie de faire votre
           communication. Paul et son équipe d&apos;agents IA s&apos;en chargent — et vous gardez le dernier mot.
@@ -58,10 +58,11 @@ export default function LandingPage() {
           OAuth officiel — jamais de mot de passe saisi chez nous.
         </p>
 
-        <footer className="mt-10 flex gap-4 border-t border-slate-200 pt-4 text-xs text-slate-400">
+        <footer className="mt-10 flex flex-wrap gap-4 border-t border-slate-200 pt-4 text-xs text-slate-400">
           <Link href="/cgu" className="hover:underline">Conditions d&apos;utilisation</Link>
           <Link href="/confidentialite" className="hover:underline">Confidentialité</Link>
           <Link href="/mentions-legales" className="hover:underline">Mentions légales</Link>
+          <a href="mailto:contact@biendecider.com" className="hover:underline">Contact</a>
         </footer>
       </div>
     </main>

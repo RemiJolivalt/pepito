@@ -137,7 +137,7 @@ export async function runMarketingAgent(
   // final (brief ponctuel transmis par Paul) varie par appel. Le cache_control
   // sur le dernier bloc met aussi en cache les définitions d'outils
   // (tools -> system -> messages, dans cet ordre de rendu).
-  const stableSystem = `Tu es ${PERSONA.name}, ${PERSONA.role} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
+  const stableSystem = `Tu es ${PERSONA.name}, ${PERSONA.role} de BienDecider, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 Réseaux sociaux déclarés : ${company.socialHandles ?? "aucun"}.
 ${companyProfileLines(company)}

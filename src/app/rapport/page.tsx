@@ -62,7 +62,7 @@ export default async function RapportPage() {
           <h2 className="font-medium">Productions · depuis le début</h2>
           <dl className="mt-4 grid grid-cols-2 gap-5">
             <div><dt className="text-sm text-slate-500">Approuvées, non exécutées</dt><dd className="mt-1 text-2xl font-semibold">{approvedCount}</dd></div>
-            <div><dt className="text-sm text-slate-500">Exécutées par Pepito</dt><dd className="mt-1 text-2xl font-semibold text-emerald-700">{executedCount}</dd></div>
+            <div><dt className="text-sm text-slate-500">Exécutées par BienDecider</dt><dd className="mt-1 text-2xl font-semibold text-emerald-700">{executedCount}</dd></div>
           </dl>
           <Link href="/dashboard?view=historique" className="mt-4 inline-block text-sm text-indigo-600 underline">Consulter l&apos;historique des décisions</Link>
         </section>

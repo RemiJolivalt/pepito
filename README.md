@@ -1,4 +1,10 @@
-# Pepito
+# BienDecider
+
+Nom public : **BienDecider**. Domaine cible : **https://www.biendecider.com**. Contact public : **contact@biendecider.com** (redirection OVH vers le Gmail du propriétaire à activer et tester).
+
+Le dépôt GitHub `RemiJolivalt/pepito`, le projet Vercel `pepito`, le nom du package et les cookies techniques restent inchangés. Pas de migration de données ; les anciens contenus et conversations ne sont pas réécrits. Le changement de domaine nécessite une nouvelle connexion (cookies limités à leur hôte).
+
+Configuration du domaine, de la messagerie et recette : [docs/domain-email-setup.md](docs/domain-email-setup.md).
 
 Copilote IA agentique pour indépendants et TPE (kiné, plombier, installateur solaire, etc.) : des agents spécialisés proposent des actions pour accroître visibilité, communication et démarchage, validées par l'utilisateur avant exécution.
 
@@ -41,6 +47,8 @@ Prérequis : Node.js, une clé API Anthropic (https://console.anthropic.com/), u
 5. Ouvrir `http://localhost:3000` : se connecter (email + mot de passe — le compte est créé à la première connexion), remplir l'onboarding, puis sur `/dashboard` générer le plan de Paul, lancer les agents et valider leurs propositions.
 
 ## Tests du parcours
+
+Test public de marque (aucune donnée créée ni appel agent) : `npm run test:brand`, avec un serveur local actif et Chromium installé. Vérifie les métadonnées, la langue, les liens de contact et les pages publiques de 320 à 1440 px.
 
 Avec le serveur local actif : `npx playwright install chromium`, puis `npm run test:ux`.
 Les tests utilisent `DATABASE_URL` et `SESSION_SECRET` du fichier `.env`. Ils créent uniquement des entreprises fictives `ux-test-…@example.invalid`, supprimées en fin de test. Utiliser de préférence une base de développement. Les appels aux agents et la publication sont simulés ; les décisions et l'ajout au plan utilisent les vraies API. `UX_TEST_BASE_URL` permet de changer le port (défaut : `http://localhost:3000`). Captures desktop/mobile dans `test-results/` (ignoré par Git).

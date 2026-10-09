@@ -120,7 +120,7 @@ export default function OnboardingPage() {
           <fieldset className="mt-1 rounded-lg border border-indigo-100 bg-indigo-50/40 p-3">
             <legend className="px-1 text-sm font-medium">Votre objectif en chiffres</legend>
             <p className="mb-3 text-xs text-slate-500">
-              Déclaratif et approximatif, ça suffit. Pepito calcule l&apos;écart et le nombre de clients à aller chercher,
+              Déclaratif et approximatif, ça suffit. BienDecider calcule l&apos;écart et le nombre de clients à aller chercher,
               puis mesure si ses actions vous en rapprochent. Rien n&apos;est partagé.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">

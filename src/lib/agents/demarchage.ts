@@ -148,7 +148,7 @@ export async function runDemarchageAgent(
   // Découpage statique/dynamique identique aux autres agents (cf.
   // marketing.ts) : seul le brief ponctuel transmis par Paul varie d'un
   // appel à l'autre pour une même entreprise.
-  const stableSystem = `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de Pepito, un copilote IA pour indépendants et TPE.
+  const stableSystem = `Tu es ${PERSONA.name}, l'agent "${PERSONA.role}" de BienDecider, un copilote IA pour indépendants et TPE.
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 ${companyProfileLines(company)}
 ${objectiveLine(company)}

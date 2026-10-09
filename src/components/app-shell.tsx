@@ -13,7 +13,7 @@ export function AppShell({
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white p-4 md:flex">
         <Link href="/dashboard" className="mb-6 block px-3">
-          <span className="text-lg font-semibold">Pepito</span>
+          <span className="text-lg font-semibold">BienDecider</span>
           {companyName && (
             <span className="block truncate text-xs text-slate-500">{companyName}</span>
           )}
@@ -28,12 +28,13 @@ export function AppShell({
           <Link href="/cgu" className="hover:text-slate-500">CGU</Link>
           <Link href="/confidentialite" className="hover:text-slate-500">Confidentialité</Link>
           <Link href="/mentions-legales" className="hover:text-slate-500">Mentions légales</Link>
+          <a href="mailto:contact@biendecider.com" className="hover:text-slate-500">Contact</a>
         </div>
       </aside>
       <div className="min-w-0 flex-1">
         <header className="border-b border-slate-200 bg-white px-4 py-3 md:hidden">
           <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link href="/dashboard" className="font-semibold">Pepito</Link>
+          <Link href="/dashboard" className="font-semibold">BienDecider</Link>
           {companyName && <span className="max-w-[65%] truncate text-xs text-slate-500">{companyName}</span>}
           </div>
           <details className="mt-3">

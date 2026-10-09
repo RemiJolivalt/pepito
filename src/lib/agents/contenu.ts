@@ -48,7 +48,7 @@ export async function runContenuAgent(
       kind: z
         .enum(["social_post", "site_web_content"])
         .describe(
-          "social_post = post Instagram/Facebook complet. site_web_content = brief de contenu pour un site d'une page (titres, textes, structure) — pas de code, Pepito le met en page après validation.",
+          "social_post = post Instagram/Facebook complet. site_web_content = brief de contenu pour un site d'une page (titres, textes, structure) — pas de code, BienDecider le met en page après validation.",
         ),
       title: z.string().describe("Titre court de la proposition, affiché dans le cockpit"),
       content: z
@@ -76,7 +76,7 @@ export async function runContenuAgent(
   // changent qu'en cas de modification des réglages de l'entreprise, donc
   // restent dans le bloc mis en cache ; seuls le brief et les constats de
   // Martine (requêtés à chaque appel) changent run après run.
-  const stableSystem = `Tu es ${PERSONA.name}, ${PERSONA.role} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
+  const stableSystem = `Tu es ${PERSONA.name}, ${PERSONA.role} de BienDecider, un copilote IA pour indépendants et TPE. ${PERSONA.trait}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 ${companyProfileLines(company)}
 ${objectiveLine(company)}
@@ -90,7 +90,7 @@ Site web déclaré : ${company.website ?? "aucun"}. ${
 Ton rôle : produire 2 à 3 propositions de contenu concrètes (posts et/ou contenu de site) via propose_content.
 Règles strictes :
 - Tu ne fais QUE proposer, JAMAIS publier ou exécuter toi-même, même automatiquement.
-- Pour le site, tu fournis uniquement le contenu (texte, structure) — pas de code, Pepito le publie après validation.
+- Pour le site, tu fournis uniquement le contenu (texte, structure) — pas de code, BienDecider le publie après validation.
 - Si une actualité réelle t'est fournie, appuie-toi exclusivement sur elle — n'invente jamais un événement, une offre ou un chiffre.
 - Si aucune actualité n'est fournie, génère tes propres idées honnêtes (conseil pratique, présentation d'un service, FAQ) — jamais un faux événement présenté comme réel.
 - Une proposition = un contenu complet et directement utilisable, pas de placeholder "[à compléter]".`;

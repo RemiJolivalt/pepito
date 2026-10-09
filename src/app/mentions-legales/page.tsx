@@ -20,7 +20,7 @@ export default function MentionsLegalesPage() {
           [Forme juridique, ex: SAS, EI...]<br />
           [Adresse du siège social]<br />
           [Numéro SIRET]<br />
-          [Email de contact]<br />
+          <a href="mailto:contact@biendecider.com" className="underline">contact@biendecider.com</a><br />
           Directeur de la publication : [Nom]
         </p>
 
@@ -38,7 +38,7 @@ export default function MentionsLegalesPage() {
         </p>
 
         <h2 className="mt-6 font-medium text-slate-900">Contact</h2>
-        <p className="mt-1">Pour toute question : [email de contact].</p>
+        <p className="mt-1">Pour toute question sur BienDecider : <a href="mailto:contact@biendecider.com" className="underline">contact@biendecider.com</a>.</p>
       </div>
     </AppShell>
   );

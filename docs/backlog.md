@@ -3,6 +3,27 @@
 Source : cahier des charges proposé par un tiers (OpenAI), challengé et ajusté le 2026-10-05.
 Décision CEO actée : garder l'esprit ("équipe virtuelle IA qui agit, pas qui conseille") sans construire la plateforme complète proposée — cf. [process-build-agentique.md](process-build-agentique.md) pour l'historique des décisions.
 
+## Décision du 2026-10-09 : BienDecider
+
+Le nom public devient **BienDecider**, domaine cible **https://www.biendecider.com** (HTTPS, pas HTTP). Le dépôt GitHub et le projet Vercel restent `pepito`. Les mentions Pepito/Pépito ci-dessous appartiennent à l'historique du produit.
+
+- [x] Nom remplacé dans la landing, la connexion, la navigation, les pages métier et les documents légaux.
+- [x] Métadonnées de marque et de partage configurées, langue française, base des URL publiques sur `https://www.biendecider.com`.
+- [x] Prompts actifs des quatre agents mis à jour. Pas de réécriture des productions ou conversations historiques.
+- [x] Contact public `contact@biendecider.com` ajouté aux liens de contact et aux documents légaux ; Gmail personnel non exposé dans l'interface ni consigné dans le dépôt.
+- [x] Dépôt/package/cookies inchangés : aucune migration de base, aucune rupture technique liée au renommage.
+- [ ] Ajouter `www.biendecider.com` et `biendecider.com` au projet Vercel existant ; rediriger le domaine nu vers `https://www.biendecider.com`.
+- [ ] Modifier uniquement les DNS web OVH selon les valeurs fournies par Vercel ; conserver les DNS de messagerie. Au contrôle du 2026-10-09, `www` résout vers `213.186.33.5` (OVH) et les MX vers `mx1/2/3.mail.ovh.net` : la bascule web n'est pas faite, la redirection email n'est pas vérifiable par DNS.
+- [ ] Créer la redirection OVH `contact@biendecider.com` vers le Gmail indiqué par le CEO, puis tester la réception depuis une autre adresse (inbox et spam). Configuration externe, pas une route Next.js.
+- [ ] Mettre à jour les écrans de consentement Google/Meta (BienDecider), domaine autorisé, URLs légales et callbacks exacts du nouveau domaine. Reconnexion nécessaire sur le nouveau domaine.
+- [ ] Vérifier HTTPS, domaine nu/www, connexion, publication d'un site et réception des demandes de contact avant d'annoncer le domaine actif.
+
+Procédure : [domain-email-setup.md](domain-email-setup.md). La redirection entrante ne configure ni l'envoi automatique des rapports ni la prospection sortante ; ces chantiers restent séparés. Les brouillons légaux restent à compléter et à faire valider.
+
+## Parcours livré le 2026-10-07
+
+Diagnostic (`/diagnostic`) → plan (`/dashboard`) → file unique de validation (`/dashboard?view=validation`) → résultats (`/rapport`). Équipe conserve les rôles et demandes ponctuelles ; les analyses et validations n'y sont plus dupliquées. Historique accessible dans Aujourd'hui ; un site approuvé reste à publier dans la file. Tests UX desktop/mobile livrés (`npm run test:ux`). Cette organisation remplace les descriptions des anciennes vues ci-dessous.
+
 ## KPI MVP (nouveau, retenu du cahier des charges tiers)
 
 > Est-ce que le dirigeant considère que Pépito a réellement travaillé pour son entreprise et veut continuer à l'utiliser/payer ?

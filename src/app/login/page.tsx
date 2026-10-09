@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex max-w-sm flex-col justify-center p-8 font-sans min-h-screen">
-      <h1 className="text-2xl font-semibold">Pepito</h1>
+      <h1 className="text-2xl font-semibold">BienDecider</h1>
       <p className="mt-1 text-sm text-gray-500">
         Première visite ? Entrez l&apos;email et le mot de passe que vous
         voulez utiliser — votre compte est créé automatiquement.

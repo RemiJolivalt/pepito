@@ -15,20 +15,20 @@ export default function ConfidentialitePage() {
         </div>
 
         <h1 className="text-2xl font-semibold text-slate-900">Politique de confidentialité</h1>
-        <p className="mt-2 text-slate-500">Dernière mise à jour : phase pilote, 2026-10-05.</p>
+        <p className="mt-2 text-slate-500">Dernière mise à jour : phase pilote, 2026-10-09.</p>
 
         <h2 className="mt-6 font-medium text-slate-900">Qui traite vos données</h2>
         <p className="mt-1">
           [Raison sociale de l&apos;éditeur] — voir les{" "}
           <a href="/mentions-legales" className="underline">mentions légales</a>.
-          Contact pour toute question relative à vos données : [email de contact].
+          Contact pour toute question relative à vos données : <a href="mailto:contact@biendecider.com" className="underline">contact@biendecider.com</a>.
         </p>
 
         <h2 className="mt-6 font-medium text-slate-900">Données collectées</h2>
         <ul className="mt-1 list-disc pl-5">
           <li>Email et mot de passe (le mot de passe est stocké sous forme de hash, jamais en clair).</li>
           <li>Informations sur votre entreprise que vous saisissez (nom, métier, zone, description, téléphone, objectifs).</li>
-          <li>Contenu des échanges avec les agents Pepito (historique de conversation).</li>
+          <li>Contenu des échanges avec les agents BienDecider (historique de conversation).</li>
           <li>Propositions générées par les agents et vos décisions de validation.</li>
           <li>Statistiques d&apos;usage (nombre de connexions, tokens et coût d&apos;appel au modèle d&apos;IA).</li>
           <li>
@@ -69,7 +69,7 @@ export default function ConfidentialitePage() {
         <h2 className="mt-6 font-medium text-slate-900">Vos droits</h2>
         <p className="mt-1">
           Conformément au RGPD, vous disposez d&apos;un droit d&apos;accès, de rectification et de
-          suppression de vos données. Pour l&apos;exercer, contactez [email de contact].
+          suppression de vos données. Pour l&apos;exercer, contactez <a href="mailto:contact@biendecider.com" className="underline">contact@biendecider.com</a>.
           Vous pouvez également introduire une réclamation auprès de la CNIL (www.cnil.fr).
         </p>
 

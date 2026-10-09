@@ -62,7 +62,7 @@ export default async function ConnexionsPage({
         <p className="mt-2 text-sm text-gray-600">
           Les agents ont besoin d&apos;accéder à vos comptes pour agir à votre
           place (une fois vos propositions validées). Cette connexion se fait
-          exclusivement via <strong>OAuth</strong> : vous autorisez Pepito
+          exclusivement via <strong>OAuth</strong> : vous autorisez BienDecider
           depuis l&apos;écran officiel de Google ou Meta — vous ne saisissez
           jamais votre mot de passe ici, et vous pouvez révoquer l&apos;accès
           à tout moment depuis votre compte Google/Meta.

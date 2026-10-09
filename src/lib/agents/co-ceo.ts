@@ -143,7 +143,7 @@ export async function runCoCeoTurn(companyId: string, userMessage: string) {
       {
         type: "text",
         cache_control: { type: "ephemeral" },
-        text: `Tu es ${PERSONA.name} de Pepito, un copilote IA pour indépendants et TPE. ${PERSONA.blurb}
+        text: `Tu es ${PERSONA.name} de BienDecider, un copilote IA pour indépendants et TPE. ${PERSONA.blurb}
 Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}.
 ${companyProfileLines(company)}
 ${objectiveLine(company)}
@@ -254,8 +254,8 @@ export async function runCoCeoPlanning(companyId: string) {
   // plan) mis en cache ; l'état réel (propositions en attente, constats,
   // plan existant, actions écartées) est recalculé à chaque appel et reste
   // donc hors cache, en toute fin de system (cf. doc prompt caching).
-  const stableSystem = `Tu es ${PERSONA.name} de Pepito. Tu dois être force de proposition et donner une direction claire — pas attendre des questions.
-Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}. Site web : ${company.website ?? (company.siteSlug ? `publié par Pepito (/site/${company.siteSlug})` : "aucun")}.
+  const stableSystem = `Tu es ${PERSONA.name} de BienDecider. Tu dois être force de proposition et donner une direction claire — pas attendre des questions.
+Entreprise : ${company.name} (métier : ${company.trade}), zone de chalandise : ${company.servingArea}. Site web : ${company.website ?? (company.siteSlug ? `publié par BienDecider (/site/${company.siteSlug})` : "aucun")}.
 ${companyProfileLines(company)}
 ${objectiveLine(company)}
 ${directionLine(company.direction)}
@@ -264,7 +264,7 @@ Ta tâche : propose un plan priorisé de 3 à 5 actions concrètes via propose_p
 Règles :
 - Chaque action doit faire avancer l'objectif de façon mesurable — dis dans la justification QUEL effet attendu (appels, devis, avis, visibilité).
 - Une action = un brief exécutable par l'agent tel quel : précis sur le quoi (ex: "3 posts sur les chantiers terminés avec photos avant/après"), pas vague ("améliorer la com").
-- Si l'entreprise n'a pas de site, l'action "préparer le contenu du site" (contenu) est prioritaire : Pepito le publie après validation.
+- Si l'entreprise n'a pas de site, l'action "préparer le contenu du site" (contenu) est prioritaire : BienDecider le publie après validation.
 - Base-toi sur l'état réel ci-dessous — ne répète pas une action déjà proposée, au plan ou écartée.
 - Priorise ce qui a le plus d'impact pour l'objectif, pas une liste exhaustive.`;
 
