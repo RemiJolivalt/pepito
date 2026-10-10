@@ -82,5 +82,6 @@ Les tests utilisent `DATABASE_URL` et `SESSION_SECRET` du fichier `.env`. Ils cr
 - [docs/spec-contextualisation.md](docs/spec-contextualisation.md) — parcours d'onboarding / contextualisation de l'entreprise
 - [docs/agents-roster.md](docs/agents-roster.md) — rôles, responsabilités et garde-fous des agents produit
 - [docs/process-build-agentique.md](docs/process-build-agentique.md) — organisation du build en rôles agentiques
+- [docs/domaines.md](docs/domaines.md) — carte des douze domaines, trajectoire cible et répartition des US
 - [docs/backlog.md](docs/backlog.md) — backlog MVP priorisé, avec décisions de scope actées
 - [docs/oauth-setup.md](docs/oauth-setup.md) — démarches externes Google/Meta pour activer les connexions OAuth

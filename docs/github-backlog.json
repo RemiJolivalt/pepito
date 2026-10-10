@@ -1,110 +1,728 @@
 [
   {
-    "id": "github-governance", "title": "Proteger main et activer la delegation prototype", "priority": "p0", "status": "ready", "area": "external",
+    "id": "github-governance", "title": "Proteger main et activer la delegation prototype", "priority": "p0", "status": "ready", "area": "external", "domain": "plateforme",
     "story": "En tant que developpeur, je veux une PR et une CI obligatoires avec delegation apres 4 secondes sans reponse, pour tous les niveaux de risque, pour ne pas bloquer le prototype.",
     "acceptance": ["main exige une PR, Checks vert et branche a jour ; force-push et suppression interdits", "0 approbation obligatoire configuree ; delegation apres 4 secondes sans reponse ou indisponibilite annoncee, tous niveaux de risque, avec justification et relecture differee", "Les deux auteurs peuvent deployer via Vercel ; Node 24 et Production Branch main confirmes"],
     "validation": "Verifier les reglages GitHub/Vercel et une PR par delegation tracee ; joindre les preuves sans secrets.", "scope": "Configuration administrateur ; CI deja livree. Pas de bypass des controles ni suppression des garde-fous des actions metier."
   },
   {
-    "id": "legal", "title": "Completer et faire valider les documents legaux", "priority": "p0", "status": "ready", "area": "external",
+    "id": "legal", "title": "Completer et faire valider les documents legaux", "priority": "p0", "status": "ready", "area": "external", "domain": "securite",
     "story": "En tant qu'utilisateur, je veux connaitre l'editeur, le traitement et la conservation de mes donnees.",
     "acceptance": ["Identite legale reelle et contact renseignes", "Base legale, conservation et droits valides avec juriste/DPO", "Politique decrit fidelement Gmail, GBP et Meta ; validation tracee avant retrait du statut brouillon"],
     "validation": "Relecture humaine competente et verification des URLs publiques.", "scope": "Ne pas inventer d'identite legale ni declarer une certification non obtenue."
   },
   {
-    "id": "support-domain", "title": "Valider le contact OVH et la recette du domaine", "priority": "p1", "status": "ready", "area": "external",
+    "id": "support-domain", "title": "Valider le contact OVH et la recette du domaine", "priority": "p1", "status": "ready", "area": "external", "domain": "marque",
     "story": "En tant qu'utilisateur, je veux pouvoir contacter BienDecider et acceder au domaine HTTPS.",
     "acceptance": ["contact@biendecider.com recu depuis deux expediteurs distincts", "Domaine nu et HTTP redirigent vers www HTTPS avec conservation du chemin", "Login et site publie fonctionnent sur le domaine ; adresse support Google selectionnable verifiee"],
     "validation": "Recette domaine et messages de test ; ne pas publier le Gmail personnel.", "scope": "DNS web declare configure ; tester la reception ne configure pas l'envoi."
   },
   {
-    "id": "brand-logo", "title": "Finaliser le logo et l'icone OAuth BienDecider", "priority": "p2", "status": "ready", "area": "dev",
+    "id": "brand-logo", "title": "Finaliser le logo et l'icone OAuth BienDecider", "priority": "p2", "status": "ready", "area": "dev", "domain": "marque",
     "story": "En tant qu'utilisateur, je veux reconnaitre BienDecider sur le site et les ecrans de consentement.",
     "acceptance": ["Logo choisi et assets utilisables dans le site", "Icone Meta 1024x1024 disponible", "Identite reportee dans Google/Meta et verifiee desktop/mobile"],
     "validation": "Validation du proprietaire et captures de l'identite.", "scope": "Pas de refonte globale de l'interface."
   },
   {
-    "id": "gmail-live", "title": "Activer et valider Gmail sur le prototype", "priority": "p1", "status": "ready", "area": "external", "dependencies": ["github-governance"],
+    "id": "gmail-live", "title": "Activer et valider Gmail sur le prototype", "priority": "p1", "status": "ready", "area": "external", "domain": "connecteurs", "dependencies": ["github-governance"],
     "story": "En tant que dirigeant pilote, je veux autoriser mon Gmail et envoyer un message confirme.",
     "acceptance": ["Secret divulgue remplace et variables Gmail/chiffrement saisies directement dans Vercel", "Gmail API, scopes et utilisateurs test configures", "Consentement, adresse expediteur, envoi reel et deconnexion verifies ; resultat de livraison documente"],
     "validation": "Email manuel a une adresse controlee, sans secret dans l'Issue ; tester refus et retrait.", "scope": "Code Gmail deja livre. Aucun envoi automatique ni prospection activee."
   },
   {
-    "id": "meta-setup", "title": "Preparer le Business Portfolio et l'app Meta", "priority": "p1", "status": "ready", "area": "external",
+    "id": "meta-setup", "title": "Preparer le Business Portfolio et l'app Meta", "priority": "p1", "status": "ready", "area": "external", "domain": "connecteurs",
     "story": "En tant qu'editeur, je veux une app Meta de test pour avancer sans attendre GBP.",
     "acceptance": ["Business Portfolio et app BienDecider relies", "Facebook Login et callback du domaine configures", "Business Verification et roles test prepares selon le dashboard ; variables privees configurees"],
     "validation": "Verifier les reglages et un consentement de compte test sans publication automatique.", "scope": "Facebook Login retenu ; App Review de publication dans une US distincte."
   },
   {
-    "id": "oauth-encryption", "title": "Chiffrer les jetons GBP et Meta et filtrer les logs", "priority": "p0", "status": "ready", "area": "dev",
+    "id": "oauth-encryption", "title": "Chiffrer les jetons GBP et Meta et filtrer les logs", "priority": "p0", "status": "ready", "area": "dev", "domain": "securite",
     "story": "En tant qu'entreprise, je veux proteger mes autorisations externes en base et dans les logs.",
     "acceptance": ["Jetons GBP/Meta chiffres avec cle serveur dediee et association entreprise", "Migration des jetons existants et procedure de rotation documentees", "Logs filtres sans tokens/secrets et tests d'isolation/alteration"],
     "validation": "Tests avec valeurs fictives ; migration reversible sur base controlee.", "scope": "Gmail dispose deja d'un chiffrement ; ne pas modifier sa cle sans migration."
   },
   {
-    "id": "oauth-lifecycle", "title": "Gerer renouvellement et erreurs des jetons GBP/Meta", "priority": "p1", "status": "backlog", "area": "dev", "dependencies": ["oauth-encryption"],
+    "id": "oauth-lifecycle", "title": "Gerer renouvellement et erreurs des jetons GBP/Meta", "priority": "p1", "status": "backlog", "area": "dev", "domain": "connecteurs", "dependencies": ["oauth-encryption"],
     "story": "En tant qu'entreprise, je veux un acces maintenu et un message clair si une nouvelle autorisation est necessaire.",
     "acceptance": ["Renouvellement specifique au fournisseur et protection contre les appels concurrents", "Refresh token conserve seulement pour la meme identite lors d'une reautorisation", "Expiration, refus et revocation testes ; limite Google Testing 7 jours expliquee"],
     "validation": "Tests mockes des erreurs fournisseur et du renouvellement.", "scope": "Aucun contournement des quotas ni de l'expiration du consentement."
   },
   {
-    "id": "meta-resources", "title": "Verifier les scopes Meta et choisir Page/Instagram", "priority": "p1", "status": "backlog", "area": "dev", "dependencies": ["meta-setup", "oauth-encryption"],
+    "id": "meta-resources", "title": "Verifier les scopes Meta et choisir Page/Instagram", "priority": "p1", "status": "backlog", "area": "dev", "domain": "connecteurs", "dependencies": ["meta-setup", "oauth-encryption"],
     "story": "En tant qu'entreprise, je veux connecter uniquement ma Page et mon compte Instagram professionnel.",
     "acceptance": ["Version Graph et noms exacts des permissions verifies sur le flux Facebook Login", "Pages listees, selection explicite et compte Instagram lie identifie", "IDs et jeton de Page persistes par entreprise ; deux canaux non declares connectes sans verification"],
     "validation": "Tests multi-entreprises et recette compte Meta test ; justifier chaque scope.", "scope": "Pas d'Instagram Login parallele ; pas de publication dans cette US."
   },
   {
-    "id": "oauth-disconnect", "title": "Completer la deconnexion et les etats GBP/Meta", "priority": "p1", "status": "backlog", "area": "dev", "dependencies": ["oauth-encryption", "oauth-lifecycle"],
+    "id": "oauth-disconnect", "title": "Completer la deconnexion et les etats GBP/Meta", "priority": "p1", "status": "backlog", "area": "dev", "domain": "connecteurs", "dependencies": ["oauth-encryption", "oauth-lifecycle"],
     "story": "En tant qu'utilisateur, je veux retirer l'acces externe et comprendre l'etat reel de ma connexion.",
     "acceptance": ["Connexion en cours, verifiee, erreur et reautorisation coherentes", "Revocation fournisseur et effacement local isoles par entreprise", "CSRF, refus, expiration et acces croises testes ; aucun secret expose"],
     "validation": "Tests routes et navigateur avec fournisseurs simules puis recette test.", "scope": "Gmail deja deconnectable ; ne pas annoncer les ressources connectees sans verification."
   },
   {
-    "id": "meta-publish", "title": "Publier une production validee sur Meta", "priority": "p1", "status": "backlog", "area": "dev", "dependencies": ["meta-resources", "oauth-lifecycle", "oauth-disconnect"],
+    "id": "meta-publish", "title": "Publier une production validee sur Meta", "priority": "p1", "status": "backlog", "area": "dev", "domain": "connecteurs", "dependencies": ["meta-resources", "oauth-lifecycle", "oauth-disconnect"],
     "story": "En tant qu'entreprise, je veux publier sur ma Page ou Instagram apres confirmation explicite.",
     "acceptance": ["Publication reellement liee a une proposition validee et une ressource selectionnee", "Double clic, erreurs et resultat incertain geres sans double publication", "Journal d'execution sans secrets et recette de bout en bout sur compte test"],
     "validation": "Tests mockes et publication controlee ; preuve fournisseur et resultat visible.", "scope": "Aucune publication autonome. Format media et limitations Instagram explicites."
   },
   {
-    "id": "meta-review", "title": "Soumettre le dossier Tech Provider Meta", "priority": "p1", "status": "blocked", "area": "external", "dependencies": ["meta-setup", "meta-publish", "legal", "support-domain", "brand-logo"],
+    "id": "meta-review", "title": "Soumettre le dossier Tech Provider Meta", "priority": "p1", "status": "blocked", "area": "external", "domain": "connecteurs", "dependencies": ["meta-setup", "meta-publish", "legal", "support-domain", "brand-logo"],
     "story": "En tant qu'editeur, je veux obtenir Advanced Access pour servir plusieurs entreprises.",
     "acceptance": ["Business Verification complete selon les exigences Meta", "Justification et video reelle de chaque permission avec compte reviewer", "App Review soumise puis decision et demandes complementaires tracees"],
     "validation": "Dossier reviewer reproductible, aucune permission non demontrable.", "scope": "Delais et approbation Meta hors controle du developpement."
   },
   {
-    "id": "gbp-access", "title": "Obtenir l'acces API Google Business Profile", "priority": "p1", "status": "blocked", "area": "external",
+    "id": "gbp-access", "title": "Obtenir l'acces API Google Business Profile", "priority": "p1", "status": "blocked", "area": "external", "domain": "connecteurs",
     "story": "En tant qu'editeur, je veux un projet GBP approuve pour connecter les fiches clientes.",
     "acceptance": ["Fiche geree verifiee et active 60+ jours avec site ; date et role owner/manager confirmes", "Demande Basic API Access pour projet 915822663727 deposee et decision tracee", "Apres accord : APIs activees, OAuth/variables configures, quotas controles"],
     "validation": "Verifier dossier Google, quotas et compte test ; aucune date d'eligibilite inventee.", "scope": "Fiche cliente geree eligible possible ; approbation GBP distincte de verification OAuth."
   },
   {
-    "id": "gbp-resources", "title": "Selectionner et verifier un etablissement GBP", "priority": "p1", "status": "blocked", "area": "dev", "dependencies": ["gbp-access", "oauth-encryption", "oauth-lifecycle"],
+    "id": "gbp-resources", "title": "Selectionner et verifier un etablissement GBP", "priority": "p1", "status": "blocked", "area": "dev", "domain": "connecteurs", "dependencies": ["gbp-access", "oauth-encryption", "oauth-lifecycle"],
     "story": "En tant qu'entreprise, je veux choisir ma fiche Google plutot qu'une autorisation non verifiee.",
     "acceptance": ["Comptes et etablissements listes apres autorisation", "Selection et IDs lies a l'entreprise, permissions verifiees", "Etat connecte seulement apres verification de la ressource"],
     "validation": "Mocks et recette GBP approuvee ; isolation entre deux entreprises.", "scope": "Pas de publication ni collecte automatique de metriques dans cette US."
   },
   {
-    "id": "gbp-publish", "title": "Executer une mise a jour GBP validee", "priority": "p1", "status": "blocked", "area": "dev", "dependencies": ["gbp-resources", "oauth-disconnect"],
+    "id": "gbp-publish", "title": "Executer une mise a jour GBP validee", "priority": "p1", "status": "blocked", "area": "dev", "domain": "connecteurs", "dependencies": ["gbp-resources", "oauth-disconnect"],
     "story": "En tant qu'entreprise, je veux appliquer une proposition a ma fiche apres validation.",
     "acceptance": ["Action disponible seulement pour proposition validee et etablissement autorise", "Appel GBP reel, erreurs et idempotence testes", "Resultat d'execution visible, sans hallucination de succes"],
     "validation": "Tests mockes puis modification controlee sur fiche autorisee.", "scope": "Pas de publication automatique ni reponses automatiques aux avis."
   },
   {
-    "id": "metrics", "title": "Suivre des snapshots de metriques declares", "priority": "p2", "status": "backlog", "area": "dev",
+    "id": "metrics", "title": "Suivre des snapshots de metriques declares", "priority": "p2", "status": "backlog", "area": "dev", "domain": "mesure",
     "story": "En tant que dirigeant, je veux comparer ma situation de depart aux metriques actuelles.",
     "acceptance": ["Snapshots dates et source declaree/automatique distingues", "Tableau depart/aujourd'hui/evolution sans conclusion inventee", "Donnees accessibles uniquement a leur entreprise"],
     "validation": "Calculs deterministes testes et recette donnees fictives.", "scope": "Collecte Google automatique reportee ; commencer par declaratif."
   },
   {
-    "id": "report-email", "title": "Recevoir le bilan et les priorites par email", "priority": "p2", "status": "backlog", "area": "dev", "dependencies": ["gmail-live", "legal"],
+    "id": "report-email", "title": "Recevoir le bilan et les priorites par email", "priority": "p2", "status": "backlog", "area": "dev", "domain": "mesure", "dependencies": ["gmail-live", "legal"],
     "story": "En tant que dirigeant, je veux recevoir un bilan factuel pour revenir sur les prochaines actions.",
     "acceptance": ["Choix fournisseur/expediteur et consentement d'envoi documentes", "Bilan deterministe, frequence et opt-out explicites", "Anti-doublon, echec et absence de donnees cross-entreprises testes"],
     "validation": "Tests mockes et email controle ; pas de promesse de resultat commercial.", "scope": "Gmail manuel et cron hebdo deja livres ; programmation d'envoi a brancher distinctement."
   },
   {
-    "id": "pilot", "title": "Organiser le pilote avec cinq entreprises", "priority": "p1", "status": "backlog", "area": "external", "dependencies": ["legal", "github-governance", "support-domain"],
+    "id": "pilot", "title": "Organiser le pilote avec cinq entreprises", "priority": "p1", "status": "backlog", "area": "external", "domain": "admin", "dependencies": ["legal", "github-governance", "support-domain"],
     "story": "En tant que responsable produit, je veux mesurer si les entreprises constatent du travail utile et souhaitent continuer.",
     "acceptance": ["Cinq entreprises consentantes et perimetre reel annonce", "Plan pilote de deux semaines et questions de retour definis", "Retours, incidents et decision de suite traces dans des Issues sans donnees privees"],
     "validation": "Bilan factuel activation/validation/realisation et entretiens pilotes.", "scope": "Ne pas attendre toutes les integrations si elles ne sont pas promises ; pas de donnees personnelles dans les Issues publiques."
+  },
+  {
+    "id": "dir-1", "title": "Exprimer mon objectif en langage naturel", "priority": "p1", "status": "backlog", "area": "dev", "domain": "dirigeant",
+    "story": "En tant que dirigeant, je veux decrire mon activite et mon objectif en une phrase libre, pour demarrer sans formulaire.",
+    "acceptance": ["Une phrase suffit a creer le profil", "Metier, zone et objectif deduits sont affiches pour confirmation", "Les informations manquantes sont demandees une par une", "Le formulaire reste disponible dans \"Mon entreprise\""],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "dir-2", "title": "Modifier une proposition avant de la valider", "priority": "p1", "status": "backlog", "area": "dev", "domain": "dirigeant",
+    "story": "En tant que dirigeant, je veux corriger un contenu presque bon, pour ne pas le rejeter.",
+    "acceptance": ["Edition depuis la carte de la proposition", "Statut \"modifiee\" enregistre", "C'est la version modifiee qui est publiee ou envoyee"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "dir-3", "title": "Dire pourquoi je refuse", "priority": "p1", "status": "backlog", "area": "dev", "domain": "dirigeant",
+    "story": "En tant que dirigeant, je veux donner la raison d'un rejet de proposition ou de prospect, pour ne plus recevoir la meme chose.",
+    "acceptance": ["Raison facultative au rejet", "Conservee et visible dans l'historique", "Disponible pour les agents (voir MOT-5)"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "dir-4", "title": "Vider une information de mon profil", "priority": "p1", "status": "backlog", "area": "dev", "domain": "dirigeant",
+    "story": "En tant que dirigeant, je veux effacer mon site, mon telephone ou ma description, pour que les agents cessent de les utiliser.",
+    "acceptance": ["Un champ texte vide est efface en base", "Les agents ne le citent plus au lancement suivant"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "dir-5", "title": "Recuperer mon mot de passe", "priority": "p1", "status": "backlog", "area": "dev", "domain": "dirigeant", "dependencies": ["con-3"],
+    "story": "En tant que dirigeant, je veux reinitialiser mon mot de passe par email, pour ne pas perdre mon compte.",
+    "acceptance": ["Lien a usage unique et a duree limitee", "Longueur minimale relevee", "Les sessions ouvertes sont fermees apres changement"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de CON-3.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mot-1", "title": "Comparer plusieurs options et arbitrer", "priority": "p1", "status": "backlog", "area": "dev", "domain": "moteur",
+    "story": "En tant que dirigeant, je veux voir deux ou trois options pour un meme sujet, pour choisir au lieu de seulement valider.",
+    "acceptance": ["Chaque option indique impact attendu, effort, cout, risque et niveau de confiance", "Paul recommande une option et dit pourquoi", "Choisir une option cree l'action du plan"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mot-2", "title": "Voir le cout estime et l'impact attendu de chaque action", "priority": "p1", "status": "backlog", "area": "dev", "domain": "moteur", "dependencies": ["mes-2", "mon-1"],
+    "story": "En tant que dirigeant, je veux connaitre le prix et l'effet vise avant de lancer, pour decider en connaissance de cause.",
+    "acceptance": ["Chaque action du plan affiche un cout estime et un effet attendu dans l'unite de l'objectif", "L'estimation vient des couts mesures", "L'ecart estime contre reel est conserve"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de MES-2 et MON-1.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mot-3", "title": "Parler a un seul Paul qui se souvient", "priority": "p1", "status": "backlog", "area": "dev", "domain": "moteur",
+    "story": "En tant que dirigeant, je veux que Paul tienne compte de nos echanges et du plan, pour ne pas me repeter.",
+    "acceptance": ["L'historique charge les messages les plus recents", "Le chat connait le plan en cours et le suivi des prospects", "Le plan tient compte des consignes donnees dans le chat", "Test sur une conversation de plus de 40 messages"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mot-4", "title": "Transmettre le detail des constats aux autres agents", "priority": "p2", "status": "backlog", "area": "dev", "domain": "moteur",
+    "story": "En tant que dirigeant, je veux que Camille et Jean-Claude travaillent a partir du diagnostic complet, pour des productions coherentes.",
+    "acceptance": ["Camille recoit \"a ameliorer\" et les actions suggerees, pas seulement les titres", "Jean-Claude recoit les constats de concurrence"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mot-5", "title": "Tenir compte de mes refus", "priority": "p1", "status": "backlog", "area": "dev", "domain": "moteur", "dependencies": ["dir-3"],
+    "story": "En tant que dirigeant, je veux que les agents apprennent de mes rejets, pour ne plus revoir ce que j'ai refuse.",
+    "acceptance": ["Les raisons de rejet sont injectees dans l'agent concerne et dans le plan", "Une proposition refusee n'est pas reproposee a l'identique"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de DIR-3.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mot-6", "title": "Etre averti quand Martine ou un autre agent echoue", "priority": "p1", "status": "backlog", "area": "dev", "domain": "moteur",
+    "story": "En tant que dirigeant, je veux savoir qu'un agent n'a rien produit, pour le relancer.",
+    "acceptance": ["Sans resultat exploitable, une erreur est affichee, quel que soit l'agent", "L'action reste \"a lancer\"", "Plus de constat \"Analyse incomplete\" cree a la place d'une erreur pour Martine"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mot-7", "title": "Rattacher au plan ce que je demande dans le chat", "priority": "p2", "status": "backlog", "area": "dev", "domain": "moteur",
+    "story": "En tant que dirigeant, je veux retrouver dans le plan ce que j'ai demande a Paul, pour garder un seul fil.",
+    "acceptance": ["Une delegation depuis le chat cree une action du plan avec son brief", "Les propositions y sont rattachees"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mot-8", "title": "Cadrer la capacite Publicite", "priority": "p3", "status": "backlog", "area": "external", "domain": "moteur",
+    "story": "En tant que peres fondateurs, nous voulons decider si et comment BienDecider gere de la publicite payante.",
+    "acceptance": ["Plateformes visees, qui paie le budget publicitaire, comptes necessaires et risques sont ecrits", "Decision de faire ou non documentee"],
+    "validation": "Decision ecrite, datee et validee par les deux PF dans l'Issue.", "scope": "Aucun developpement dans cette US.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mot-9", "title": "Cadrer la capacite Administratif", "priority": "p2", "status": "backlog", "area": "external", "domain": "moteur",
+    "story": "En tant que peres fondateurs, nous voulons definir ce que \"administratif\" recouvre.",
+    "acceptance": ["Liste des taches visees (devis, relances, rendez-vous, autres), donnees manipulees et risques ecrits", "Decision documentee"],
+    "validation": "Decision ecrite, datee et validee par les deux PF dans l'Issue.", "scope": "Aucun developpement dans cette US.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mot-10", "title": "Savoir ce que BienDecider ne sait pas faire pour mon objectif", "priority": "p2", "status": "backlog", "area": "dev", "domain": "moteur",
+    "story": "En tant que dirigeant, je veux une reponse honnete quand mon objectif sort du catalogue, pour ne pas attendre un resultat impossible.",
+    "acceptance": ["Quand aucun agent ne couvre l'objectif, Paul le dit, propose ce qui s'en rapproche et note la demande pour les peres fondateurs"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-1", "title": "Acter la levee de la validation obligatoire", "priority": "p1", "status": "backlog", "area": "external", "domain": "delegation",
+    "story": "En tant que peres fondateurs, nous voulons decider quels types d'action peuvent partir sans validation.",
+    "acceptance": ["Tableau des types d'action avec le niveau maximal autorise (par exemple : une reponse a un avis negatif n'est jamais automatique)", "Fiche des agents, architecture et conditions d'utilisation mises a jour", "Valide par les deux peres fondateurs"],
+    "validation": "Decision ecrite, datee et validee par les deux PF dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-2", "title": "Choisir mon niveau de delegation", "priority": "p1", "status": "backlog", "area": "dev", "domain": "delegation", "dependencies": ["del-1"],
+    "story": "En tant que dirigeant, je veux choisir entre Conseiller, Accompagner et Deleguer, pour garder le controle que je souhaite.",
+    "acceptance": ["Reglable globalement et par type d'action", "\"Accompagner\" par defaut", "Chaque changement est trace et reversible immediatement"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-3", "title": "Utiliser le niveau Conseiller", "priority": "p2", "status": "backlog", "area": "dev", "domain": "delegation", "dependencies": ["del-1", "del-2"],
+    "story": "En tant que dirigeant, je veux recevoir des recommandations que j'applique moi-meme.",
+    "acceptance": ["Aucun bouton d'execution a ce niveau", "Je peux marquer une recommandation \"faite par moi\"", "Elle compte dans les resultats"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-4", "title": "Fixer un budget et des limites", "priority": "p1", "status": "backlog", "area": "dev", "domain": "delegation", "dependencies": ["del-1"],
+    "story": "En tant que dirigeant, je veux plafonner ce que BienDecider peut depenser et faire en mon nom.",
+    "acceptance": ["Plafond mensuel", "Limites par type (emails par jour, publications par semaine)", "Arret automatique au plafond avec notification", "Rien ne s'execute au-dela"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-5", "title": "Evaluer le risque de chaque action", "priority": "p1", "status": "backlog", "area": "dev", "domain": "delegation", "dependencies": ["del-1"],
+    "story": "En tant que dirigeant, je veux que les actions sensibles me soient toujours soumises.",
+    "acceptance": ["Niveau de risque calcule par des regles ecrites (reversibilite, exposition publique, depense, donnees de tiers), pas par le modele seul", "Au-dessus du seuil, validation exigee meme en mode Deleguer"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-6", "title": "Laisser BienDecider agir dans mon cadre", "priority": "p1", "status": "backlog", "area": "dev", "domain": "delegation", "dependencies": ["del-1", "del-2", "del-4", "del-5"],
+    "story": "En tant que dirigeant en mode Deleguer, je veux que les actions a faible risque partent sans moi.",
+    "acceptance": ["Une action part seule uniquement si le risque est faible, le connecteur autorise et le budget disponible", "Sinon elle va en file de validation", "Test prouvant que rien ne part hors cadre"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de DEL-1, 2, 4, 5.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-7", "title": "Consulter le journal de ce qui a ete fait en mon nom", "priority": "p1", "status": "backlog", "area": "dev", "domain": "delegation", "dependencies": ["del-1"],
+    "story": "En tant que dirigeant, je veux la trace complete de chaque action.",
+    "acceptance": ["Chaque execution indique quoi, quand, pourquoi, cout et resultat", "Consultable et exportable"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-8", "title": "Tout arreter d'un clic", "priority": "p1", "status": "backlog", "area": "dev", "domain": "delegation", "dependencies": ["del-1"],
+    "story": "En tant que dirigeant, je veux un bouton de pause, pour reprendre la main immediatement.",
+    "acceptance": ["La pause bloque toute execution automatique sur-le-champ", "Les actions planifiees sont annulees", "La reprise est explicite"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-9", "title": "Annuler une action reversible", "priority": "p2", "status": "backlog", "area": "dev", "domain": "delegation", "dependencies": ["del-7"],
+    "story": "En tant que dirigeant, je veux defaire ce qui peut l'etre.",
+    "acceptance": ["Depublier le site ou retirer une publication depuis le journal", "Les actions irreversibles sont signalees comme telles avant execution"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "del-10", "title": "Fondre la prise de contact deleguee dans les niveaux", "priority": "p2", "status": "backlog", "area": "dev", "domain": "delegation", "dependencies": ["del-2"],
+    "story": "En tant que dirigeant, je veux un seul reglage de delegation.",
+    "acceptance": ["L'option actuelle de prise de contact automatique devient le niveau Deleguer du type \"email de prospection\"", "Plus de second mecanisme"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (docs/backlog.md)"
+  },
+  {
+    "id": "con-1", "title": "Creer et publier un site referencable a mon nom", "priority": "p1", "status": "backlog", "area": "dev", "domain": "connecteurs",
+    "story": "En tant que dirigeant, je veux que mon site soit trouve sur Google sous le nom de mon entreprise.",
+    "acceptance": ["Page servie directement, sans cadre isole", "Titre et description de l'entreprise cliente", "Liens telephone et externes fonctionnels", "Nettoyage du HTML par liste blanche, puisque le cadre ne protege plus"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "con-2", "title": "Envoyer un email depuis la fiche d'un prospect", "priority": "p1", "status": "backlog", "area": "dev", "domain": "connecteurs", "dependencies": ["gmail-live"],
+    "story": "En tant que dirigeant, je veux contacter un prospect sans rien recopier.",
+    "acceptance": ["Bouton sur la fiche", "Destinataire et modele valide preremplis", "Confirmation explicite conservee", "Le prospect passe \"contacte\" apres envoi confirme"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de la US 5.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "con-3", "title": "Envoyer les emails du service", "priority": "p1", "status": "backlog", "area": "dev", "domain": "connecteurs",
+    "story": "En tant que BienDecider, nous voulons un fournisseur d'email pour les messages du produit.",
+    "acceptance": ["Envoi depuis le domaine biendecider.com avec authentification du domaine", "Sert a la confirmation d'email, au mot de passe oublie et au bilan (US 17)"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Prerequis de DIR-5 et SEC-2.", "source": "docs/domaines.md, proposition du 2026-10-10 (docs/backlog.md)"
+  },
+  {
+    "id": "con-4", "title": "Exporter mon site", "priority": "p2", "status": "backlog", "area": "dev", "domain": "connecteurs",
+    "story": "En tant que dirigeant, je veux recuperer mon site pour l'heberger ailleurs.",
+    "acceptance": ["Telechargement du fichier de la page", "L'export WordPress reste une option ulterieure, deja notee au backlog"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (docs/backlog.md)"
+  },
+  {
+    "id": "mes-1", "title": "Mesurer l'effet d'une action hors prospection", "priority": "p2", "status": "backlog", "area": "dev", "domain": "mesure", "dependencies": ["metrics"],
+    "story": "En tant que dirigeant, je veux voir ce qu'ont change un post, mon site ou ma fiche Google.",
+    "acceptance": ["Une mesure de reference est prise avant l'action et relevee apres", "L'evolution s'affiche dans Resultats, rattachee a l'action"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de la US 16.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mes-2", "title": "Connaitre le cout reel complet", "priority": "p1", "status": "backlog", "area": "dev", "domain": "mesure",
+    "story": "En tant que peres fondateurs, nous voulons un cout par client exact, pour fixer le prix.",
+    "acceptance": ["Les recherches web sont comptees", "L'usage est enregistre meme quand un lancement echoue", "Un modele inconnu du bareme est signale au lieu de valoir zero"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mes-3", "title": "Separer les emails envoyes des propositions d'agents", "priority": "p2", "status": "backlog", "area": "dev", "domain": "mesure",
+    "story": "En tant que dirigeant, je veux des resultats qui ne melangent pas mes envois et le travail des agents.",
+    "acceptance": ["Les envois Gmail ne sont plus comptes comme actions de Camille", "Resultats et entonnoir d'administration corriges", "La protection contre le double envoi est conservee"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mes-4", "title": "Recevoir une proposition de reorientation", "priority": "p2", "status": "backlog", "area": "dev", "domain": "mesure",
+    "story": "En tant que dirigeant, je veux que Paul me dise quand arreter ce qui ne marche pas.",
+    "acceptance": ["Au-dela du seuil de 20 contacts deja en place, Paul propose d'arreter ou de reorienter un type de cible, chiffres a l'appui", "Jamais de conclusion sous le seuil"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mes-5", "title": "Comparer l'impact attendu et l'impact obtenu", "priority": "p2", "status": "backlog", "area": "dev", "domain": "mesure", "dependencies": ["mot-2", "mes-1"],
+    "story": "En tant que dirigeant, je veux savoir si les promesses du plan ont ete tenues.",
+    "acceptance": ["Pour chaque action terminee : effet annonce, effet mesure, ecart", "Paul s'en sert pour ses estimations suivantes"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de MOT-2 et MES-1.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mes-6", "title": "Activer le bilan hebdomadaire en production", "priority": "p1", "status": "backlog", "area": "external", "domain": "mesure",
+    "story": "En tant que dirigeant pilote, je veux recevoir le point du lundi.",
+    "acceptance": ["Le secret de la tache planifiee est defini chez l'hebergeur", "Un premier bilan est constate dans un compte pilote"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Demarche externe.", "source": "docs/domaines.md, proposition du 2026-10-10 (docs/backlog.md)"
+  },
+  {
+    "id": "mon-1", "title": "Decider le modele de prix", "priority": "p1", "status": "backlog", "area": "external", "domain": "monetisation", "dependencies": ["mes-2"],
+    "story": "En tant que peres fondateurs, nous voulons fixer abonnement, credits inclus et recharge.",
+    "acceptance": ["Prix, credits inclus et cout par type d'action sont ecrits, calibres sur les couts reels et une marge cible"],
+    "validation": "Decision ecrite, datee et validee par les deux PF dans l'Issue.", "scope": "Depend de MES-2. Decision, pas de developpement.", "source": "docs/domaines.md, proposition du 2026-10-10 (docs/backlog.md)"
+  },
+  {
+    "id": "mon-2", "title": "Voir mon solde et le prix d'une action", "priority": "p1", "status": "backlog", "area": "dev", "domain": "monetisation", "dependencies": ["mon-1"],
+    "story": "En tant que dirigeant, je veux savoir ce qu'il me reste et ce que coute un lancement.",
+    "acceptance": ["Solde visible en permanence", "Cout affiche a cote de \"Lancer\"", "Decompte apres execution", "Historique des consommations"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mon-3", "title": "Souscrire et payer mon abonnement", "priority": "p1", "status": "backlog", "area": "dev", "domain": "monetisation", "dependencies": ["mon-1", "ent-5", "ent-12", "ent-13"],
+    "story": "En tant que dirigeant, je veux m'abonner en ligne.",
+    "acceptance": ["Paiement confie a un prestataire, aucune carte stockee chez BienDecider", "Periode pilote gratuite geree", "Resiliation en ligne"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mon-4", "title": "Etre arrete proprement sans credits", "priority": "p1", "status": "backlog", "area": "dev", "domain": "monetisation", "dependencies": ["mon-2"],
+    "story": "En tant que dirigeant, je veux un message clair quand mon solde est epuise.",
+    "acceptance": ["Lancement refuse avant tout appel au modele", "Rien n'est execute a moitie", "La recharge ou l'attente du mois suivant est proposee"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mon-5", "title": "Recharger des credits", "priority": "p2", "status": "backlog", "area": "dev", "domain": "monetisation", "dependencies": ["mon-3"],
+    "story": "En tant que dirigeant, je veux acheter des credits en plus.",
+    "acceptance": ["Achat ponctuel", "Credits disponibles des la confirmation du paiement", "Recu envoye"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mon-6", "title": "Gerer un paiement echoue", "priority": "p2", "status": "backlog", "area": "dev", "domain": "monetisation", "dependencies": ["mon-3"],
+    "story": "En tant que BienDecider, nous voulons suspendre sans perdre le client.",
+    "acceptance": ["Relances automatiques", "Suspension des lancements apres delai", "Donnees conservees", "Reactivation des paiement"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mon-7", "title": "Emettre des factures conformes", "priority": "p2", "status": "backlog", "area": "dev", "domain": "monetisation", "dependencies": ["mon-3", "ent-10"],
+    "story": "En tant que dirigeant, je veux une facture pour ma comptabilite.",
+    "acceptance": ["Facture telechargeable avec les mentions obligatoires", "Regime de TVA valide par un comptable"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mon-8", "title": "Visualiser le credit LLM", "priority": "p1", "status": "backlog", "area": "dev", "domain": "monetisation", "dependencies": ["mes-2", "sec-1"],
+    "story": "En tant que peres fondateurs (PF), nous voulons voir le credit restant chez le fournisseur du modele, pour recharger avant la panne.",
+    "acceptance": ["L'administration affiche le credit restant, la depense du jour et du mois, et le nombre de jours restants au rythme actuel", "Reserve aux PF", "Alerte sous un seuil reglable. Si le fournisseur n'expose pas le solde, le montant recharge est saisi a la main et le restant est calcule a partir de la consommation mesuree"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de MES-2 et SEC-1.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "sec-1", "title": "Fermer l'administration par defaut", "priority": "p0", "status": "ready", "area": "dev", "domain": "securite",
+    "story": "En tant que client, je veux que personne d'autre ne voie ni ne supprime mon entreprise.",
+    "acceptance": ["Sans liste d'administrateurs definie, personne n'est administrateur", "Le lien est masque aux autres", "Test d'acces refuse sur la page et sur la suppression"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "sec-2", "title": "Confirmer mon email a l'inscription", "priority": "p1", "status": "backlog", "area": "dev", "domain": "securite", "dependencies": ["con-3"],
+    "story": "En tant que dirigeant, je veux que personne ne cree un compte avec mon adresse.",
+    "acceptance": ["Compte inactif tant que l'adresse n'est pas confirmee", "Aucun agent ne peut etre lance avant"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de CON-3.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "sec-3", "title": "Avoir une session qui expire", "priority": "p1", "status": "backlog", "area": "dev", "domain": "securite",
+    "story": "En tant que dirigeant, je veux qu'un cookie vole ne serve pas indefiniment.",
+    "acceptance": ["Date d'expiration signee dans le cookie", "Attribut securise en production", "La deconnexion et le changement de mot de passe invalident les sessions"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "sec-4", "title": "Limiter les tentatives par adresse IP", "priority": "p1", "status": "backlog", "area": "dev", "domain": "securite",
+    "story": "En tant que dirigeant, je veux qu'un tiers ne puisse pas bloquer mon compte.",
+    "acceptance": ["Limite par adresse IP sur la connexion et l'inscription, en plus du verrou par compte", "Compteur d'echecs atomique"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "sec-5", "title": "Borner et valider toutes les entrees", "priority": "p1", "status": "backlog", "area": "dev", "domain": "securite",
+    "story": "En tant que BienDecider, nous voulons refuser les donnees anormales.",
+    "acceptance": ["Longueur et type verifies sur chaque route, comme c'est deja fait pour l'envoi Gmail", "Une entree invalide renvoie une erreur claire, jamais une erreur serveur"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "sec-6", "title": "Supprimer mon compte et mes donnees", "priority": "p1", "status": "backlog", "area": "dev", "domain": "securite",
+    "story": "En tant que dirigeant, je veux exercer mon droit a l'effacement sans ecrire au support.",
+    "acceptance": ["Suppression depuis \"Mon entreprise\" avec confirmation", "Toutes les donnees liees et les jetons sont effaces", "Les autorisations Google et Meta sont revoquees quand c'est possible"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "sec-7", "title": "Encadrer le fichier de prospection", "priority": "p0", "status": "ready", "area": "external", "domain": "securite",
+    "story": "En tant que BienDecider, nous voulons un traitement des prospects conforme.",
+    "acceptance": ["Base legale, duree de conservation et droit d'opposition ecrits dans la politique de confidentialite", "Purge des prospects ecartes apres delai", "Valide par un juriste"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "A traiter avec la US 2.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "sec-8", "title": "Exporter mes donnees", "priority": "p2", "status": "backlog", "area": "dev", "domain": "securite",
+    "story": "En tant que dirigeant, je veux recuperer ce que BienDecider detient sur mon entreprise.",
+    "acceptance": ["Export telechargeable du profil, des propositions, des prospects et des echanges"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "adm-1", "title": "Plafonner la depense par entreprise", "priority": "p0", "status": "ready", "area": "dev", "domain": "admin",
+    "story": "En tant que peres fondateurs, nous voulons qu'aucun compte ne puisse vider notre credit.",
+    "acceptance": ["Quota quotidien et mensuel de lancements et de cout", "Refus au-dela avec message clair", "Plafond reglable par entreprise depuis l'administration"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "adm-2", "title": "Etre alerte d'une consommation anormale", "priority": "p1", "status": "backlog", "area": "dev", "domain": "admin",
+    "story": "En tant que peres fondateurs, nous voulons savoir avant la facture.",
+    "acceptance": ["Alerte quand une entreprise ou le total depasse un seuil", "Seuil reglable"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "adm-3", "title": "Suspendre une entreprise au lieu de la supprimer", "priority": "p1", "status": "backlog", "area": "dev", "domain": "admin",
+    "story": "En tant qu'administrateur, je veux bloquer un compte sans detruire ses donnees.",
+    "acceptance": ["Suspension et reactivation reversibles", "La suppression definitive demande une confirmation renforcee"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "adm-4", "title": "Voir l'activite et les erreurs d'une entreprise", "priority": "p2", "status": "backlog", "area": "dev", "domain": "admin",
+    "story": "En tant qu'administrateur, je veux aider un client qui signale un probleme.",
+    "acceptance": ["Derniers lancements, echecs et messages d'erreur par entreprise, sans afficher le contenu des jetons ni des mots de passe"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "adm-5", "title": "Tracer les actions d'administration", "priority": "p2", "status": "backlog", "area": "dev", "domain": "admin",
+    "story": "En tant que peres fondateurs, nous voulons savoir qui a fait quoi.",
+    "acceptance": ["Suspension, suppression et changement de quota sont journalises avec auteur et date"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "adm-6", "title": "Voir la marge par client", "priority": "p2", "status": "backlog", "area": "dev", "domain": "admin", "dependencies": ["mes-2", "mon-3"],
+    "story": "En tant que peres fondateurs, nous voulons comparer revenu et cout de chaque entreprise.",
+    "acceptance": ["Tableau revenu, cout et marge par entreprise et par mois"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de MES-2 et MON-3.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "pla-1", "title": "Executer les agents en tache de fond", "priority": "p0", "status": "ready", "area": "dev", "domain": "plateforme",
+    "story": "En tant que dirigeant, je veux lancer un agent sans rester bloque ni perdre son travail.",
+    "acceptance": ["Le lancement rend la main tout de suite", "L'etat \"en cours\" est visible", "Duree maximale declaree", "Un echec ou une coupure est signale et relancable"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "pla-2", "title": "Empecher le double lancement", "priority": "p0", "status": "ready", "area": "dev", "domain": "plateforme",
+    "story": "En tant que dirigeant, je veux qu'un double clic ne coute pas deux fois.",
+    "acceptance": ["Verrou pose des le premier clic", "Le second est refuse", "Test automatise"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "pla-3", "title": "Versionner les changements de base de donnees", "priority": "p1", "status": "backlog", "area": "dev", "domain": "plateforme",
+    "story": "En tant qu'equipe, nous voulons faire evoluer le schema sans risquer les donnees clients.",
+    "acceptance": ["Migrations versionnees dans le depot", "Plus de poussee directe du schema en production", "Procedure de retour arriere ecrite"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "pla-4", "title": "Tester connexion et isolation a chaque envoi de code", "priority": "p1", "status": "backlog", "area": "dev", "domain": "plateforme",
+    "story": "En tant qu'equipe, nous voulons que la CI attrape une regression de securite.",
+    "acceptance": ["Tests automatises : cookie falsifie refuse, verrouillage, acces croise entre deux entreprises refuse sur chaque route", "Lances par la CI"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "pla-5", "title": "Disposer d'une base de test dediee", "priority": "p2", "status": "backlog", "area": "dev", "domain": "plateforme",
+    "story": "En tant qu'equipe, nous voulons que les tests n'ecrivent jamais en production.",
+    "acceptance": ["Base separee pour les tests de bout en bout", "Garde qui refuse de tourner contre la base de production"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "A traiter apres le premier client payant.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "pla-6", "title": "Tester la sauvegarde et la restauration", "priority": "p1", "status": "backlog", "area": "dev", "domain": "plateforme",
+    "story": "En tant que peres fondateurs, nous voulons pouvoir revenir en arriere apres un incident.",
+    "acceptance": ["Sauvegarde automatique verifiee chez l'hebergeur", "Une restauration complete a ete faite une fois et documentee"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Etat actuel non verifie.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "pla-7", "title": "Suivre les erreurs en production", "priority": "p2", "status": "backlog", "area": "dev", "domain": "plateforme",
+    "story": "En tant qu'equipe, nous voulons etre prevenus avant le client.",
+    "acceptance": ["Collecte des erreurs serveur avec alerte", "Aucun secret ni jeton dans les traces"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "pla-8", "title": "Mettre a jour la documentation d'architecture", "priority": "p2", "status": "backlog", "area": "dev", "domain": "plateforme",
+    "story": "En tant que nouvel arrivant, je veux une description fidele du produit.",
+    "acceptance": ["L'architecture et la fiche des agents decrivent la prospection, Gmail, le bilan hebdomadaire et le role actuel de Paul"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "pla-9", "title": "Mettre a jour les dependances signalees", "priority": "p2", "status": "backlog", "area": "dev", "domain": "plateforme",
+    "story": "En tant qu'equipe, nous voulons un outillage sans alerte connue.",
+    "acceptance": ["Les 9 alertes elevees de l'outillage sont traitees ou justifiees", "Controle ajoute a la CI"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "mar-1", "title": "Aligner la page d'accueil sur la promesse", "priority": "p2", "status": "backlog", "area": "dev", "domain": "marque",
+    "story": "En tant que visiteur, je veux comprendre en dix secondes ce que fait BienDecider.",
+    "acceptance": ["La page reprend \"vous fixez l'objectif, l'IA trouve comment agir, vous gardez le controle\", les quatre etapes et les trois niveaux", "Elle n'annonce que ce qui est livre"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mar-2", "title": "Consulter les tarifs", "priority": "p2", "status": "backlog", "area": "dev", "domain": "marque", "dependencies": ["mon-1"],
+    "story": "En tant que visiteur, je veux connaitre le prix avant de m'inscrire.",
+    "acceptance": ["Page tarifs publique, coherente avec MON-1"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mar-3", "title": "Voir un exemple concret", "priority": "p2", "status": "backlog", "area": "dev", "domain": "marque", "dependencies": ["pilot"],
+    "story": "En tant que visiteur, je veux voir un cas reel du debut a la fin.",
+    "acceptance": ["Un parcours d'exemple (objectif, diagnostic, plan, resultat) consultable sans compte, tire d'un pilote avec son accord"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de la US 18.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "mar-4", "title": "Creer une identite visuelle", "priority": "p2", "status": "backlog", "area": "external", "domain": "marque",
+    "story": "En tant que PF, nous voulons une identite visuelle pour BienDecider, pour une marque reconnaissable sur le site et dans le produit.",
+    "acceptance": ["Logo, couleurs et typographie choisis et valides par les deux PF", "Regles d'usage ecrites en une page", "Identite appliquee au site public et au produit"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Ajoutee par les PF sans detail le 2026-10-10 : besoin, criteres et priorite rediges a l'import, a corriger dans l'Issue. Voir aussi brand-logo et ux-5.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ux-1", "title": "Distinguer inscription et connexion", "priority": "p1", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant, je veux savoir si je cree un compte ou si je me connecte, pour ne pas ouvrir un compte vide par erreur.",
+    "acceptance": ["Deux parcours separes", "Une faute de frappe dans l'email ne cree plus de compte", "Message clair quand le compte n'existe pas"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "ux-2", "title": "Suivre l'avancement d'un agent", "priority": "p1", "status": "backlog", "area": "dev", "domain": "ux", "dependencies": ["pla-1"],
+    "story": "En tant que dirigeant, je veux voir ce que fait l'agent pendant qu'il travaille, pour ne pas croire que c'est bloque.",
+    "acceptance": ["Etapes affichees (lecture du site, recherche, redaction) avec une duree indicative", "Je peux quitter la page et retrouver le resultat", "La fin est annoncee"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de PLA-1.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "ux-3", "title": "Etre prevenu quand j'ai quelque chose a decider", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant, je veux un signal sans avoir a revenir verifier.",
+    "acceptance": ["Compteur visible dans le menu sur toutes les pages", "Email quand un agent a termine, desactivable"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "L'email depend de CON-3.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "ux-4", "title": "Separer l'inscription guidee de la page \"Mon entreprise\"", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que nouveau dirigeant, je veux demarrer avec l'essentiel, pas avec un formulaire de 17 champs.",
+    "acceptance": ["Trois informations suffisent pour commencer", "Le reste est demande au moment ou un agent en a besoin", "\"Mon entreprise\" reste la page complete"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Complete DIR-1.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "ux-5", "title": "Avoir une interface visuellement coherente", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant, je veux reconnaitre du premier coup le bouton principal de chaque ecran.",
+    "acceptance": ["Un seul style de bouton principal (trois couleurs coexistent aujourd'hui)", "Composants partages pour boutons, cartes et champs", "Couleurs et arrondis definis une fois"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "ux-6", "title": "Utiliser BienDecider avec un lecteur d'ecran ou au clavier", "priority": "p3", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant en situation de handicap, je veux acceder a toutes les fonctions.",
+    "acceptance": ["Chaque champ a un libelle (28 champs pour 11 libelles aujourd'hui)", "Contrastes suffisants", "Focus visible", "Parcours complet au clavier", "Controle automatique ajoute aux tests"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "ux-7", "title": "Voir une page claire en cas d'erreur ou d'attente", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant, je veux comprendre ce qui se passe et comment revenir.",
+    "acceptance": ["Pages \"introuvable\", \"erreur\" et \"chargement\" en francais, aux couleurs du produit, avec un lien de retour", "Aucune n'existe aujourd'hui"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "ux-8", "title": "Lire un vocabulaire simple et constant", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant, je veux des mots que je comprends, toujours les memes.",
+    "acceptance": ["Glossaire ecrit (constat, action, proposition, prospect, piste) et applique partout", "Aucun terme technique (OAuth, scope, GBP) sur les ecrans du dirigeant"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "ux-9", "title": "Savoir quoi faire ensuite sur un ecran vide", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que nouveau dirigeant, je veux etre guide vers la prochaine etape.",
+    "acceptance": ["Chaque ecran sans donnees explique a quoi il sert et propose l'action suivante (diagnostic, plan, validation)"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "ux-10", "title": "Decider au telephone, d'une main", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant sur un chantier, je veux valider une proposition en quelques secondes.",
+    "acceptance": ["Valider ou rejeter en trois touches au plus depuis l'ouverture", "Boutons d'au moins 44 pixels", "Contenu lisible sans zoom a 320 pixels de large"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (trajectoire cible)"
+  },
+  {
+    "id": "ux-11", "title": "Observer cinq dirigeants utiliser le produit", "priority": "p1", "status": "backlog", "area": "external", "domain": "ux", "dependencies": ["pilot"],
+    "story": "En tant que peres fondateurs, nous voulons voir ou les vrais utilisateurs butent.",
+    "acceptance": ["Cinq seances observees pendant le pilote", "Liste des blocages classee par frequence", "Les trois premiers deviennent des US"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Depend de la US 18. Demarche externe.", "source": "docs/domaines.md, proposition du 2026-10-10 (docs/backlog.md)"
+  },
+  {
+    "id": "ux-12", "title": "Revenir sur une decision prise par erreur", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant, je veux annuler une validation ou un rejet fait trop vite.",
+    "acceptance": ["Annulation proposee pendant quelques secondes apres le clic", "Un rejet peut etre rouvert depuis l'historique tant que rien n'a ete execute"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (audit du code du 2026-10-09)"
+  },
+  {
+    "id": "ux-13", "title": "Avoir Paul avec moi sur toutes les pages", "priority": "p1", "status": "backlog", "area": "dev", "domain": "ux", "dependencies": ["mot-3"],
+    "story": "En tant que dirigeant, je veux poser une question a Paul ou que je sois, sans revenir au tableau de bord.",
+    "acceptance": ["Panneau de discussion accessible depuis chaque ecran, repliable", "Bouton flottant sur telephone", "La conversation continue d'une page a l'autre"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de MOT-3.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ux-14", "title": "Parler a un Paul qui sait ou je suis", "priority": "p1", "status": "backlog", "area": "dev", "domain": "ux", "dependencies": ["ux-13"],
+    "story": "En tant que dirigeant, je veux dire \"explique-moi ca\" sans rien recopier.",
+    "acceptance": ["Paul connait la page ouverte et l'element consulte (constat, proposition, prospect)", "Il repond a partir de cet element", "Il ne lit que les donnees de mon entreprise"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Depend de UX-13.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ux-15", "title": "Voir ou j'en suis dans le parcours", "priority": "p1", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que nouveau dirigeant, je veux un fil d'etapes, pour savoir ce qui est fait et ce qui vient.",
+    "acceptance": ["Fil visible : objectif, diagnostic, plan, validation, resultats", "L'etape en cours et la prochaine action sont mises en avant", "Masquable, et discret une fois le premier cycle termine"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ux-16", "title": "Recevoir de Paul la prochaine etape utile", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant, je veux une suggestion adaptee a l'ecran, sans avoir a demander.",
+    "acceptance": ["Une seule suggestion par ecran, liee a ma situation (rien a valider, diagnostic ancien, prospects sans suite)", "Calculee par des regles, sans appel au modele a chaque changement de page", "Refusable, et une suggestion refusee ne revient pas"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ux-17", "title": "Etre emmene au bon ecran par Paul", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que dirigeant, je veux que Paul me montre ce dont il parle.",
+    "acceptance": ["Les reponses de Paul contiennent des liens vers la proposition, le constat ou le prospect cite", "Un clic ouvre l'ecran sans fermer la discussion"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Complete MOT-7.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ux-18", "title": "Savoir ou les dirigeants decrochent", "priority": "p2", "status": "backlog", "area": "dev", "domain": "ux",
+    "story": "En tant que peres fondateurs, nous voulons mesurer le parcours etape par etape.",
+    "acceptance": ["Entonnoir par etape (inscription, objectif, diagnostic, plan, premiere validation, premiere execution) avec le delai entre etapes", "Etend l'entonnoir deja present dans l'administration", "Aucun traceur tiers"],
+    "validation": "Tests automatises couvrant les criteres, puis recette sur le prototype ; resultat note dans l'Issue.", "scope": "Perimetre limite aux criteres ci-dessus ; a redecouper si trop gros pour une seule livraison.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-1", "title": "Choisir la forme juridique et la repartition", "priority": "p0", "status": "ready", "area": "external", "domain": "entreprise",
+    "story": "En tant que PF, nous voulons decider du cadre de la societe BienOuBien.",
+    "acceptance": ["Forme, montant du capital, repartition entre PF et dirigeant legal sont decides et ecrits, apres avis d'un professionnel"],
+    "validation": "Decision ecrite, datee et validee par les deux PF dans l'Issue.", "scope": "Debloque : ENT-5. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-2", "title": "Verifier que le nom BienOuBien est libre", "priority": "p0", "status": "ready", "area": "external", "domain": "entreprise",
+    "story": "En tant que PF, nous voulons eviter un refus ou un litige sur la denomination.",
+    "acceptance": ["Recherche faite sur les societes et les marques existantes", "Resultat conserve", "Nom de repli prevu"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Debloque : ENT-5. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-3", "title": "Domicilier la societe", "priority": "p0", "status": "ready", "area": "external", "domain": "entreprise",
+    "story": "En tant que PF, nous voulons une adresse de siege.",
+    "acceptance": ["Adresse choisie (domicile d'un PF, societe de domiciliation ou local) avec le justificatif necessaire"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Debloque : ENT-5, US 2. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-4", "title": "Ouvrir le compte bancaire et deposer le capital", "priority": "p0", "status": "ready", "area": "external", "domain": "entreprise",
+    "story": "En tant que PF, nous voulons un compte au nom de la societe.",
+    "acceptance": ["Compte professionnel ouvert", "Capital depose et attestation obtenue", "Moyen de paiement de la societe disponible pour les fournisseurs"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Debloque : ENT-5, ENT-12. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-5", "title": "Signer les statuts et immatriculer BienOuBien", "priority": "p0", "status": "backlog", "area": "external", "domain": "entreprise", "dependencies": ["ent-1", "ent-2", "ent-3", "ent-4", "ent-6"],
+    "story": "En tant que PF, nous voulons que la societe existe legalement.",
+    "acceptance": ["Statuts signes", "Formalites deposees", "Numero SIRET et extrait d'immatriculation obtenus", "Beneficiaires effectifs declares"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Debloque : US 2, US 6, US 12, MON-3. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-6", "title": "Verifier la situation personnelle de chaque PF", "priority": "p1", "status": "backlog", "area": "external", "domain": "entreprise",
+    "story": "En tant que PF, nous voulons etre surs de pouvoir creer et diriger la societe.",
+    "acceptance": ["Clauses d'exclusivite, de non-concurrence et de propriete intellectuelle des contrats de travail en cours relues", "Statut et protection sociale de chaque PF clarifies"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "A faire avant ENT-5. Debloque : ENT-5. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-7", "title": "Mettre les actifs au nom de la societe", "priority": "p1", "status": "backlog", "area": "external", "domain": "entreprise", "dependencies": ["ent-5"],
+    "story": "En tant que PF, nous voulons que BienOuBien possede ce qu'elle exploite.",
+    "acceptance": ["Code cede par les PF a la societe par ecrit", "Depot GitHub, domaine, hebergeur, comptes Anthropic, Google et Meta rattaches a la societe et payes par elle", "Acces partages entre les deux PF"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Debloque : Premier client payant. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-8", "title": "Mettre la societe en regle sur les donnees personnelles", "priority": "p1", "status": "backlog", "area": "external", "domain": "entreprise", "dependencies": ["ent-5"],
+    "story": "En tant que PF, nous voulons pouvoir repondre a un client ou a la CNIL.",
+    "acceptance": ["Registre des traitements tenu", "Contrats de sous-traitance des donnees signes avec les fournisseurs (modele, hebergeur, base)", "Personne referente designee"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Complete la US 2 et SEC-7. Debloque : Pilote externe. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-9", "title": "Fixer les regles entre PF", "priority": "p2", "status": "backlog", "area": "external", "domain": "entreprise",
+    "story": "En tant que PF, nous voulons un accord ecrit avant qu'un desaccord survienne.",
+    "acceptance": ["Pacte signe : roles, prise de decision, depart d'un PF, sort des parts"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-10", "title": "Choisir un expert-comptable et le regime fiscal", "priority": "p2", "status": "backlog", "area": "external", "domain": "entreprise", "dependencies": ["ent-5"],
+    "story": "En tant que PF, nous voulons une comptabilite tenue des le premier euro.",
+    "acceptance": ["Expert-comptable retenu", "Regime de TVA et d'imposition choisis", "Outil de facturation selectionne"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Debloque : MON-7. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-11", "title": "Assurer la societe", "priority": "p2", "status": "backlog", "area": "external", "domain": "entreprise", "dependencies": ["ent-5"],
+    "story": "En tant que PF, nous voulons etre couverts si une action du produit cause un dommage.",
+    "acceptance": ["Responsabilite civile professionnelle souscrite, couvrant un service qui agit pour le compte de clients", "Option cyber etudiee"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Debloque : Premier client payant. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-12", "title": "Ouvrir le compte chez le prestataire de paiement", "priority": "p2", "status": "backlog", "area": "external", "domain": "entreprise", "dependencies": ["ent-4", "ent-5"],
+    "story": "En tant que PF, nous voulons pouvoir encaisser.",
+    "acceptance": ["Prestataire choisi", "Compte valide avec les justificatifs de la societe", "Versements vers le compte bancaire testes"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Debloque : MON-3. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-13", "title": "Rediger les conditions de vente", "priority": "p2", "status": "backlog", "area": "external", "domain": "entreprise", "dependencies": ["ent-5"],
+    "story": "En tant que PF, nous voulons un contrat d'abonnement distinct des conditions d'utilisation.",
+    "acceptance": ["Prix, duree, resiliation, responsabilite et droit de retractation ecrits et relus par un juriste"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Debloque : MON-3. Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-14", "title": "Proteger la marque BienDecider", "priority": "p2", "status": "backlog", "area": "external", "domain": "entreprise", "dependencies": ["ent-5"],
+    "story": "En tant que PF, nous voulons defendre le nom commercial.",
+    "acceptance": ["Recherche d'anteriorite faite", "Depot effectue au nom de la societe, de preference avec le logo puisque l'expression est descriptive", "Domaines voisins reserves"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
+  },
+  {
+    "id": "ent-15", "title": "Identifier les aides a la creation", "priority": "p3", "status": "backlog", "area": "external", "domain": "entreprise",
+    "story": "En tant que PF, nous voulons ne pas passer a cote d'un financement.",
+    "acceptance": ["Liste des dispositifs accessibles (aides a la creation, a l'innovation, prets d'honneur) avec conditions et echeances"],
+    "validation": "Preuve de la demarche jointe a l'Issue, sans secret ni donnee personnelle.", "scope": "Detail juridique et fiscal a valider avec un expert-comptable ou un avocat.", "source": "docs/domaines.md, proposition du 2026-10-10 (demande des PF)"
   }
 ]

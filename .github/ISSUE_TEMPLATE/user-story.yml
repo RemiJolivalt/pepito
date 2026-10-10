@@ -21,7 +21,15 @@ body:
     id: priority
     attributes:
       label: Priorite
-      options: [P0 - Bloquant, P1 - Prochain, P2 - Plus tard]
+      options: [P0 - Bloquant, P1 - Prochain, P2 - Plus tard, P3 - Non planifie]
+    validations:
+      required: true
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domaine
+      description: Ajouter ensuite le label domaine:* correspondant (voir docs/domaines.md).
+      options: [dirigeant, moteur, delegation, connecteurs, mesure, monetisation, securite, admin, plateforme, marque, ux, entreprise]
     validations:
       required: true
   - type: textarea

@@ -1,10 +1,26 @@
 const fs = require("node:fs");
 
+const domains = [
+  ["dirigeant", "Compte, objectif, tableau de bord, validation"],
+  ["moteur", "Paul et les agents, de comprendre a arbitrer"],
+  ["delegation", "Niveaux, budget, autorisations, risque, transparence"],
+  ["connecteurs", "Gmail, Google, Meta, site : ce qui execute"],
+  ["mesure", "Resultats, bilan, apprentissage"],
+  ["monetisation", "Prix, credits, paiement, facturation"],
+  ["securite", "Acces, sessions, donnees personnelles, legal"],
+  ["admin", "Back-office, quotas, support, pilote"],
+  ["plateforme", "Fiabilite, base de donnees, tests, documentation"],
+  ["marque", "Landing, domaine, logo, tarifs"],
+  ["ux", "Clarte du parcours, attente, mobile, accessibilite"],
+  ["entreprise", "Demarches des PF : societe, banque, contrats"],
+];
+
 const labels = [
   ["type:us", "1d76db", "User story"],
   ["priority:p0", "b60205", "Bloquant avant ouverture externe"],
   ["priority:p1", "fbca04", "Prochain travail"],
   ["priority:p2", "c5def5", "Plus tard"],
+  ["priority:p3", "e4e4e4", "Non planifie"],
   ["status:backlog", "ededed", "A prioriser"],
   ["status:ready", "0e8a16", "Pret a prendre"],
   ["status:in-progress", "1d76db", "Travail en cours"],
@@ -13,6 +29,7 @@ const labels = [
   ["area:dev", "bfdadc", "Implementation"],
   ["area:external", "fef2c0", "Console fournisseur ou demarche CEO"],
   ["review-deferred", "f9d0c4", "Relecture apres fusion par delegation"],
+  ...domains.map(([name, description]) => [`domaine:${name}`, "d4c5f9", description]),
 ];
 
 function validateCatalog(catalog) {
@@ -22,7 +39,8 @@ function validateCatalog(catalog) {
     if (!/^[a-z0-9-]+$/.test(story.id) || ids.has(story.id)) throw new Error("Invalid or duplicate US id");
     ids.add(story.id);
     if (!story.title || !story.story || !Array.isArray(story.acceptance) || !story.acceptance.length) throw new Error("Missing story content");
-    if (!["p0", "p1", "p2"].includes(story.priority) || !["ready", "backlog", "blocked"].includes(story.status) || !["dev", "external"].includes(story.area)) throw new Error("Invalid story labels");
+    if (!["p0", "p1", "p2", "p3"].includes(story.priority) || !["ready", "backlog", "blocked"].includes(story.status) || !["dev", "external"].includes(story.area)) throw new Error("Invalid story labels");
+    if (!domains.some(([name]) => name === story.domain)) throw new Error("Invalid story domain");
   }
   for (const story of catalog) {
     for (const dependency of story.dependencies ?? []) {
@@ -42,11 +60,14 @@ function storyBody(story, issuesById) {
     "## Verification", story.validation,
     "## Perimetre", story.scope,
     "## Suivi", "Un responsable dans Assignees, un seul label status:*. PR avec Closes #numero seulement si tous les criteres sont livres. Lier le deploiement et rouvrir si la recette echoue.",
-    "Source initiale : docs/backlog.md, tri du 2026-10-10. Cette Issue est la source de verite du suivi ; l'import ne remplace pas les modifications humaines.",
+    `Source initiale : ${story.source ?? "docs/backlog.md, tri du 2026-10-10"}. Cette Issue est la source de verite du suivi ; l'import ne remplace pas les modifications humaines.`,
   ].join("\n\n");
 }
 
-async function syncBacklog({ github, context, catalog, log = console.log }) {
+// GitHub limite les ecritures rapprochees : une pause entre deux creations evite un import interrompu a mi-chemin.
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function syncBacklog({ github, context, catalog, log = console.log, wait = pause }) {
   validateCatalog(catalog);
   const repo = context.repo;
   const existingLabels = await github.paginate(github.rest.issues.listLabelsForRepo, { ...repo, per_page: 100 });
@@ -66,14 +87,17 @@ async function syncBacklog({ github, context, catalog, log = console.log }) {
     if (issuesById.has(story.id)) continue;
     const { data } = await github.rest.issues.create({
       ...repo, title: `[US] ${story.title}`, body: storyBody(story, issuesById),
-      labels: ["type:us", `priority:${story.priority}`, `status:${story.status}`, `area:${story.area}`],
+      labels: ["type:us", `priority:${story.priority}`, `status:${story.status}`, `area:${story.area}`, `domaine:${story.domain}`],
     });
+    await wait(1000);
     issuesById.set(story.id, data);
     created.push(story);
     log(`${story.id}: ${data.html_url}`);
   }
   for (const story of created) {
+    if (!story.dependencies?.length) continue;
     await github.rest.issues.update({ ...repo, issue_number: issuesById.get(story.id).number, body: storyBody(story, issuesById) });
+    await wait(1000);
   }
   log(`Created ${created.length} US; existing Issues (including closed ones) preserved.`);
   return { created: created.length, total: issuesById.size };
@@ -90,4 +114,4 @@ async function syncBacklogWithRetry(input) {
   }
 }
 
-module.exports = { syncBacklog, syncBacklogWithRetry, validateCatalog, storyBody, readCatalog: () => JSON.parse(fs.readFileSync("docs/github-backlog.json", "utf8")) };
+module.exports = { domains, syncBacklog, syncBacklogWithRetry, validateCatalog, storyBody, readCatalog: () => JSON.parse(fs.readFileSync("docs/github-backlog.json", "utf8")) };
