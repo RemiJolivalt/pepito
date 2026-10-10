@@ -42,7 +42,7 @@ jobs:
             const issues = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: 'open', per_page: 100 });
             const issue = issues.find(item => !item.pull_request && item.body?.includes('<!-- biendecider-us:del-5 -->'));
             if (!issue) throw new Error('Delegation risk US del-5 was not found among open Issues.');
-            const marker = '<!-- delegation-risk-p1:server-guard-v3 -->';
+            const marker = '<!-- delegation-risk-p1:admin-policy-v4 -->';
             const labels = issue.labels.map(label => label.name).filter(name => !name.startsWith('status:'));
             labels.push('status:in-progress');
             await github.rest.issues.update({ ...context.repo, issue_number: issue.number, labels: [...new Set(labels)] });
@@ -51,6 +51,6 @@ jobs:
               await github.rest.issues.createComment({
                 ...context.repo,
                 issue_number: issue.number,
-                body: `${marker}\n## Tranche implementee le 2026-10-10\nClassification deterministe par type, avec facteurs explicites (exposition publique, communication externe, donnees de tiers, depense, irreversibilite), motif visible et type inconnu a risque eleve. Aucune action actuellement livree n'est classee faible. Les routes serveur de publication du site et d'envoi Gmail imposent Accompagner/confirmation ; un test appelle directement la route site non validee et verifie le refus sans ExecutionLog. CI, tests unitaires et recette navigateur passes.\n\n**Encore ouvert dans cette US :** decision des deux fondateurs sur les regles par action, persistance des modes autorises et contextes reels de depense/reversibilite. Aucun mode autonome n'est active.\n\nDetails : https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/docs/domaines.md`
+                body: `${marker}\n## Tranche implementee le 2026-10-10\nClassification deterministe par type avec facteurs explicites ; aucun type actuellement livre n'est faible. Les routes serveur de publication du site et d'envoi Gmail imposent toujours la confirmation humaine. Une page admin dediee permet maintenant de regler un niveau de risque persistant par type d'action ; ADMIN_EMAILS explicite est requis et le plancher de securite reste non abaissable. Tests de la page admin, refus non-admin, CI et build passes.\n\n**Activation base encore requise :** sauvegarder la base prototype, verifier DATABASE_URL, puis appliquer la migration additive DelegationRiskSetting comme indique dans docs/delegation-risk-admin.md. Aucun db push n'est execute par le deploiement.\n\n**Encore ouvert dans cette US :** decision des deux fondateurs par type d'action, modes de delegation persistants par entreprise, evaluation des contextes reels de depense/reversibilite et garde de tous les connecteurs avant tout mode autonome.\n\nDetails : https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/docs/delegation-risk-admin.md`
               });
             }
