@@ -6,7 +6,7 @@
 
 Ce document conserve l'historique et les décisions. Les cases ci-dessous reflètent leur date de rédaction ; ne pas les maintenir en parallèle du statut des Issues. Le catalogue initial [github-backlog.json](github-backlog.json) importe uniquement les US de travail restant, sans recréer toutes les livraisons passées. Les changements de statut se font dans GitHub, l'import ne les écrase pas.
 
-Délégation prototype : relecture habituelle par l'autre développeur, fusion autonome traçable à faible risque en cas d'indisponibilité, CI toujours obligatoire ; voir [ci-cd.md](ci-cd.md). Pas de délégation autonome pour sécurité, données, envoi externe ou CI/protections.
+Délégation prototype (décision du 2026-10-10) : fusion autonome traçable après **4 secondes** sans réponse à la demande de relecture, ou indisponibilité annoncée, pour **tous les niveaux de risque**, y compris sécurité, données, envoi externe et CI/protections. PR et CI toujours obligatoires ; relecture différée et risques documentés. Voir [ci-cd.md](ci-cd.md). Les garde-fous des actions métier et la coordination des modifications de base restent inchangés.
 
 Source : cahier des charges proposé par un tiers (OpenAI), challengé et ajusté le 2026-10-05.
 Décision CEO actée : garder l'esprit ("équipe virtuelle IA qui agit, pas qui conseille") sans construire la plateforme complète proposée — cf. [process-build-agentique.md](process-build-agentique.md) pour l'historique des décisions.

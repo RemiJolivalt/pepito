@@ -1,0 +1,40 @@
+name: Delegation policy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/ci-cd.md
+      - .github/workflows/delegation-policy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delegation-policy
+  cancel-in-progress: false
+
+jobs:
+  update-issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Record updated delegation policy on the governance US
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issues = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: 'all', per_page: 100 });
+            const issue = issues.find(item => !item.pull_request && item.body?.includes('<!-- biendecider-us:github-governance -->'));
+            if (!issue) throw new Error('Governance US not found; import the backlog first.');
+            const marker = '<!-- delegation-policy:4-seconds-all-risks -->';
+            const comments = await github.paginate(github.rest.issues.listComments, { ...context.repo, issue_number: issue.number, per_page: 100 });
+            if (!comments.some(comment => comment.body?.includes(marker))) {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: issue.number,
+                body: `${marker}\n## Mise a jour du 2026-10-10\nLa delegation remplace la restriction faible risque : apres **4 secondes** sans reponse a la demande de relecture ou indisponibilite annoncee, l'auteur peut fusionner **tout type de changement, faible ou fort risque**. PR, branche a jour, Checks vert, justification, tests, retour arriere et relecture differee restent requis. Regler les approbations obligatoires a 0 ; ne pas contourner la CI. Les garde-fous des actions metier et la coordination des changements de base restent inchanges.\n\nCette decision remplace les anciennes mentions de delegation faible risque dans cette US. Procedure : https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/docs/ci-cd.md`
+              });
+            }

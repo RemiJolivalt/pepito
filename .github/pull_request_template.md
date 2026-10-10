@@ -14,11 +14,11 @@ Closes #<numero>
 
 ## Risque et deploiement
 
-<!-- Faible risque ou relecture independante obligatoire ? Base/variables/envois impactes ? Retour arriere ? -->
+<!-- Niveau de risque et impacts : base/variables/securite/envois ? Tests et retour arriere ? -->
 
 ## Validation
 
 - [ ] Relecture par l'autre developpeur ou un remplacant
-- [ ] OU delegation faible risque documentee, label review-deferred et reviewer mentionne
+- [ ] OU delegation apres 4 secondes sans reponse ou indisponibilite annoncee, tous niveaux de risque, label review-deferred et reviewer mentionne
 
 <!-- Ne pas fermer une US seulement partiellement livree : utiliser Refs #... au lieu de Closes. -->
