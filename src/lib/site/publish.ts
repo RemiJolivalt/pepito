@@ -33,6 +33,7 @@ function sanitizeHtml(html: string): string {
     .trim();
 }
 import { canExecuteAction } from "@/lib/delegation-risk";
+import { getConfiguredRiskLevels } from "@/lib/delegation-policy";
 
 export async function publishSiteFromProposal(proposalId: string) {
   const proposal = await prisma.agentProposal.findUniqueOrThrow({
@@ -44,7 +45,8 @@ export async function publishSiteFromProposal(proposalId: string) {
     throw new Error("Seule une proposition de contenu de site peut être publiée.");
   }
   const humanApproved = ["validee", "modifiee"].includes(proposal.status);
-  if (!canExecuteAction(proposal.kind, "accompagner", humanApproved)) {
+  const riskSettings = await getConfiguredRiskLevels();
+  if (!canExecuteAction(proposal.kind, "accompagner", humanApproved, { publicExposure: true }, riskSettings[proposal.kind])) {
     throw new Error("La proposition doit être validée par le dirigeant avant publication.");
   }
 

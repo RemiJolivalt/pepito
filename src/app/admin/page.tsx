@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionEmail } from "@/lib/session";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminEmail, isExplicitAdminEmail } from "@/lib/admin";
 import { AppShell } from "@/components/app-shell";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
 import { DeleteCompanyButton } from "./delete-company-button";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -89,6 +90,14 @@ export default async function AdminPage() {
             </div>
           ))}
         </section>
+
+        {isExplicitAdminEmail(ownerEmail) && (
+          <section className="mt-8 border-y border-slate-200 py-5">
+            <h2 className="font-medium">Politique de risque des actions</h2>
+            <p className="mt-1 text-sm text-slate-600">Réglez les niveaux de risque globaux par type d&apos;action.</p>
+            <Link href="/admin/risques" className="mt-3 inline-flex rounded-lg bg-slate-900 px-3 py-2 text-sm text-white">Configurer les risques</Link>
+          </section>
+        )}
 
         {/* Coût total */}
         <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

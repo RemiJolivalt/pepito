@@ -190,3 +190,12 @@ model ExecutionLog {
   result      String // succes, echec
   detail      String?
 }
+
+model DelegationRiskSetting {
+  id          String   @id @default(cuid())
+  actionKind  String   @unique
+  riskLevel   String
+  updatedBy   String
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}

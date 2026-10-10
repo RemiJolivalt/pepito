@@ -39,15 +39,17 @@ export function ProposalCard({
   onExecute,
   busy,
   showAgent = false,
+  riskSettings,
 }: {
   proposal: AgentProposal;
   onDecision: (id: string, status: "validee" | "rejetee") => void;
   onExecute?: (id: string) => void;
   busy?: boolean;
   showAgent?: boolean;
+  riskSettings?: Record<string, string>;
 }) {
   const persona = PERSONAS[proposal.agent as Exclude<AgentKey, "co_ceo">];
-  const risk = assessActionRisk(proposal.kind);
+  const risk = assessActionRisk(proposal.kind, {}, riskSettings?.[proposal.kind]);
   let displayContent = proposal.content;
   if (proposal.kind === "gmail_email") {
     try {

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { assessActionRisk, canExecuteAction, requiresHumanApproval } from "../src/lib/delegation-risk";
+import { assessActionRisk, canExecuteAction, effectiveRiskLevel, requiresHumanApproval } from "../src/lib/delegation-risk";
+import { isAdminEmail, isExplicitAdminEmail } from "../src/lib/admin";
 
 test("risk rules use registered kinds and contextual factors, then fail closed", () => {
   expect(assessActionRisk("piste_croissance").level).toBe("modere");
@@ -17,6 +18,10 @@ test("risk rules use registered kinds and contextual factors, then fail closed",
   expect(assessActionRisk("piste_croissance").factors.thirdPartyData).toBe(true);
   expect(assessActionRisk("gmail_email").factors.irreversible).toBe(true);
   expect(assessActionRisk("site_web_content").factors.publicExposure).toBe(true);
+  expect(effectiveRiskLevel("piste_croissance", "eleve")).toBe("eleve");
+  expect(effectiveRiskLevel("site_web_content", "faible", { publicExposure: true })).toBe("eleve");
+  expect(effectiveRiskLevel("gmail_email", "faible")).toBe("eleve");
+  expect(effectiveRiskLevel("prospect", "faible")).toBe("modere");
   expect(requiresHumanApproval("piste_croissance", "accompagner")).toBe(true);
   expect(requiresHumanApproval("piste_croissance", "deleguer")).toBe(true);
   expect(requiresHumanApproval("prospect", "deleguer")).toBe(true);
@@ -31,4 +36,19 @@ test("risk rules use registered kinds and contextual factors, then fail closed",
   expect(canExecuteAction("piste_croissance", "conseiller", true)).toBe(false);
   expect(canExecuteAction("piste_croissance", "accompagner", false)).toBe(false);
   expect(canExecuteAction("piste_croissance", "accompagner", true)).toBe(true);
+});
+
+test("global risk settings require an explicit admin allowlist even in prototype mode", () => {
+  const previous = process.env.ADMIN_EMAILS;
+  try {
+    delete process.env.ADMIN_EMAILS;
+    expect(isAdminEmail("pilot@example.invalid")).toBe(true);
+    expect(isExplicitAdminEmail("pilot@example.invalid")).toBe(false);
+    process.env.ADMIN_EMAILS = "Founder@biendecider.com, other@example.invalid";
+    expect(isExplicitAdminEmail("founder@biendecider.com")).toBe(true);
+    expect(isExplicitAdminEmail("pilot@example.invalid")).toBe(false);
+  } finally {
+    if (previous === undefined) delete process.env.ADMIN_EMAILS;
+    else process.env.ADMIN_EMAILS = previous;
+  }
 });

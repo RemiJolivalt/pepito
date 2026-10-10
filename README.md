@@ -10,6 +10,8 @@ Développement à deux, CI et déploiement du prototype : **[docs/ci-cd.md](docs
 
 Répartition du travail et statuts des US : **[docs/github-tracking.md](docs/github-tracking.md)** et [GitHub Issues](https://github.com/RemiJolivalt/pepito/issues). Délégation documentée après 4 secondes sans réponse ou indisponibilité annoncée, pour tous les niveaux de risque, sans contourner la PR ni la CI.
 
+Réglages admin du risque et migration de base requise : **[docs/delegation-risk-admin.md](docs/delegation-risk-admin.md)**. Page `/admin/risques`, accessible aux seuls emails explicitement listés dans `ADMIN_EMAILS`.
+
 Copilote IA agentique pour indépendants et TPE (kiné, plombier, installateur solaire, etc.) : des agents spécialisés proposent des actions pour accroître visibilité, communication et démarchage, validées par l'utilisateur avant exécution.
 
 ## Statut
@@ -67,6 +69,8 @@ Les tests utilisent `DATABASE_URL` et `SESSION_SECRET` du fichier `.env`. Ils cr
 4. Premier déploiement : Vercel lance `npm install` (génère le client Prisma) puis `next build` automatiquement.
 5. Créer les tables en prod : exécuter une fois `npx prisma db push` avec la `DATABASE_URL` de production dans l'environnement (copiée depuis l'onglet Storage de Vercel vers votre terminal local — jamais partagée ailleurs).
 6. Chaque fusion sur `main` redéploie automatiquement. Les autres branches ne sont pas déployées. Ne pas pousser directement sur `main` dans le processus d'équipe ; voir [docs/ci-cd.md](docs/ci-cd.md) pour les protections à activer.
+
+Le panneau admin des niveaux de risque utilise une table Prisma ajoutée après la mise en place initiale. Avant de l'utiliser, appliquer la mise à jour additive de schéma à la base prototype selon [docs/delegation-risk-admin.md](docs/delegation-risk-admin.md). La CI et le déploiement ne font jamais de `db push` automatiquement.
 
 ## Décisions clés (V1)
 

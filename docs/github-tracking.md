@@ -40,6 +40,8 @@ Focus produit du 2026-10-10 : **délégation P1**, avec décision fondatrice #35
 
 La première tranche de l'US #39 est livrée : classification statique et affichage du risque ; l'Issue passe en cours jusqu'à validation des règles complètes et de leur application serveur au futur mode Déléguer. Voir la tranche et ses limites dans [domaines.md](domaines.md#tranche-del-5-livrée-le-2026-10-10).
 
+Réglages admin dynamiques (P1) : procédure de rôle explicite, table et déploiement du schéma dans [delegation-risk-admin.md](delegation-risk-admin.md). Ce réglage global ne lève pas la validation humaine et ne remplace pas la décision fondatrice #35.
+
 **Un seul label `status:*` par Issue ouverte.** Retirer l'ancien en changeant d'etape. Les priorites et le statut initial de l'import sont un point de depart, a ajuster ensemble. Une date d'eligibilite fournisseur ne doit pas etre inventee.
 
 ## Routine quotidienne a deux

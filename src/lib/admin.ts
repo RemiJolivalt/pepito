@@ -14,3 +14,13 @@ export function isAdminEmail(email: string | null): boolean {
     .filter(Boolean);
   return allowed.includes(email.toLowerCase());
 }
+
+/** Explicit allowlist check for global controls; never inherit the pilot open-by-default behavior. */
+export function isExplicitAdminEmail(email: string | null): boolean {
+  if (!email || !process.env.ADMIN_EMAILS) return false;
+  return process.env.ADMIN_EMAILS
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(email.toLowerCase());
+}

@@ -45,6 +45,7 @@ La validation humaine demeure le défaut tant que #35 n'est pas approuvée par l
 
 - [x] Classification déterministe par `kind` de proposition, indépendante du contenu généré par le modèle ; justification visible sur la carte de proposition.
 - [x] Facteurs explicites évalués : exposition publique, communication externe, données de tiers, dépense et irréversibilité ; un facteur risqué ne peut pas être neutralisé par le modèle.
+- [x] Les administrateurs explicitement listés par `ADMIN_EMAILS` peuvent régler le niveau par type d'action dans Administration ; réglages globaux persistants et visibles sur les propositions, sans abaisser le plancher automatique.
 - [x] Types inconnus classés à risque élevé par défaut ; les pistes de croissance et prospects sont modérés car ils contiennent des données d'organisations tierces. Aucun type livré n'est faible.
 - [x] Publications, réponses publiques, prospection, contenu de site et email Gmail classés élevés.
 - [x] Le formulaire Gmail signale le risque élevé et l'irréversibilité avant la confirmation d'envoi.
@@ -53,7 +54,7 @@ La validation humaine demeure le défaut tant que #35 n'est pas approuvée par l
 - [ ] Compléter les règles métier (réversibilité, exposition publique, dépense, données de tiers) par action, avec validation des deux fondateurs dans #35.
 - [ ] Persister les modes autorisés par entreprise et type d'action après #35 ; appliquer au serveur le seuil aux autres connecteurs/actions et aux contextes réels de dépense/réversibilité. Au-dessus du seuil, forcer la validation même si l'interface est contournée.
 
-Implémentation : [src/lib/delegation-risk.ts](../src/lib/delegation-risk.ts), affichage : [ProposalCard](../src/components/proposal-card.tsx), gardeurs serveur : publication du site et Gmail, tests : [delegation.spec.ts](../tests/delegation.spec.ts). Aucun mode autonome n'est activé dans le prototype ; ce n'est pas encore le moteur complet d'autorisation de #39.
+Implémentation : [src/lib/delegation-risk.ts](../src/lib/delegation-risk.ts), page admin `/admin/risques`, affichage : [ProposalCard](../src/components/proposal-card.tsx), gardeurs serveur : publication du site et Gmail, tests : [delegation.spec.ts](../tests/delegation.spec.ts). La politique est globale et n'abaisse pas le plancher déterministe. Aucun mode autonome n'est activé dans le prototype ; ce n'est pas encore le moteur complet d'autorisation de #39. Procédure DB/admin : [delegation-risk-admin.md](delegation-risk-admin.md).
 
 ## Trajectoire cible
 

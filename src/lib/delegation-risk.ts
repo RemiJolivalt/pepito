@@ -16,6 +16,50 @@ export type ActionRisk = {
   factors: ActionRiskFactors;
 };
 
+export const RISK_LEVELS = ["faible", "modere", "eleve"] as const;
+export type ConfiguredRiskLevel = (typeof RISK_LEVELS)[number];
+
+export const RISK_ACTIONS = [
+  { kind: "piste_croissance", label: "Piste de croissance" },
+  { kind: "prospect", label: "Prospect professionnel" },
+  { kind: "gbp_update", label: "Mise à jour fiche Google" },
+  { kind: "review_reply", label: "Réponse à un avis" },
+  { kind: "social_post", label: "Publication réseaux sociaux" },
+  { kind: "site_web_content", label: "Publication du site" },
+  { kind: "prospecting_email", label: "Email de prospection" },
+  { kind: "gmail_email", label: "Email Gmail manuel" },
+] as const;
+
+const LEVEL_RANK: Record<ActionRiskLevel, number> = { faible: 0, modere: 1, eleve: 2 };
+
+export function minimumRiskLevel(kind: string, context: Partial<ActionRiskFactors> = {}): ActionRiskLevel {
+  const rule = RULES[kind];
+  const factors = rule
+    ? {
+        publicExposure: rule.factors.publicExposure || context.publicExposure === true,
+        externalCommunication: rule.factors.externalCommunication || context.externalCommunication === true,
+        thirdPartyData: rule.factors.thirdPartyData || context.thirdPartyData === true,
+        spending: rule.factors.spending || context.spending === true,
+        irreversible: rule.factors.irreversible || context.irreversible === true,
+      }
+    : UNKNOWN_RISK_FACTORS;
+  return riskLevelFromFactors(factors);
+}
+
+function riskLevelFromFactors(factors: ActionRiskFactors): ActionRiskLevel {
+  return factors.publicExposure || factors.externalCommunication || factors.spending || factors.irreversible
+    ? "eleve"
+    : factors.thirdPartyData
+      ? "modere"
+      : "faible";
+}
+
+export function effectiveRiskLevel(kind: string, configured?: string | null, context: Partial<ActionRiskFactors> = {}, minimum?: ActionRiskLevel): ActionRiskLevel {
+  const floor = minimum ?? minimumRiskLevel(kind, context);
+  if (!configured || !RISK_LEVELS.includes(configured as ConfiguredRiskLevel)) return floor;
+  return LEVEL_RANK[configured as ConfiguredRiskLevel] >= LEVEL_RANK[floor] ? configured as ConfiguredRiskLevel : floor;
+}
+
 const NO_RISK_FACTORS: ActionRiskFactors = {
   publicExposure: false,
   externalCommunication: false,
@@ -67,7 +111,7 @@ const UNKNOWN_RISK_FACTORS: ActionRiskFactors = {
   irreversible: true,
 };
 
-export function assessActionRisk(kind: string, context: Partial<ActionRiskFactors> = {}): ActionRisk {
+export function assessActionRisk(kind: string, context: Partial<ActionRiskFactors> = {}, configuredLevel?: string | null): ActionRisk {
   const rule = RULES[kind];
   const factors = rule
     ? {
@@ -78,12 +122,8 @@ export function assessActionRisk(kind: string, context: Partial<ActionRiskFactor
         irreversible: rule.factors.irreversible || context.irreversible === true,
       }
     : UNKNOWN_RISK_FACTORS;
-  const level: ActionRiskLevel =
-    factors.publicExposure || factors.externalCommunication || factors.spending || factors.irreversible
-      ? "eleve"
-      : factors.thirdPartyData
-        ? "modere"
-        : "faible";
+  const minimum = riskLevelFromFactors(factors);
+  const level = effectiveRiskLevel(kind, configuredLevel, context, minimum);
   const label = level === "faible" ? "Risque faible" : level === "modere" ? "Risque modéré" : "Risque élevé";
   return {
     level,
@@ -93,9 +133,9 @@ export function assessActionRisk(kind: string, context: Partial<ActionRiskFactor
   };
 }
 
-export function requiresHumanApproval(kind: string, mode: DelegationMode = "accompagner", context: Partial<ActionRiskFactors> = {}): boolean {
+export function requiresHumanApproval(kind: string, mode: DelegationMode = "accompagner", context: Partial<ActionRiskFactors> = {}, configuredLevel?: string | null): boolean {
   if (mode !== "deleguer") return true;
-  return assessActionRisk(kind, context).level !== "faible";
+  return assessActionRisk(kind, context, configuredLevel).level !== "faible";
 }
 
 export function canExecuteAction(
@@ -103,8 +143,9 @@ export function canExecuteAction(
   mode: DelegationMode,
   humanApproved: boolean,
   context: Partial<ActionRiskFactors> = {},
+  configuredLevel?: string | null,
 ): boolean {
   if (mode === "conseiller") return false;
   if (humanApproved) return true;
-  return mode === "deleguer" && !requiresHumanApproval(kind, mode, context);
+  return mode === "deleguer" && !requiresHumanApproval(kind, mode, context, configuredLevel);
 }

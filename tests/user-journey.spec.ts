@@ -8,11 +8,15 @@ import { encryptGmailToken } from "../src/lib/oauth/gmail";
 config({ quiet: true });
 
 const baseURL = process.env.UX_TEST_BASE_URL ?? "http://localhost:3000";
+const adminFixture = process.env.ADMIN_UI_TEST === "1";
 const test = base.extend<{ company: Company }>({
   company: async ({ page }, runFixture) => {
     if (!process.env.DATABASE_URL || !process.env.SESSION_SECRET) throw new Error("DATABASE_URL and SESSION_SECRET are required for UX tests.");
     const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
-    const ownerEmail = `ux-test-${randomUUID()}@example.invalid`;
+    const ownerEmail = adminFixture
+      ? "ux-admin-settings-test@example.invalid"
+      : `ux-test-${randomUUID()}@example.invalid`;
+    if (process.env.ADMIN_UI_TEST === "1") await prisma.company.deleteMany({ where: { ownerEmail } });
     const company = await prisma.company.create({ data: {
       ownerEmail, name: "Atelier Test Parcours", trade: "Artisan", servingArea: "Paris",
       objective: "Développer les demandes de devis", monthlyRevenue: 4000, revenueTarget: 6000, averageClientValue: 500,
@@ -119,6 +123,16 @@ test("Gmail start, refusal and send guards do not contact providers", async ({ p
     headers: { Origin: baseURL }, data: { to: "recipient@example.invalid", subject: "Test", text: "Test", confirmed: true, requestId: randomUUID() },
   });
   expect([409, 503]).toContain(missingConnection.status());
+});
+
+test("risk policy API rejects non-admin sessions", async ({ page }) => {
+  test.skip(process.env.ADMIN_UI_TEST === "1", "Run with the normal local environment to test a non-admin session.");
+  const get = await page.request.get(`${baseURL}/api/admin/delegation-risk`);
+  expect(get.status()).toBe(403);
+  const patch = await page.request.patch(`${baseURL}/api/admin/delegation-risk`, {
+    headers: { Origin: baseURL }, data: { actionKind: "piste_croissance", riskLevel: "eleve" },
+  });
+  expect(patch.status()).toBe(403);
 });
 
 test("OAuth authorization is not advertised as a verified business connection", async ({ page, company }, testInfo) => {
@@ -252,4 +266,52 @@ test("diagnostic to plan, keyboard dialog and responsive navigation", async ({ p
     await expect(page.getByRole("heading", { name: "Diagnostic", exact: true })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("diagnostic-mobile.png"), fullPage: true });
   } finally { await prisma.$disconnect(); }
+});
+
+test("explicit admin can tune global risk level but cannot lower the effective floor", async ({ page, company }) => {
+  test.skip(!adminFixture, "Requires an isolated local server with ADMIN_EMAILS for the fixture admin.");
+  expect(company.ownerEmail).toBe("ux-admin-settings-test@example.invalid");
+  const settings = [{
+    kind: "piste_croissance", label: "Piste de croissance", configuredLevel: null,
+    minimumLevel: "modere", effectiveLevel: "modere", updatedBy: null, updatedAt: null,
+  }];
+  await page.route("**/api/admin/delegation-risk", async (route) => {
+    if (route.request().method() === "GET") return route.fulfill({ json: settings });
+    const input = route.request().postDataJSON();
+    expect(input).toEqual({ actionKind: "piste_croissance", riskLevel: "eleve" });
+    return route.fulfill({ json: {
+      actionKind: input.actionKind, configuredLevel: input.riskLevel, effectiveLevel: "eleve",
+      minimumLevel: "modere", updatedBy: "ux-admin-settings-test@example.invalid", updatedAt: new Date().toISOString(),
+    } });
+  });
+  await page.goto(`${baseURL}/admin/risques`);
+  await expect(page.getByRole("heading", { name: "Politique de risque des actions" })).toBeVisible();
+  const risk = page.getByLabel("Risque pour Piste de croissance");
+  await expect(risk).toHaveValue("modere");
+  await expect(risk.locator('option[value="faible"]')).toBeDisabled();
+  const belowFloor = await page.request.patch(`${baseURL}/api/admin/delegation-risk`, {
+    headers: { Origin: baseURL }, data: { actionKind: "site_web_content", riskLevel: "faible" },
+  });
+  expect(belowFloor.status()).toBe(400);
+  await risk.selectOption("eleve");
+  await expect(page.getByRole("status")).toContainText("Niveau de risque mis à jour");
+  await expect(risk).toHaveValue("eleve");
+    await expect(page.getByText("Niveau effectif : Élevé")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  const otherContext = await page.context().browser()!.newContext();
+  try {
+    const otherPage = await otherContext.newPage();
+    const otherEmail = "ordinary-pilot@example.invalid";
+    const encoded = Buffer.from(otherEmail).toString("base64url");
+    const signature = createHmac("sha256", process.env.SESSION_SECRET!).update(otherEmail).digest("hex");
+    await otherContext.addCookies([{ name: "pepito_session", value: `${encoded}.${signature}`, url: baseURL, httpOnly: true, sameSite: "Lax" }]);
+    const denied = await otherPage.request.get(`${baseURL}/api/admin/delegation-risk`);
+    expect(denied.status()).toBe(403);
+    const deniedUpdate = await otherPage.request.patch(`${baseURL}/api/admin/delegation-risk`, {
+      headers: { Origin: baseURL }, data: { actionKind: "piste_croissance", riskLevel: "eleve" },
+    });
+    expect(deniedUpdate.status()).toBe(403);
+  } finally {
+    await otherContext.close();
+  }
 });

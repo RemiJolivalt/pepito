@@ -4,6 +4,7 @@ import { getSessionEmail } from "@/lib/session";
 import { AppShell } from "@/components/app-shell";
 import { omitPasswordHash } from "@/lib/safe-company";
 import { DashboardClient } from "./dashboard-client";
+import { getConfiguredRiskLevels } from "@/lib/delegation-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function DashboardPage({ searchParams }: {
   const company = await prisma.company.findUnique({ where: { ownerEmail } });
   if (!company || !company.name) redirect("/onboarding");
 
-  const [planItems, chatMessages, proposals] = await Promise.all([
+  const [planItems, chatMessages, proposals, riskSettings] = await Promise.all([
     prisma.actionPlanItem.findMany({
       where: { companyId: company.id },
       orderBy: { createdAt: "asc" },
@@ -31,6 +32,7 @@ export default async function DashboardPage({ searchParams }: {
       where: { companyId: company.id },
       orderBy: { createdAt: "desc" },
     }),
+    getConfiguredRiskLevels(),
   ]);
 
   return (
@@ -40,6 +42,7 @@ export default async function DashboardPage({ searchParams }: {
         initialPlanItems={planItems}
         initialChatMessages={chatMessages}
         initialProposals={proposals}
+        riskSettings={riskSettings}
         initialView={view === "validation" || view === "historique" ? view : "plan"}
       />
     </AppShell>

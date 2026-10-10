@@ -16,12 +16,13 @@ function needsAttention(proposal: AgentProposal) {
     (proposal.kind === "site_web_content" && ["validee", "modifiee"].includes(proposal.status));
 }
 
-export function DashboardClient({ company, initialPlanItems, initialChatMessages, initialProposals, initialView }: {
+export function DashboardClient({ company, initialPlanItems, initialChatMessages, initialProposals, initialView, riskSettings }: {
   company: SafeCompany;
   initialPlanItems: PlanItemWithProposals[];
   initialChatMessages: ChatMessage[];
   initialProposals: AgentProposal[];
   initialView: View;
+  riskSettings: Record<string, string>;
 }) {
   const [planItems, setPlanItems] = useState(initialPlanItems);
   const [proposals, setProposals] = useState(initialProposals);
@@ -246,7 +247,7 @@ export function DashboardClient({ company, initialPlanItems, initialChatMessages
           {validationItems.map((proposal) => (
             <div key={proposal.id}>
               <p className="mb-2 text-xs text-slate-500">{planItems.find((item) => item.id === proposal.planItemId)?.title ?? "Demande ponctuelle à l'équipe"}</p>
-              <ProposalCard proposal={proposal} onDecision={handleDecision} onExecute={handleExecute} busy={locked} showAgent />
+              <ProposalCard proposal={proposal} onDecision={handleDecision} onExecute={handleExecute} busy={locked} showAgent riskSettings={riskSettings} />
             </div>
           ))}
         </section>
@@ -255,7 +256,7 @@ export function DashboardClient({ company, initialPlanItems, initialChatMessages
         <section className="space-y-4 py-5" aria-label="Historique">
           <h2 className="font-medium">Productions traitées</h2>
           {history.length === 0 && <p className="text-sm text-slate-500">Aucune production traitée.</p>}
-          {history.map((proposal) => <ProposalCard key={proposal.id} proposal={proposal} onDecision={handleDecision} busy={locked} showAgent />)}
+          {history.map((proposal) => <ProposalCard key={proposal.id} proposal={proposal} onDecision={handleDecision} busy={locked} showAgent riskSettings={riskSettings} />)}
           <h2 className="pt-4 font-medium">Actions terminées et écartées</h2>
           <ul className="divide-y divide-slate-200">
             {closedItems.map((item) => <li key={item.id} className="py-3 text-sm"><span className="text-xs text-slate-500">{item.status === "ecarte" ? "Écartée" : "Traitée"}</span><p className="font-medium">{item.title}</p>{item.feedback && <p className="mt-1 text-slate-500">{item.feedback}</p>}</li>)}
