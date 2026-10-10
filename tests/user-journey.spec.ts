@@ -166,6 +166,7 @@ test("single validation queue, persistent decisions, publishing and error recove
     await expect(page.getByText("toute action réelle reste soumise à votre validation.", { exact: true })).toHaveCount(0);
     await page.locator("article summary").filter({ hasText: "Risque élevé" }).first().click();
     await expect(page.getByText("Dans ce prototype, toute action réelle reste soumise à votre validation.", { exact: true }).first()).toBeVisible();
+    await expect(page.locator("article").filter({ hasText: "Publication issue du plan" }).getByText("Exposition publique", { exact: true })).toBeVisible();
     const manual = page.locator("article").filter({ hasText: "Demande manuelle" });
     await page.route("**/api/proposals/*", async (route) => {
       if (route.request().method() === "PATCH") await route.fulfill({ status: 500, json: { error: "Décision non enregistrée" } });

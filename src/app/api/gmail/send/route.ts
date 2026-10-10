@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSessionCompany } from "@/lib/session";
 import { buildGmailMessage, decryptGmailAccount, decryptGmailToken, encryptGmailToken, gmailClient, gmailMessageSchema, isGmailConfigured } from "@/lib/oauth/gmail";
+import { canExecuteAction } from "@/lib/delegation-risk";
 
 const inputSchema = gmailMessageSchema.extend({ requestId: z.uuid() });
 
@@ -13,6 +14,7 @@ export async function POST(request: NextRequest) {
   if (!isGmailConfigured()) return NextResponse.json({ error: "Gmail non configuré côté serveur." }, { status: 503 });
   const input = inputSchema.safeParse(await request.json().catch(() => null));
   if (!input.success) return NextResponse.json({ error: "Destinataire, objet, message et confirmation requis." }, { status: 400 });
+  if (!canExecuteAction("gmail_email", "accompagner", input.data.confirmed)) return NextResponse.json({ error: "Validation humaine requise pour cet email." }, { status: 403 });
   const connection = await prisma.channelConnection.findUnique({ where: { companyId_channel: { companyId: company.id, channel: "gmail" } } });
   if (connection?.status !== "connecte" || !connection.accessToken || !connection.refreshToken) return NextResponse.json({ error: "Autorisez Gmail avant l'envoi." }, { status: 409 });
   const proposalId = `gmail-${input.data.requestId}`;

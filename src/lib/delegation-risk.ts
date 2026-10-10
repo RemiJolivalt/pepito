@@ -1,64 +1,110 @@
 export type ActionRiskLevel = "faible" | "modere" | "eleve";
+export type DelegationMode = "conseiller" | "accompagner" | "deleguer";
+
+export type ActionRiskFactors = {
+  publicExposure: boolean;
+  externalCommunication: boolean;
+  thirdPartyData: boolean;
+  spending: boolean;
+  irreversible: boolean;
+};
 
 export type ActionRisk = {
   level: ActionRiskLevel;
   label: string;
   explanation: string;
+  factors: ActionRiskFactors;
 };
 
-const RULES: Record<string, ActionRisk> = {
+const NO_RISK_FACTORS: ActionRiskFactors = {
+  publicExposure: false,
+  externalCommunication: false,
+  thirdPartyData: false,
+  spending: false,
+  irreversible: false,
+};
+
+const RULES: Record<string, { factors: ActionRiskFactors; explanation: string }> = {
   piste_croissance: {
-    level: "faible",
-    label: "Risque faible",
+    factors: NO_RISK_FACTORS,
     explanation: "Piste informative interne ; aucune publication, dépense ou prise de contact.",
   },
   prospect: {
-    level: "modere",
-    label: "Risque modéré",
+    factors: { ...NO_RISK_FACTORS, thirdPartyData: true },
     explanation: "Ajoute des informations professionnelles sur une organisation tierce ; vérifier la source et la pertinence.",
   },
   gbp_update: {
-    level: "eleve",
-    label: "Risque élevé",
+    factors: { ...NO_RISK_FACTORS, publicExposure: true },
     explanation: "Peut modifier publiquement la fiche d'une entreprise sur Google.",
   },
   review_reply: {
-    level: "eleve",
-    label: "Risque élevé",
+    factors: { ...NO_RISK_FACTORS, publicExposure: true, thirdPartyData: true },
     explanation: "Réponse publique à un avis ; impact réputationnel et données d'un tiers.",
   },
   social_post: {
-    level: "eleve",
-    label: "Risque élevé",
+    factors: { ...NO_RISK_FACTORS, publicExposure: true },
     explanation: "Contenu destiné à être publié publiquement au nom de l'entreprise.",
   },
   site_web_content: {
-    level: "eleve",
-    label: "Risque élevé",
+    factors: { ...NO_RISK_FACTORS, publicExposure: true },
     explanation: "Peut conduire à publier ou remplacer le site visible par les clients.",
   },
   prospecting_email: {
-    level: "eleve",
-    label: "Risque élevé",
+    factors: { ...NO_RISK_FACTORS, externalCommunication: true, thirdPartyData: true },
     explanation: "Message de prospection destiné à un tiers ; conformité et réputation à vérifier.",
   },
   gmail_email: {
-    level: "eleve",
-    label: "Risque élevé",
+    factors: { ...NO_RISK_FACTORS, externalCommunication: true, thirdPartyData: true },
     explanation: "Envoie un message externe depuis Gmail au nom du dirigeant.",
   },
 };
 
-const UNKNOWN_RISK: ActionRisk = {
-  level: "eleve",
-  label: "Risque élevé",
-  explanation: "Type d'action non évalué ; validation humaine requise par prudence.",
+const UNKNOWN_RISK_FACTORS: ActionRiskFactors = {
+  publicExposure: true,
+  externalCommunication: true,
+  thirdPartyData: true,
+  spending: true,
+  irreversible: true,
 };
 
-export function assessActionRisk(kind: string): ActionRisk {
-  return RULES[kind] ?? UNKNOWN_RISK;
+export function assessActionRisk(kind: string, context: Partial<ActionRiskFactors> = {}): ActionRisk {
+  const rule = RULES[kind];
+  const factors = rule
+    ? {
+        publicExposure: rule.factors.publicExposure || context.publicExposure === true,
+        externalCommunication: rule.factors.externalCommunication || context.externalCommunication === true,
+        thirdPartyData: rule.factors.thirdPartyData || context.thirdPartyData === true,
+        spending: rule.factors.spending || context.spending === true,
+        irreversible: rule.factors.irreversible || context.irreversible === true,
+      }
+    : UNKNOWN_RISK_FACTORS;
+  const level: ActionRiskLevel =
+    factors.publicExposure || factors.externalCommunication || factors.spending || factors.irreversible
+      ? "eleve"
+      : factors.thirdPartyData
+        ? "modere"
+        : "faible";
+  const label = level === "faible" ? "Risque faible" : level === "modere" ? "Risque modéré" : "Risque élevé";
+  return {
+    level,
+    label,
+    explanation: rule?.explanation ?? "Type d'action non évalué ; validation humaine requise par prudence.",
+    factors,
+  };
 }
 
-export function requiresHumanApproval(kind: string): boolean {
-  return assessActionRisk(kind).level !== "faible";
+export function requiresHumanApproval(kind: string, mode: DelegationMode = "accompagner", context: Partial<ActionRiskFactors> = {}): boolean {
+  if (mode !== "deleguer") return true;
+  return assessActionRisk(kind, context).level !== "faible";
+}
+
+export function canExecuteAction(
+  kind: string,
+  mode: DelegationMode,
+  humanApproved: boolean,
+  context: Partial<ActionRiskFactors> = {},
+): boolean {
+  if (mode === "conseiller") return false;
+  if (humanApproved) return true;
+  return mode === "deleguer" && !requiresHumanApproval(kind, mode, context);
 }

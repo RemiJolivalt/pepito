@@ -44,13 +44,15 @@ La validation humaine demeure le défaut tant que #35 n'est pas approuvée par l
 ### Tranche `del-5` livrée le 2026-10-10
 
 - [x] Classification déterministe par `kind` de proposition, indépendante du contenu généré par le modèle ; justification visible sur la carte de proposition.
+- [x] Facteurs explicites évalués : exposition publique, communication externe, données de tiers, dépense et irréversibilité ; un facteur risqué ne peut pas être neutralisé par le modèle.
 - [x] Types inconnus classés à risque élevé par défaut ; seuls `piste_croissance` est faible et `prospect` modéré dans le catalogue actuel.
 - [x] Publications, réponses publiques, prospection, contenu de site et email Gmail classés élevés.
-- [x] Tests du classificateur et vérification navigateur du badge sur des propositions à risque élevé.
+- [x] Le serveur exige le mode `Accompagner` et une confirmation humaine pour publier un site ou envoyer un Gmail ; l'interface rend les facteurs lisibles.
+- [x] Tests du classificateur, des décisions de mode et vérification navigateur du badge/facteur sur une proposition à risque élevé.
 - [ ] Compléter les règles métier (réversibilité, exposition publique, dépense, données de tiers) par action, avec validation des deux fondateurs dans #35.
-- [ ] Appliquer le seuil au futur mode `Déléguer` côté serveur : au-dessus du seuil, forcer la validation même si l'interface est contournée. Aucun mode autonome n'est activé par cette tranche ; aujourd'hui toute action réelle reste à confirmer.
+- [ ] Persister les modes autorisés par entreprise et type d'action après #35 ; appliquer au serveur le seuil aux autres connecteurs/actions et aux contextes réels de dépense/réversibilité. Au-dessus du seuil, forcer la validation même si l'interface est contournée.
 
-Implémentation : [src/lib/delegation-risk.ts](../src/lib/delegation-risk.ts), affichage : [ProposalCard](../src/components/proposal-card.tsx), tests : [delegation.spec.ts](../tests/delegation.spec.ts). La PR classe les types connus ; ce n'est pas encore le moteur complet d'autorisation de #39.
+Implémentation : [src/lib/delegation-risk.ts](../src/lib/delegation-risk.ts), affichage : [ProposalCard](../src/components/proposal-card.tsx), gardeurs serveur : publication du site et Gmail, tests : [delegation.spec.ts](../tests/delegation.spec.ts). Aucun mode autonome n'est activé dans le prototype ; ce n'est pas encore le moteur complet d'autorisation de #39.
 
 ## Trajectoire cible
 

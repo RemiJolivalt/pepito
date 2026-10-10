@@ -25,6 +25,14 @@ const KIND_LABELS: Record<string, string> = {
   gmail_email: "Email Gmail manuel",
 };
 
+const RISK_FACTOR_LABELS: Record<keyof ReturnType<typeof assessActionRisk>["factors"], string> = {
+  publicExposure: "Exposition publique",
+  externalCommunication: "Communication externe",
+  thirdPartyData: "Données d'un tiers",
+  spending: "Dépense engagée",
+  irreversible: "Action difficile à annuler",
+};
+
 export function ProposalCard({
   proposal,
   onDecision,
@@ -82,6 +90,12 @@ export function ProposalCard({
           <span>Pourquoi ?</span>
         </summary>
         <p className="mt-1 max-w-prose text-xs text-slate-600">{risk.explanation}</p>
+        <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+          {(Object.entries(risk.factors) as [keyof typeof risk.factors, boolean][])
+            .filter(([, applies]) => applies)
+            .map(([factor]) => <li key={factor}>{RISK_FACTOR_LABELS[factor]}</li>)}
+          {!Object.values(risk.factors).some(Boolean) && <li>Aucun facteur aggravant identifié</li>}
+        </ul>
         <p className="mt-1 text-xs font-medium text-slate-700">Dans ce prototype, toute action réelle reste soumise à votre validation.</p>
       </details>
       <details className="mt-1">

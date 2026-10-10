@@ -31,7 +31,7 @@ jobs:
             const issues = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: 'open', per_page: 100 });
             const issue = issues.find(item => !item.pull_request && item.body?.includes('<!-- biendecider-us:del-5 -->'));
             if (!issue) throw new Error('Delegation risk US del-5 was not found among open Issues.');
-            const marker = '<!-- delegation-risk-p1:deterministic-kind-v1 -->';
+            const marker = '<!-- delegation-risk-p1:server-guard-v2 -->';
             const labels = issue.labels.map(label => label.name).filter(name => !name.startsWith('status:'));
             labels.push('status:in-progress');
             await github.rest.issues.update({ ...context.repo, issue_number: issue.number, labels: [...new Set(labels)] });
@@ -40,6 +40,6 @@ jobs:
               await github.rest.issues.createComment({
                 ...context.repo,
                 issue_number: issue.number,
-                body: `${marker}\n## Tranche implementee le 2026-10-10\nClassification deterministe selon le type de proposition, motif visible, types inconnus a risque eleve. Tests unitaires et parcours navigateur passes.\n\n**Encore ouvert dans cette US :** valider les regles par action (reversibilite, exposition publique, depense, donnees de tiers) avec les deux fondateurs, puis forcer le seuil cote serveur dans le futur mode Deleguer. Pour l'instant, la validation humaine reste obligatoire pour toute action reelle ; cette tranche n'active aucune autonomie.\n\nDetails : https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/docs/domaines.md`
+                body: `${marker}\n## Tranche implementee le 2026-10-10\nClassification deterministe par type, avec facteurs explicites (exposition publique, communication externe, donnees de tiers, depense, irreversibilite), motif visible et type inconnu a risque eleve. Le site et Gmail passent par le garde serveur Accompagner et exigent une confirmation humaine. Tests unitaires et parcours navigateur passes.\n\n**Encore ouvert dans cette US :** decision des deux fondateurs sur les regles par action, persistance des modes autorises et application des facteurs de depense/reversibilite et du seuil serveur a tous les connecteurs. Aucun mode autonome n'est active.\n\nDetails : https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/docs/domaines.md`
               });
             }
