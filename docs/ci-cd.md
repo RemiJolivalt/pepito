@@ -8,7 +8,7 @@
 
 ```text
 main à jour → petite branche → travail local → pull request vers main
-           → CI verte + relecture rapide → Squash and merge
+           → CI verte + relecture (ou délégation faible risque tracée) → Squash and merge
            → Vercel déploie main → vérification sur biendecider.com
 ```
 
@@ -29,7 +29,7 @@ Un seul job CI, cache du téléchargement npm et annulation des anciennes exécu
 
 La CI utilise une URL PostgreSQL fictive pour compiler/générer Prisma, **pas la base du prototype**. Aucun serveur PostgreSQL n'est démarré. Si un build tente de lire cette base, il échoue : une compilation ne doit pas modifier ni dépendre des données partagées.
 
-Les tests `test:gmail` vérifient scope, chiffrement et MIME sans contacter Google. Les tests navigateur `test:brand` et `test:ux` restent des contrôles locaux ciblés, pas des étapes CI obligatoires pour chaque PR. Le build inclut TypeScript : pas de second typecheck redondant dans la CI. Les avertissements ESLint sont visibles mais non bloquants ; les erreurs bloquent.
+Les tests `test:gmail` vérifient scope, chiffrement et MIME sans contacter Google. Les tests du script d'import du backlog vérifient le catalogue et l'absence de doublons sans appeler GitHub. Les tests navigateur `test:brand` et `test:ux` restent des contrôles locaux ciblés, pas des étapes CI obligatoires pour chaque PR. Le build inclut TypeScript : pas de second typecheck redondant dans la CI. Les avertissements ESLint sont visibles mais non bloquants ; les erreurs bloquent.
 
 ## Réglages à faire une seule fois
 
@@ -40,7 +40,7 @@ Ces réglages de comptes ne sont pas appliqués par les fichiers du dépôt. Un 
 1. Donner aux deux développeurs l'accès au dépôt `RemiJolivalt/pepito` et vérifier que GitHub Actions est autorisé.
 2. Après la première exécution de CI, aller dans **Settings > Rules > Rulesets**, ou **Branches > Branch protection rules**, et cibler `main`.
 3. Exiger une pull request et le contrôle obligatoire **`Checks`** du workflow **`CI`** (choisir le contrôle apparu dans l'interface). Exiger une branche à jour avant fusion : après mise à jour avec `main`, les contrôles doivent repasser.
-4. Exiger **une approbation**, celle de l'autre développeur ; invalider les approbations après de nouveaux commits. Aucun comité de validation supplémentaire.
+4. Pour le prototype avec délégation, régler le nombre d'approbations obligatoires à **0** : la PR et `Checks` restent obligatoires. Demander normalement une relecture à l'autre développeur ; la procédure ci-dessous autorise une fusion autonome seulement à faible risque. Cette distinction de risque est une règle d'équipe, pas un verrou GitHub automatique.
 5. Interdire force-push et suppression de `main`, et appliquer les règles aussi aux administrateurs si l'option existe. Ne pas configurer de bypass pour les changements ordinaires.
 6. Activer **Squash merging** et la suppression automatique des branches fusionnées dans **Settings > General**. Un changement = un commit lisible dans `main`.
 
@@ -87,11 +87,41 @@ git push -u origin feat/description-courte
 
 Ouvrir la PR vers `main`. Indiquer ce qui change, comment c'est testé et si un réglage Vercel ou une modification de base est nécessaire. Pour un changement UI, ajouter une capture desktop/mobile ; pour OAuth ou l'envoi email, préciser si les appels ont été simulés ou réellement effectués.
 
+Lier l'US avec `Closes #numero` seulement si tous ses critères sont livrés, sinon `Refs #numero`. Répartition du travail, statuts et import : [github-tracking.md](github-tracking.md). Le modèle de PR est proposé automatiquement par GitHub.
+
 Pour `test:brand`, lancer le serveur et Chromium comme indiqué dans [../README.md](../README.md). `test:ux` crée et supprime des entreprises de test dans la base pointée par `DATABASE_URL` : **ne pas le lancer automatiquement sur la base du prototype**. Utiliser une base locale/de test disponible, ou coordonner explicitement une exécution contrôlée. La CI ne lance jamais cette suite.
 
 ### 3. Relire et fusionner
 
 L'autre développeur fait une relecture courte et approuve. Attendre **Checks vert** ; si `main` a évolué, mettre à jour la branche via GitHub, résoudre les conflits et attendre la nouvelle CI. Fusionner avec **Squash and merge**. Le développeur qui fusionne vérifie le déploiement Vercel et le parcours touché sur le domaine. Le second repart de `main` à jour pour son prochain changement.
+
+### 4. Délégation en cas d'indisponibilité
+
+**Relecture normale d'abord**, mais pas de blocage systématique à deux. Délégation permanente et réciproque sur les changements à faible risque, sans bypass de CI ni push direct sur `main`.
+
+| Situation | Qui valide/fusionne ? |
+|---|---|
+| L'autre développeur est disponible | Relecture courte par l'autre, puis fusion avec Checks vert. |
+| Un remplaçant est désigné | Il relit la PR ; donner l'accès GitHub nécessaire, sans partager un compte. |
+| Indisponibilité annoncée, ou aucune réponse après 4 heures ouvrées | L'auteur peut fusionner une PR à faible risque, avec les conditions ci-dessous. Le silence n'autorise pas les changements à risque. |
+| Sécurité, OAuth/permissions/tokens, envoi externe, base de données, facturation, CI/protections ou action destructive | Relecture humaine indépendante obligatoire selon la règle d'équipe. Attendre ou désigner un remplaçant ; pas de fusion autonome. |
+
+Faible risque : documentation, texte, CSS/UI sans changement de droits ni d'envoi, correctif local couvert par un test et facilement réversible. Si le risque est incertain, demander une relecture.
+
+Avant fusion autonome : PR petite, liée à son Issue, branche à jour, **Checks vert sur le dernier commit**, tests ciblés et plan de retour arrière. Ajouter le label `review-deferred`, mentionner l'autre développeur et laisser ce commentaire :
+
+```text
+Fusion par délégation prototype
+Motif : indisponibilité annoncée / absence de réponse depuis <date et heure>.
+Risque faible : <justification>.
+Vérification : <tests, captures, lien CI>.
+Retour arrière : <revert/rollback compatible>.
+Relecture différée demandée à @<login> au prochain jour ouvré disponible.
+```
+
+Après fusion, l'auteur vérifie Vercel et le parcours touché ; l'autre développeur relit au prochain jour ouvré disponible et retire `review-deferred` après son commentaire. Une anomalie ouvre une Issue de correction. Un agent peut aider à la relecture, mais son avis n'est pas une approbation humaine GitHub.
+
+**Limite assumée :** avec 0 approbation obligatoire, GitHub ne bloque pas techniquement une fusion à risque. Si cette discipline ne suffit plus, revenir à 1 approbation obligatoire et prévoir un troisième reviewer ; ne pas accorder un bypass global qui contournerait aussi `Checks`.
 
 Pas de push de branche après fusion pour republier : la fusion déclenche déjà le déploiement. Les commits de documentation sur `main` peuvent aussi déclencher un build Vercel ; c'est assumé pour conserver un processus uniforme.
 
@@ -122,8 +152,8 @@ Une urgence ne doit pas devenir le chemin normal. Si un administrateur utilise e
 - [x] Workflow CI versionné, un job court, sans secrets réels.
 - [x] Déploiements Git limités à `main`, cron existant conservé.
 - [x] Guide commun et lien depuis le README.
-- [ ] Administrateur : activer les protections `main`, contrôle Checks obligatoire et une approbation.
+- [ ] Administrateur : activer les protections `main`, contrôle Checks obligatoire et 0 approbation obligatoire pour la délégation prototype ; appliquer la règle de risque ci-dessus.
 - [ ] Administrateur : vérifier Node 24, branche Production main et accès Vercel des deux auteurs.
-- [ ] Confirmer le premier Checks GitHub vert et le déploiement de main réussi.
+- [x] Première CI et déploiement de main réussis sur le commit `0c9d578` le 2026-10-10.
 
 La configuration versionnée définit le processus ; les cases d'administration doivent être cochées après vérification dans les consoles, pas déduites d'un commit.

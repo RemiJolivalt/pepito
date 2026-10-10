@@ -8,6 +8,8 @@ Configuration du domaine, de la messagerie et recette : [docs/domain-email-setup
 
 Développement à deux, CI et déploiement du prototype : **[docs/ci-cd.md](docs/ci-cd.md)**. PR courte vers `main`, contrôles GitHub obligatoires après configuration des protections, puis déploiement Vercel automatique. Un seul environnement partagé ; pas de previews de branches.
 
+Répartition du travail et statuts des US : **[docs/github-tracking.md](docs/github-tracking.md)** et [GitHub Issues](https://github.com/RemiJolivalt/pepito/issues). Délégation faible risque documentée en cas d'indisponibilité, sans contourner la CI.
+
 Copilote IA agentique pour indépendants et TPE (kiné, plombier, installateur solaire, etc.) : des agents spécialisés proposent des actions pour accroître visibilité, communication et démarchage, validées par l'utilisateur avant exécution.
 
 ## Statut

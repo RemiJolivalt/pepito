@@ -1,0 +1,40 @@
+name: Backlog Issues
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/github-backlog.json
+      - scripts/sync-backlog.cjs
+      - .github/workflows/backlog.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backlog-issues
+  cancel-in-progress: false
+
+jobs:
+  import:
+    name: Import missing US
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Validate importer
+        run: node --test scripts/sync-backlog.test.cjs
+      - name: Create missing Issues without overwriting existing work
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { syncBacklog, readCatalog } = require(`${process.env.GITHUB_WORKSPACE}/scripts/sync-backlog.cjs`);
+            const result = await syncBacklog({ github, context, catalog: readCatalog(), log: core.info });
+            await core.summary.addHeading('Backlog Issues').addRaw(`Created ${result.created} US. Existing Issues preserved.`).write();

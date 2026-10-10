@@ -36,5 +36,7 @@ jobs:
         run: npm run lint
       - name: Gmail tests (no network)
         run: npm run test:gmail
+      - name: Backlog importer tests (no network)
+        run: node --test scripts/sync-backlog.test.cjs
       - name: Production build and TypeScript
         run: npm run build

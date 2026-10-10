@@ -1,5 +1,13 @@
 # Backlog MVP — rôle Business Analyst / CEO
 
+## Suivi courant depuis le 2026-10-10
+
+**GitHub Issues est la source de vérité pour les US, responsables, priorités et statuts** : [US ouvertes](https://github.com/RemiJolivalt/pepito/issues?q=is%3Aissue%20is%3Aopen%20label%3Atype%3Aus). Répartition et mise à jour : [github-tracking.md](github-tracking.md).
+
+Ce document conserve l'historique et les décisions. Les cases ci-dessous reflètent leur date de rédaction ; ne pas les maintenir en parallèle du statut des Issues. Le catalogue initial [github-backlog.json](github-backlog.json) importe uniquement les US de travail restant, sans recréer toutes les livraisons passées. Les changements de statut se font dans GitHub, l'import ne les écrase pas.
+
+Délégation prototype : relecture habituelle par l'autre développeur, fusion autonome traçable à faible risque en cas d'indisponibilité, CI toujours obligatoire ; voir [ci-cd.md](ci-cd.md). Pas de délégation autonome pour sécurité, données, envoi externe ou CI/protections.
+
 Source : cahier des charges proposé par un tiers (OpenAI), challengé et ajusté le 2026-10-05.
 Décision CEO actée : garder l'esprit ("équipe virtuelle IA qui agit, pas qui conseille") sans construire la plateforme complète proposée — cf. [process-build-agentique.md](process-build-agentique.md) pour l'historique des décisions.
 

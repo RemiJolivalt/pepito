@@ -1,0 +1,110 @@
+[
+  {
+    "id": "github-governance", "title": "Proteger main et activer la delegation prototype", "priority": "p0", "status": "ready", "area": "external",
+    "story": "En tant que developpeur, je veux une PR et une CI obligatoires avec delegation faible risque pour ne pas bloquer le prototype.",
+    "acceptance": ["main exige une PR, Checks vert et branche a jour ; force-push et suppression interdits", "0 approbation obligatoire configuree avec procedure de delegation documentee", "Les deux auteurs peuvent deployer via Vercel ; Node 24 et Production Branch main confirmes"],
+    "validation": "Verifier les reglages GitHub/Vercel et une PR de faible risque ; joindre les preuves sans secrets.", "scope": "Configuration administrateur ; CI deja livree. Pas de bypass des controles."
+  },
+  {
+    "id": "legal", "title": "Completer et faire valider les documents legaux", "priority": "p0", "status": "ready", "area": "external",
+    "story": "En tant qu'utilisateur, je veux connaitre l'editeur, le traitement et la conservation de mes donnees.",
+    "acceptance": ["Identite legale reelle et contact renseignes", "Base legale, conservation et droits valides avec juriste/DPO", "Politique decrit fidelement Gmail, GBP et Meta ; validation tracee avant retrait du statut brouillon"],
+    "validation": "Relecture humaine competente et verification des URLs publiques.", "scope": "Ne pas inventer d'identite legale ni declarer une certification non obtenue."
+  },
+  {
+    "id": "support-domain", "title": "Valider le contact OVH et la recette du domaine", "priority": "p1", "status": "ready", "area": "external",
+    "story": "En tant qu'utilisateur, je veux pouvoir contacter BienDecider et acceder au domaine HTTPS.",
+    "acceptance": ["contact@biendecider.com recu depuis deux expediteurs distincts", "Domaine nu et HTTP redirigent vers www HTTPS avec conservation du chemin", "Login et site publie fonctionnent sur le domaine ; adresse support Google selectionnable verifiee"],
+    "validation": "Recette domaine et messages de test ; ne pas publier le Gmail personnel.", "scope": "DNS web declare configure ; tester la reception ne configure pas l'envoi."
+  },
+  {
+    "id": "brand-logo", "title": "Finaliser le logo et l'icone OAuth BienDecider", "priority": "p2", "status": "ready", "area": "dev",
+    "story": "En tant qu'utilisateur, je veux reconnaitre BienDecider sur le site et les ecrans de consentement.",
+    "acceptance": ["Logo choisi et assets utilisables dans le site", "Icone Meta 1024x1024 disponible", "Identite reportee dans Google/Meta et verifiee desktop/mobile"],
+    "validation": "Validation du proprietaire et captures de l'identite.", "scope": "Pas de refonte globale de l'interface."
+  },
+  {
+    "id": "gmail-live", "title": "Activer et valider Gmail sur le prototype", "priority": "p1", "status": "ready", "area": "external", "dependencies": ["github-governance"],
+    "story": "En tant que dirigeant pilote, je veux autoriser mon Gmail et envoyer un message confirme.",
+    "acceptance": ["Secret divulgue remplace et variables Gmail/chiffrement saisies directement dans Vercel", "Gmail API, scopes et utilisateurs test configures", "Consentement, adresse expediteur, envoi reel et deconnexion verifies ; resultat de livraison documente"],
+    "validation": "Email manuel a une adresse controlee, sans secret dans l'Issue ; tester refus et retrait.", "scope": "Code Gmail deja livre. Aucun envoi automatique ni prospection activee."
+  },
+  {
+    "id": "meta-setup", "title": "Preparer le Business Portfolio et l'app Meta", "priority": "p1", "status": "ready", "area": "external",
+    "story": "En tant qu'editeur, je veux une app Meta de test pour avancer sans attendre GBP.",
+    "acceptance": ["Business Portfolio et app BienDecider relies", "Facebook Login et callback du domaine configures", "Business Verification et roles test prepares selon le dashboard ; variables privees configurees"],
+    "validation": "Verifier les reglages et un consentement de compte test sans publication automatique.", "scope": "Facebook Login retenu ; App Review de publication dans une US distincte."
+  },
+  {
+    "id": "oauth-encryption", "title": "Chiffrer les jetons GBP et Meta et filtrer les logs", "priority": "p0", "status": "ready", "area": "dev",
+    "story": "En tant qu'entreprise, je veux proteger mes autorisations externes en base et dans les logs.",
+    "acceptance": ["Jetons GBP/Meta chiffres avec cle serveur dediee et association entreprise", "Migration des jetons existants et procedure de rotation documentees", "Logs filtres sans tokens/secrets et tests d'isolation/alteration"],
+    "validation": "Tests avec valeurs fictives ; migration reversible sur base controlee.", "scope": "Gmail dispose deja d'un chiffrement ; ne pas modifier sa cle sans migration."
+  },
+  {
+    "id": "oauth-lifecycle", "title": "Gerer renouvellement et erreurs des jetons GBP/Meta", "priority": "p1", "status": "backlog", "area": "dev", "dependencies": ["oauth-encryption"],
+    "story": "En tant qu'entreprise, je veux un acces maintenu et un message clair si une nouvelle autorisation est necessaire.",
+    "acceptance": ["Renouvellement specifique au fournisseur et protection contre les appels concurrents", "Refresh token conserve seulement pour la meme identite lors d'une reautorisation", "Expiration, refus et revocation testes ; limite Google Testing 7 jours expliquee"],
+    "validation": "Tests mockes des erreurs fournisseur et du renouvellement.", "scope": "Aucun contournement des quotas ni de l'expiration du consentement."
+  },
+  {
+    "id": "meta-resources", "title": "Verifier les scopes Meta et choisir Page/Instagram", "priority": "p1", "status": "backlog", "area": "dev", "dependencies": ["meta-setup", "oauth-encryption"],
+    "story": "En tant qu'entreprise, je veux connecter uniquement ma Page et mon compte Instagram professionnel.",
+    "acceptance": ["Version Graph et noms exacts des permissions verifies sur le flux Facebook Login", "Pages listees, selection explicite et compte Instagram lie identifie", "IDs et jeton de Page persistes par entreprise ; deux canaux non declares connectes sans verification"],
+    "validation": "Tests multi-entreprises et recette compte Meta test ; justifier chaque scope.", "scope": "Pas d'Instagram Login parallele ; pas de publication dans cette US."
+  },
+  {
+    "id": "oauth-disconnect", "title": "Completer la deconnexion et les etats GBP/Meta", "priority": "p1", "status": "backlog", "area": "dev", "dependencies": ["oauth-encryption", "oauth-lifecycle"],
+    "story": "En tant qu'utilisateur, je veux retirer l'acces externe et comprendre l'etat reel de ma connexion.",
+    "acceptance": ["Connexion en cours, verifiee, erreur et reautorisation coherentes", "Revocation fournisseur et effacement local isoles par entreprise", "CSRF, refus, expiration et acces croises testes ; aucun secret expose"],
+    "validation": "Tests routes et navigateur avec fournisseurs simules puis recette test.", "scope": "Gmail deja deconnectable ; ne pas annoncer les ressources connectees sans verification."
+  },
+  {
+    "id": "meta-publish", "title": "Publier une production validee sur Meta", "priority": "p1", "status": "backlog", "area": "dev", "dependencies": ["meta-resources", "oauth-lifecycle", "oauth-disconnect"],
+    "story": "En tant qu'entreprise, je veux publier sur ma Page ou Instagram apres confirmation explicite.",
+    "acceptance": ["Publication reellement liee a une proposition validee et une ressource selectionnee", "Double clic, erreurs et resultat incertain geres sans double publication", "Journal d'execution sans secrets et recette de bout en bout sur compte test"],
+    "validation": "Tests mockes et publication controlee ; preuve fournisseur et resultat visible.", "scope": "Aucune publication autonome. Format media et limitations Instagram explicites."
+  },
+  {
+    "id": "meta-review", "title": "Soumettre le dossier Tech Provider Meta", "priority": "p1", "status": "blocked", "area": "external", "dependencies": ["meta-setup", "meta-publish", "legal", "support-domain", "brand-logo"],
+    "story": "En tant qu'editeur, je veux obtenir Advanced Access pour servir plusieurs entreprises.",
+    "acceptance": ["Business Verification complete selon les exigences Meta", "Justification et video reelle de chaque permission avec compte reviewer", "App Review soumise puis decision et demandes complementaires tracees"],
+    "validation": "Dossier reviewer reproductible, aucune permission non demontrable.", "scope": "Delais et approbation Meta hors controle du developpement."
+  },
+  {
+    "id": "gbp-access", "title": "Obtenir l'acces API Google Business Profile", "priority": "p1", "status": "blocked", "area": "external",
+    "story": "En tant qu'editeur, je veux un projet GBP approuve pour connecter les fiches clientes.",
+    "acceptance": ["Fiche geree verifiee et active 60+ jours avec site ; date et role owner/manager confirmes", "Demande Basic API Access pour projet 915822663727 deposee et decision tracee", "Apres accord : APIs activees, OAuth/variables configures, quotas controles"],
+    "validation": "Verifier dossier Google, quotas et compte test ; aucune date d'eligibilite inventee.", "scope": "Fiche cliente geree eligible possible ; approbation GBP distincte de verification OAuth."
+  },
+  {
+    "id": "gbp-resources", "title": "Selectionner et verifier un etablissement GBP", "priority": "p1", "status": "blocked", "area": "dev", "dependencies": ["gbp-access", "oauth-encryption", "oauth-lifecycle"],
+    "story": "En tant qu'entreprise, je veux choisir ma fiche Google plutot qu'une autorisation non verifiee.",
+    "acceptance": ["Comptes et etablissements listes apres autorisation", "Selection et IDs lies a l'entreprise, permissions verifiees", "Etat connecte seulement apres verification de la ressource"],
+    "validation": "Mocks et recette GBP approuvee ; isolation entre deux entreprises.", "scope": "Pas de publication ni collecte automatique de metriques dans cette US."
+  },
+  {
+    "id": "gbp-publish", "title": "Executer une mise a jour GBP validee", "priority": "p1", "status": "blocked", "area": "dev", "dependencies": ["gbp-resources", "oauth-disconnect"],
+    "story": "En tant qu'entreprise, je veux appliquer une proposition a ma fiche apres validation.",
+    "acceptance": ["Action disponible seulement pour proposition validee et etablissement autorise", "Appel GBP reel, erreurs et idempotence testes", "Resultat d'execution visible, sans hallucination de succes"],
+    "validation": "Tests mockes puis modification controlee sur fiche autorisee.", "scope": "Pas de publication automatique ni reponses automatiques aux avis."
+  },
+  {
+    "id": "metrics", "title": "Suivre des snapshots de metriques declares", "priority": "p2", "status": "backlog", "area": "dev",
+    "story": "En tant que dirigeant, je veux comparer ma situation de depart aux metriques actuelles.",
+    "acceptance": ["Snapshots dates et source declaree/automatique distingues", "Tableau depart/aujourd'hui/evolution sans conclusion inventee", "Donnees accessibles uniquement a leur entreprise"],
+    "validation": "Calculs deterministes testes et recette donnees fictives.", "scope": "Collecte Google automatique reportee ; commencer par declaratif."
+  },
+  {
+    "id": "report-email", "title": "Recevoir le bilan et les priorites par email", "priority": "p2", "status": "backlog", "area": "dev", "dependencies": ["gmail-live", "legal"],
+    "story": "En tant que dirigeant, je veux recevoir un bilan factuel pour revenir sur les prochaines actions.",
+    "acceptance": ["Choix fournisseur/expediteur et consentement d'envoi documentes", "Bilan deterministe, frequence et opt-out explicites", "Anti-doublon, echec et absence de donnees cross-entreprises testes"],
+    "validation": "Tests mockes et email controle ; pas de promesse de resultat commercial.", "scope": "Gmail manuel et cron hebdo deja livres ; programmation d'envoi a brancher distinctement."
+  },
+  {
+    "id": "pilot", "title": "Organiser le pilote avec cinq entreprises", "priority": "p1", "status": "backlog", "area": "external", "dependencies": ["legal", "github-governance", "support-domain"],
+    "story": "En tant que responsable produit, je veux mesurer si les entreprises constatent du travail utile et souhaitent continuer.",
+    "acceptance": ["Cinq entreprises consentantes et perimetre reel annonce", "Plan pilote de deux semaines et questions de retour definis", "Retours, incidents et decision de suite traces dans des Issues sans donnees privees"],
+    "validation": "Bilan factuel activation/validation/realisation et entretiens pilotes.", "scope": "Ne pas attendre toutes les integrations si elles ne sont pas promises ; pas de donnees personnelles dans les Issues publiques."
+  }
+]

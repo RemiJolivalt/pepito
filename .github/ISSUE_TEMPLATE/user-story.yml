@@ -1,0 +1,36 @@
+name: User story
+description: Travail a repartir dans le prototype BienDecider
+title: "[US] "
+labels: ["type:us", "status:backlog"]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: Besoin utilisateur
+      placeholder: En tant que..., je veux..., afin de...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criteres d'acceptation
+      placeholder: "- [ ] Resultat observable et testable"
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priorite
+      options: [P0 - Bloquant, P1 - Prochain, P2 - Plus tard]
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependances et perimetre
+      placeholder: "Bloque par #... ; hors perimetre : ..."
+  - type: textarea
+    id: validation
+    attributes:
+      label: Verification prevue
+      placeholder: Tests, recette, appels simules ou reels, risques et retour arriere.
