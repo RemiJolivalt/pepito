@@ -6,6 +6,8 @@ Le dépôt GitHub `RemiJolivalt/pepito`, le projet Vercel `pepito`, le nom du pa
 
 Configuration du domaine, de la messagerie et recette : [docs/domain-email-setup.md](docs/domain-email-setup.md).
 
+Développement à deux, CI et déploiement du prototype : **[docs/ci-cd.md](docs/ci-cd.md)**. PR courte vers `main`, contrôles GitHub obligatoires après configuration des protections, puis déploiement Vercel automatique. Un seul environnement partagé ; pas de previews de branches.
+
 Copilote IA agentique pour indépendants et TPE (kiné, plombier, installateur solaire, etc.) : des agents spécialisés proposent des actions pour accroître visibilité, communication et démarchage, validées par l'utilisateur avant exécution.
 
 ## Statut
@@ -62,7 +64,7 @@ Les tests utilisent `DATABASE_URL` et `SESSION_SECRET` du fichier `.env`. Ils cr
 3. Onglet **Settings → Environment Variables** → ajouter `ANTHROPIC_API_KEY` et `SESSION_SECRET` (même valeur qu'en local, sinon les sessions existantes deviennent invalides). Clés OAuth si prêtes. Laisser `ADMIN_EMAILS` non défini tant que l'admin doit rester ouvert à tous.
 4. Premier déploiement : Vercel lance `npm install` (génère le client Prisma) puis `next build` automatiquement.
 5. Créer les tables en prod : exécuter une fois `npx prisma db push` avec la `DATABASE_URL` de production dans l'environnement (copiée depuis l'onglet Storage de Vercel vers votre terminal local — jamais partagée ailleurs).
-6. Chaque `git push` sur la branche connectée redéploie automatiquement — aucune action supplémentaire.
+6. Chaque fusion sur `main` redéploie automatiquement. Les autres branches ne sont pas déployées. Ne pas pousser directement sur `main` dans le processus d'équipe ; voir [docs/ci-cd.md](docs/ci-cd.md) pour les protections à activer.
 
 ## Décisions clés (V1)
 
