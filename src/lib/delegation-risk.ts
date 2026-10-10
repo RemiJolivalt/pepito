@@ -26,8 +26,8 @@ const NO_RISK_FACTORS: ActionRiskFactors = {
 
 const RULES: Record<string, { factors: ActionRiskFactors; explanation: string }> = {
   piste_croissance: {
-    factors: NO_RISK_FACTORS,
-    explanation: "Piste informative interne ; aucune publication, dépense ou prise de contact.",
+    factors: { ...NO_RISK_FACTORS, thirdPartyData: true },
+    explanation: "Piste interne sans contact, mais contenant des informations sur une organisation tierce.",
   },
   prospect: {
     factors: { ...NO_RISK_FACTORS, thirdPartyData: true },
@@ -42,19 +42,19 @@ const RULES: Record<string, { factors: ActionRiskFactors; explanation: string }>
     explanation: "Réponse publique à un avis ; impact réputationnel et données d'un tiers.",
   },
   social_post: {
-    factors: { ...NO_RISK_FACTORS, publicExposure: true },
+    factors: { ...NO_RISK_FACTORS, publicExposure: true, thirdPartyData: true },
     explanation: "Contenu destiné à être publié publiquement au nom de l'entreprise.",
   },
   site_web_content: {
-    factors: { ...NO_RISK_FACTORS, publicExposure: true },
+    factors: { ...NO_RISK_FACTORS, publicExposure: true, irreversible: true },
     explanation: "Peut conduire à publier ou remplacer le site visible par les clients.",
   },
   prospecting_email: {
-    factors: { ...NO_RISK_FACTORS, externalCommunication: true, thirdPartyData: true },
+    factors: { ...NO_RISK_FACTORS, externalCommunication: true, thirdPartyData: true, irreversible: true },
     explanation: "Message de prospection destiné à un tiers ; conformité et réputation à vérifier.",
   },
   gmail_email: {
-    factors: { ...NO_RISK_FACTORS, externalCommunication: true, thirdPartyData: true },
+    factors: { ...NO_RISK_FACTORS, externalCommunication: true, thirdPartyData: true, irreversible: true },
     explanation: "Envoie un message externe depuis Gmail au nom du dirigeant.",
   },
 };

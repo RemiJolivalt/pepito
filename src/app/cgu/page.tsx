@@ -16,8 +16,10 @@ export default function CguPage() {
         <h2 className="mt-6 font-medium text-slate-900">1. Objet</h2>
         <p className="mt-1">
           BienDecider est un service en phase pilote qui propose, via des agents IA, des actions de
-          visibilité, communication et prospection pour les indépendants et TPE. Aucune action
-          n&apos;est exécutée sans votre validation explicite.
+          visibilité, communication et prospection pour les indépendants et TPE. Dans le prototype
+          actuel, toute publication du site ou tout envoi Gmail requiert votre validation et
+          confirmation explicites. Les fondateurs n&apos;ont pas encore arrêté la politique des
+          futurs niveaux de délégation ; aucune exécution autonome n&apos;est activée.
         </p>
 
         <h2 className="mt-6 font-medium text-slate-900">2. Statut pilote</h2>

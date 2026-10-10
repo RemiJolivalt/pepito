@@ -45,8 +45,9 @@ La validation humaine demeure le défaut tant que #35 n'est pas approuvée par l
 
 - [x] Classification déterministe par `kind` de proposition, indépendante du contenu généré par le modèle ; justification visible sur la carte de proposition.
 - [x] Facteurs explicites évalués : exposition publique, communication externe, données de tiers, dépense et irréversibilité ; un facteur risqué ne peut pas être neutralisé par le modèle.
-- [x] Types inconnus classés à risque élevé par défaut ; seuls `piste_croissance` est faible et `prospect` modéré dans le catalogue actuel.
+- [x] Types inconnus classés à risque élevé par défaut ; les pistes de croissance et prospects sont modérés car ils contiennent des données d'organisations tierces. Aucun type livré n'est faible.
 - [x] Publications, réponses publiques, prospection, contenu de site et email Gmail classés élevés.
+- [x] Le formulaire Gmail signale le risque élevé et l'irréversibilité avant la confirmation d'envoi.
 - [x] Le serveur exige le mode `Accompagner` et une confirmation humaine pour publier un site ou envoyer un Gmail ; l'interface rend les facteurs lisibles.
 - [x] Tests du classificateur, des décisions de mode et vérification navigateur du badge/facteur sur une proposition à risque élevé.
 - [ ] Compléter les règles métier (réversibilité, exposition publique, dépense, données de tiers) par action, avec validation des deux fondateurs dans #35.

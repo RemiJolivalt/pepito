@@ -40,9 +40,12 @@ export default function ConfidentialitePage() {
 
         <h2 className="mt-6 font-medium text-slate-900">Pourquoi ces données sont traitées</h2>
         <p className="mt-1">
-          Pour fournir le service : générer des propositions de contenu et
-          d&apos;actions marketing pertinentes pour votre entreprise, et vous
-          permettre de les valider avant toute publication.
+          Pour fournir le service : analyser les informations de votre entreprise, générer des
+          propositions de contenu et d&apos;actions marketing, et exécuter les fonctionnalités
+          que vous utilisez. Dans le prototype actuel, la publication du site et l&apos;envoi
+          Gmail exigent une validation et une confirmation explicites. Les niveaux futurs
+          d&apos;autonomie et leurs limites doivent encore être décidés par les fondateurs ; ils
+          ne sont pas activés dans le produit.
         </p>
 
         <h2 className="mt-6 font-medium text-slate-900">Accès aux données Google et Meta</h2>
@@ -66,7 +69,9 @@ export default function ConfidentialitePage() {
         <p className="mt-2">
           Pour Gmail, les jetons et l&apos;adresse expéditeur sont chiffrés avec une clé serveur dédiée et les jetons sont renouvelés
           avant l&apos;envoi. Le destinataire, l&apos;objet et le texte du message confirmé sont
-          transmis à Google pour l&apos;envoi et conservés dans votre historique BienDecider.
+          transmis à Google pour l&apos;envoi. BienDecider conserve l&apos;objet, le destinataire et le
+          texte dans l&apos;historique des propositions Gmail ; ils sont donc également conservés
+          dans la base BienDecider jusqu&apos;à suppression selon la durée de conservation du compte.
           Aucun rapport ni message de prospection n&apos;est envoyé automatiquement.
           Vous pouvez déconnecter Gmail dans Connexions : les jetons locaux sont supprimés
           et une révocation Google est tentée. Si elle échoue, retirez également l&apos;accès

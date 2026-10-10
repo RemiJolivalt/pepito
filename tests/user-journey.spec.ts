@@ -62,6 +62,7 @@ test("Gmail compose requires confirmation and handles uncertain sends", async ({
     await page.getByLabel("Destinataire", { exact: true }).fill("recipient@example.invalid");
     await page.getByLabel("Objet", { exact: true }).fill("Test manuel");
     await page.getByLabel("Message", { exact: true }).fill("Contenu confirmé");
+    await expect(page.getByText("Risque élevé · communication externe non rappelable.", { exact: false })).toBeVisible();
     await expect(page.getByRole("button", { name: "Envoyer avec Gmail" })).toBeDisabled();
     await page.getByLabel("Je confirme le destinataire et le contenu de cet envoi.").check();
     let firstId: string | undefined;
@@ -167,6 +168,15 @@ test("single validation queue, persistent decisions, publishing and error recove
     await page.locator("article summary").filter({ hasText: "Risque élevé" }).first().click();
     await expect(page.getByText("Dans ce prototype, toute action réelle reste soumise à votre validation.", { exact: true }).first()).toBeVisible();
     await expect(page.locator("article").filter({ hasText: "Publication issue du plan" }).getByText("Exposition publique", { exact: true })).toBeVisible();
+    const unapprovedSite = await prisma.agentProposal.create({ data: {
+      companyId: company.id, agent: "contenu", kind: "site_web_content", title: "Site encore en attente", content: "Proposition non validée",
+    } });
+    const crossOriginAttempt = await page.request.post(`${baseURL}/api/proposals/${unapprovedSite.id}/execute`, { headers: { Origin: "https://untrusted.example" } });
+    expect(crossOriginAttempt.status()).toBe(403);
+    const bypassAttempt = await page.request.post(`${baseURL}/api/proposals/${unapprovedSite.id}/execute`, { headers: { Origin: baseURL } });
+    expect(bypassAttempt.status()).toBe(400);
+    expect(await prisma.executionLog.count({ where: { proposalId: unapprovedSite.id } })).toBe(0);
+    await prisma.agentProposal.delete({ where: { id: unapprovedSite.id } });
     const manual = page.locator("article").filter({ hasText: "Demande manuelle" });
     await page.route("**/api/proposals/*", async (route) => {
       if (route.request().method() === "PATCH") await route.fulfill({ status: 500, json: { error: "Décision non enregistrée" } });

@@ -12,6 +12,10 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (_request.headers.get("origin") !== _request.nextUrl.origin) {
+    return NextResponse.json({ error: "Origine refusée" }, { status: 403 });
+  }
+
   const company = await getSessionCompany();
   if (!company) {
     return NextResponse.json({ error: "Non connecté" }, { status: 401 });
