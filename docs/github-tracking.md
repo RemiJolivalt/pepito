@@ -31,7 +31,9 @@ Pas de GitHub Project obligatoire : les Issues et les filtres suffisent a deux. 
 | `priority:p0` | Bloquant avant ouverture externe, notamment securite/conformite |
 | `priority:p1` | Prochain travail prioritaire |
 | `priority:p2` | Plus tard, ne pas prendre avant les priorites convenues |
+| `priority:p3` | Non planifie, garde pour memoire |
 | `area:dev` / `area:external` | Code ou demarche console/fournisseur/CEO |
+| `domaine:*` | Un des douze domaines fonctionnels, decrits dans [domaines.md](domaines.md) |
 
 **Un seul label `status:*` par Issue ouverte.** Retirer l'ancien en changeant d'etape. Les priorites et le statut initial de l'import sont un point de depart, a ajuster ensemble. Une date d'eligibilite fournisseur ne doit pas etre inventee.
 
@@ -48,7 +50,7 @@ Petit point de 10 minutes une fois par semaine : trier P0/P1, revoir les blocage
 
 ## Import initial et nouvelles US
 
-Le workflow [Backlog Issues](../.github/workflows/backlog.yml) lit [github-backlog.json](github-backlog.json). Le catalogue initial contient 18 US de travail restant ; l'absence d'approbation fournisseur n'est pas marquee comme une fonctionnalite livree.
+Le workflow [Backlog Issues](../.github/workflows/backlog.yml) lit [github-backlog.json](github-backlog.json). Le catalogue initial contenait 18 US de travail restant ; 103 US classees par domaine ont ete ajoutees le 2026-10-10 (voir [domaines.md](domaines.md)) ; l'absence d'approbation fournisseur n'est pas marquee comme une fonctionnalite livree.
 
 L'import s'execute sur `main` quand le catalogue, le script ou son workflow change ; il peut aussi etre relance via **Actions > Backlog Issues > Run workflow**. Il utilise le token natif GitHub Actions avec `issues: write`, aucun PAT ni secret externe. Les PR de branches ne creent pas d'Issues par ce workflow.
 

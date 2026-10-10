@@ -6,6 +6,8 @@ test("catalog is valid and dependencies refer to known US", () => {
   const catalog = readCatalog();
   assert.equal(validateCatalog(catalog), catalog);
   assert.throws(() => validateCatalog([...catalog, catalog[0]]), /duplicate/);
+  assert.throws(() => validateCatalog([{ ...catalog[0], domain: "inconnu" }]), /domain/);
+  assert.throws(() => validateCatalog([{ ...catalog[0], domain: undefined }]), /domain/);
 });
 
 test("import is idempotent and preserves human edits and closed Issues", async () => {
@@ -23,10 +25,11 @@ test("import is idempotent and preserves human edits and closed Issues", async (
     update: async ({ issue_number, body }) => { issues.find((issue) => issue.number === issue_number).body = body; },
   };
   const github = { rest: { issues: api }, paginate: async (method, input) => (await method(input)).data };
-  const input = { github, context: { repo: { owner: "test", repo: "test" } }, catalog: readCatalog(), log: () => {} };
+  const input = { github, context: { repo: { owner: "test", repo: "test" } }, catalog: readCatalog(), log: () => {}, wait: async () => {} };
   const first = await syncBacklog(input);
   assert.equal(first.created, input.catalog.length);
   assert(issues.some((issue) => issue.body.includes("#")));
+  assert(issues.every((issue) => issue.labels.filter((label) => label.startsWith("domaine:")).length === 1));
   issues[0].body += "\nHuman change";
   issues[0].state = "closed";
   issues[0].labels = ["status:review"];
