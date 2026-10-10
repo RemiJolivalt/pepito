@@ -35,6 +35,6 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { syncBacklog, readCatalog } = require(`${process.env.GITHUB_WORKSPACE}/scripts/sync-backlog.cjs`);
-            const result = await syncBacklog({ github, context, catalog: readCatalog(), log: core.info });
+            const { syncBacklogWithRetry, readCatalog } = require(`${process.env.GITHUB_WORKSPACE}/scripts/sync-backlog.cjs`);
+            const result = await syncBacklogWithRetry({ github, context, catalog: readCatalog(), log: core.info });
             await core.summary.addHeading('Backlog Issues').addRaw(`Created ${result.created} US. Existing Issues preserved.`).write();

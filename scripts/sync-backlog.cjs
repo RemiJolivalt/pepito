@@ -79,4 +79,15 @@ async function syncBacklog({ github, context, catalog, log = console.log }) {
   return { created: created.length, total: issuesById.size };
 }
 
-module.exports = { syncBacklog, validateCatalog, storyBody, readCatalog: () => JSON.parse(fs.readFileSync("docs/github-backlog.json", "utf8")) };
+async function syncBacklogWithRetry(input) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await syncBacklog(input);
+    } catch (error) {
+      if (attempt === 3 || ![429, 500, 502, 503, 504].includes(error.status)) throw error;
+      (input.log ?? console.log)(`Temporary GitHub error (${error.status}); re-reading existing Issues before attempt ${attempt + 1}.`);
+    }
+  }
+}
+
+module.exports = { syncBacklog, syncBacklogWithRetry, validateCatalog, storyBody, readCatalog: () => JSON.parse(fs.readFileSync("docs/github-backlog.json", "utf8")) };

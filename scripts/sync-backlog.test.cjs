@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { readCatalog, validateCatalog, syncBacklog } = require("./sync-backlog.cjs");
+const { readCatalog, validateCatalog, syncBacklog, syncBacklogWithRetry } = require("./sync-backlog.cjs");
 
 test("catalog is valid and dependencies refer to known US", () => {
   const catalog = readCatalog();
@@ -34,4 +34,15 @@ test("import is idempotent and preserves human edits and closed Issues", async (
   const second = await syncBacklog(input);
   assert.equal(second.created, 0);
   assert.equal(JSON.stringify(issues), saved);
+  let attempts = 0;
+  const retryGithub = { ...github, paginate: async (...args) => {
+    attempts += 1;
+    if (attempts === 1) throw Object.assign(new Error("Temporary GitHub failure"), { status: 500 });
+    return github.paginate(...args);
+  } };
+  assert.equal((await syncBacklogWithRetry({ ...input, github: retryGithub })).created, 0);
+  assert.equal(JSON.stringify(issues), saved);
+  await assert.rejects(syncBacklogWithRetry({ ...input, github: { ...github, paginate: async () => {
+    throw Object.assign(new Error("Missing permission"), { status: 403 });
+  } } }), /Missing permission/);
 });
