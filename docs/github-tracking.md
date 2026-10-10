@@ -38,6 +38,8 @@ Pas de GitHub Project obligatoire : les Issues et les filtres suffisent a deux. 
 
 Focus produit du 2026-10-10 : **délégation P1**, avec décision fondatrice #35 en premier ; voir l'ordre et les dépendances dans [domaines.md](domaines.md#focus-actuel--délégation-p1). Les trois P2 de ce domaine restent hors focus.
 
+La première tranche de l'US #39 est livrée : classification statique et affichage du risque ; l'Issue passe en cours jusqu'à validation des règles complètes et de leur application serveur au futur mode Déléguer. Voir la tranche et ses limites dans [domaines.md](domaines.md#tranche-del-5-livrée-le-2026-10-10).
+
 **Un seul label `status:*` par Issue ouverte.** Retirer l'ancien en changeant d'etape. Les priorites et le statut initial de l'import sont un point de depart, a ajuster ensemble. Une date d'eligibilite fournisseur ne doit pas etre inventee.
 
 ## Routine quotidienne a deux

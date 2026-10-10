@@ -160,6 +160,12 @@ test("single validation queue, persistent decisions, publishing and error recove
     await expect(page.locator("article")).toHaveCount(0);
     await page.getByRole("link", { name: "À valider 3", exact: true }).click();
     await expect(page.locator("article")).toHaveCount(3);
+    await expect(page.getByText("Risque élevé", { exact: true })).toHaveCount(3);
+    await expect(page.getByText("Risque modéré", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Risque élevé", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("toute action réelle reste soumise à votre validation.", { exact: true })).toHaveCount(0);
+    await page.locator("article summary").filter({ hasText: "Risque élevé" }).first().click();
+    await expect(page.getByText("Dans ce prototype, toute action réelle reste soumise à votre validation.", { exact: true }).first()).toBeVisible();
     const manual = page.locator("article").filter({ hasText: "Demande manuelle" });
     await page.route("**/api/proposals/*", async (route) => {
       if (route.request().method() === "PATCH") await route.fulfill({ status: 500, json: { error: "Décision non enregistrée" } });

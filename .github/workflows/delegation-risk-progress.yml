@@ -1,0 +1,45 @@
+name: Delegation risk progress
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/lib/delegation-risk.ts
+      - src/components/proposal-card.tsx
+      - tests/delegation.spec.ts
+      - .github/workflows/delegation-risk-progress.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delegation-risk-progress
+  cancel-in-progress: false
+
+jobs:
+  update-issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Mark del-5 in progress and record delivered scope
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issues = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: 'open', per_page: 100 });
+            const issue = issues.find(item => !item.pull_request && item.body?.includes('<!-- biendecider-us:del-5 -->'));
+            if (!issue) throw new Error('Delegation risk US del-5 was not found among open Issues.');
+            const marker = '<!-- delegation-risk-p1:deterministic-kind-v1 -->';
+            const labels = issue.labels.map(label => label.name).filter(name => !name.startsWith('status:'));
+            labels.push('status:in-progress');
+            await github.rest.issues.update({ ...context.repo, issue_number: issue.number, labels: [...new Set(labels)] });
+            const comments = await github.paginate(github.rest.issues.listComments, { ...context.repo, issue_number: issue.number, per_page: 100 });
+            if (!comments.some(comment => comment.body?.includes(marker))) {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: issue.number,
+                body: `${marker}\n## Tranche implementee le 2026-10-10\nClassification deterministe selon le type de proposition, motif visible, types inconnus a risque eleve. Tests unitaires et parcours navigateur passes.\n\n**Encore ouvert dans cette US :** valider les regles par action (reversibilite, exposition publique, depense, donnees de tiers) avec les deux fondateurs, puis forcer le seuil cote serveur dans le futur mode Deleguer. Pour l'instant, la validation humaine reste obligatoire pour toute action reelle ; cette tranche n'active aucune autonomie.\n\nDetails : https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/docs/domaines.md`
+              });
+            }

@@ -2,6 +2,7 @@
 
 import type { AgentProposal } from "@prisma/client";
 import { PERSONAS, type AgentKey } from "@/lib/agents/personas";
+import { assessActionRisk } from "@/lib/delegation-risk";
 
 export const STATUS_LABELS: Record<string, string> = {
   en_attente: "À valider",
@@ -38,6 +39,7 @@ export function ProposalCard({
   showAgent?: boolean;
 }) {
   const persona = PERSONAS[proposal.agent as Exclude<AgentKey, "co_ceo">];
+  const risk = assessActionRisk(proposal.kind);
   let displayContent = proposal.content;
   if (proposal.kind === "gmail_email") {
     try {
@@ -74,6 +76,14 @@ export function ProposalCard({
         </span>
       </div>
       <h3 className="mt-1 font-medium">{proposal.title}</h3>
+      <details className="mt-2">
+        <summary className="flex w-fit cursor-pointer items-center gap-2 text-xs text-slate-600">
+          <span className={`rounded px-2 py-0.5 font-medium ${risk.level === "faible" ? "bg-emerald-50 text-emerald-800" : risk.level === "modere" ? "bg-amber-50 text-amber-800" : "bg-rose-50 text-rose-800"}`}>{risk.label}</span>
+          <span>Pourquoi ?</span>
+        </summary>
+        <p className="mt-1 max-w-prose text-xs text-slate-600">{risk.explanation}</p>
+        <p className="mt-1 text-xs font-medium text-slate-700">Dans ce prototype, toute action réelle reste soumise à votre validation.</p>
+      </details>
       <details className="mt-1">
         <summary className="cursor-pointer text-xs text-indigo-600">Voir le contenu</summary>
         <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{displayContent}</p>

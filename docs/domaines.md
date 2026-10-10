@@ -41,6 +41,17 @@ Ordre fondé sur les dépendances des US :
 
 La validation humaine demeure le défaut tant que #35 n'est pas approuvée par les deux fondateurs et que les garde-fous P1 ne sont pas livrés et testés. La demande d'autonomie ne vaut pas autorisation de publier ou d'envoyer pendant cette phase.
 
+### Tranche `del-5` livrée le 2026-10-10
+
+- [x] Classification déterministe par `kind` de proposition, indépendante du contenu généré par le modèle ; justification visible sur la carte de proposition.
+- [x] Types inconnus classés à risque élevé par défaut ; seuls `piste_croissance` est faible et `prospect` modéré dans le catalogue actuel.
+- [x] Publications, réponses publiques, prospection, contenu de site et email Gmail classés élevés.
+- [x] Tests du classificateur et vérification navigateur du badge sur des propositions à risque élevé.
+- [ ] Compléter les règles métier (réversibilité, exposition publique, dépense, données de tiers) par action, avec validation des deux fondateurs dans #35.
+- [ ] Appliquer le seuil au futur mode `Déléguer` côté serveur : au-dessus du seuil, forcer la validation même si l'interface est contournée. Aucun mode autonome n'est activé par cette tranche ; aujourd'hui toute action réelle reste à confirmer.
+
+Implémentation : [src/lib/delegation-risk.ts](../src/lib/delegation-risk.ts), affichage : [ProposalCard](../src/components/proposal-card.tsx), tests : [delegation.spec.ts](../tests/delegation.spec.ts). La PR classe les types connus ; ce n'est pas encore le moteur complet d'autorisation de #39.
+
 ## Trajectoire cible
 
 Promesse : *vous fixez l'objectif, l'IA trouve comment agir, vous gardez le contrôle.* Le moteur enchaîne sept étapes. Le tableau situe le code du 2026-10-09 face à cette cible.

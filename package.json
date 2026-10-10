@@ -10,6 +10,7 @@
     "test:ux": "playwright test tests/user-journey.spec.ts --workers=1",
     "test:brand": "playwright test tests/brand.spec.ts --workers=1",
     "test:gmail": "playwright test tests/gmail.spec.ts --workers=1",
+    "test:delegation": "playwright test tests/delegation.spec.ts --workers=1",
     "postinstall": "prisma generate"
   },
   "dependencies": {

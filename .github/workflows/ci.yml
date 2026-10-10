@@ -38,5 +38,7 @@ jobs:
         run: npm run test:gmail
       - name: Backlog importer tests (no network)
         run: node --test scripts/sync-backlog.test.cjs
+      - name: Delegation risk tests (no network)
+        run: npm run test:delegation
       - name: Production build and TypeScript
         run: npm run build

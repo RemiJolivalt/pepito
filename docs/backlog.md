@@ -6,6 +6,8 @@
 
 Focus actuel demandé par les fondateurs : **domaine delegation en P1** ; état des 7 P1, dépendances et ordre de prise en charge dans [domaines.md](domaines.md#focus-actuel--délégation-p1). Les Issues restent la source de vérité des labels et affectations.
 
+Première tranche `del-5` livrée le 2026-10-10 : niveau de risque déterministe affiché par type de proposition ; détails et limites dans [domaines.md](domaines.md#tranche-del-5-livrée-le-2026-10-10). Pas de changement au garde-fou d'approbation obligatoire.
+
 Ce document conserve l'historique et les décisions. Les cases ci-dessous reflètent leur date de rédaction ; ne pas les maintenir en parallèle du statut des Issues. Le catalogue initial [github-backlog.json](github-backlog.json) importe uniquement les US de travail restant, sans recréer toutes les livraisons passées. Les changements de statut se font dans GitHub, l'import ne les écrase pas.
 
 Délégation prototype (décision du 2026-10-10) : fusion autonome traçable après **4 secondes** sans réponse à la demande de relecture, ou indisponibilité annoncée, pour **tous les niveaux de risque**, y compris sécurité, données, envoi externe et CI/protections. PR et CI toujours obligatoires ; relecture différée et risques documentés. Voir [ci-cd.md](ci-cd.md). Les garde-fous des actions métier et la coordination des modifications de base restent inchangés.
