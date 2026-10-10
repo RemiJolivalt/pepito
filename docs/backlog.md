@@ -4,6 +4,8 @@
 
 **GitHub Issues est la source de vérité pour les US, responsables, priorités et statuts** : [US ouvertes](https://github.com/RemiJolivalt/pepito/issues?q=is%3Aissue%20is%3Aopen%20label%3Atype%3Aus). Répartition et mise à jour : [github-tracking.md](github-tracking.md).
 
+Focus actuel demandé par les fondateurs : **domaine delegation en P1** ; état des 7 P1, dépendances et ordre de prise en charge dans [domaines.md](domaines.md#focus-actuel--délégation-p1). Les Issues restent la source de vérité des labels et affectations.
+
 Ce document conserve l'historique et les décisions. Les cases ci-dessous reflètent leur date de rédaction ; ne pas les maintenir en parallèle du statut des Issues. Le catalogue initial [github-backlog.json](github-backlog.json) importe uniquement les US de travail restant, sans recréer toutes les livraisons passées. Les changements de statut se font dans GitHub, l'import ne les écrase pas.
 
 Délégation prototype (décision du 2026-10-10) : fusion autonome traçable après **4 secondes** sans réponse à la demande de relecture, ou indisponibilité annoncée, pour **tous les niveaux de risque**, y compris sécurité, données, envoi externe et CI/protections. PR et CI toujours obligatoires ; relecture différée et risques documentés. Voir [ci-cd.md](ci-cd.md). Les garde-fous des actions métier et la coordination des modifications de base restent inchangés.

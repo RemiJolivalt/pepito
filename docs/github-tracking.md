@@ -14,6 +14,7 @@ Chaque US contient le besoin utilisateur, des criteres d'acceptation, les depend
 - [A relire](https://github.com/RemiJolivalt/pepito/issues?q=is%3Aissue%20is%3Aopen%20label%3Astatus%3Areview).
 - [Bloquees](https://github.com/RemiJolivalt/pepito/issues?q=is%3Aissue%20is%3Aopen%20label%3Astatus%3Ablocked).
 - [P0](https://github.com/RemiJolivalt/pepito/issues?q=is%3Aissue%20is%3Aopen%20label%3Apriority%3Ap0).
+- [Délégation P1](https://github.com/RemiJolivalt/pepito/issues?q=is%3Aissue%20is%3Aopen%20label%3Adomaine%3Adelegation%20label%3Apriority%3Ap1).
 - [Relectures differees, PR ouvertes ou fermees](https://github.com/RemiJolivalt/pepito/pulls?q=is%3Apr%20label%3Areview-deferred).
 
 Pas de GitHub Project obligatoire : les Issues et les filtres suffisent a deux. Un tableau Project pourra etre ajoute plus tard sans dupliquer les US.
@@ -34,6 +35,8 @@ Pas de GitHub Project obligatoire : les Issues et les filtres suffisent a deux. 
 | `priority:p3` | Non planifie, garde pour memoire |
 | `area:dev` / `area:external` | Code ou demarche console/fournisseur/CEO |
 | `domaine:*` | Un des douze domaines fonctionnels, decrits dans [domaines.md](domaines.md) |
+
+Focus produit du 2026-10-10 : **délégation P1**, avec décision fondatrice #35 en premier ; voir l'ordre et les dépendances dans [domaines.md](domaines.md#focus-actuel--délégation-p1). Les trois P2 de ce domaine restent hors focus.
 
 **Un seul label `status:*` par Issue ouverte.** Retirer l'ancien en changeant d'etape. Les priorites et le statut initial de l'import sont un point de depart, a ajuster ensemble. Une date d'eligibilite fournisseur ne doit pas etre inventee.
 
